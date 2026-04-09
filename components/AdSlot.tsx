@@ -1,65 +1,49 @@
-/**
- * AdSlot — 애드센스 자리 예약 컴포넌트
- *
- * 실제 애드센스 삽입 방법:
- *   1. <script> 태그를 app/layout.tsx의 <head>에 추가
- *   2. placeholder div를 <ins class="adsbygoogle" ...>로 교체
- *   3. 아래 주석 처리된 useEffect 블록을 활성화
- */
-
 "use client";
 
-// import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type AdSize = "horizontal" | "rectangle" | "square";
 
-const SIZE_STYLES: Record<AdSize, { minHeight: string; label: string }> = {
-  horizontal:  { minHeight: "90px",  label: "광고 (728×90)" },
-  rectangle:   { minHeight: "280px", label: "광고 (336×280)" },
-  square:      { minHeight: "250px", label: "광고 (300×250)" },
+const SIZE_MIN_HEIGHT: Record<AdSize, string> = {
+  horizontal: "90px",
+  rectangle:  "280px",
+  square:     "250px",
 };
 
 type Props = {
   size?: AdSize;
-  /** 실제 AdSense data-ad-slot 값 */
-  slot?: string;
   className?: string;
 };
 
-export default function AdSlot({ size = "horizontal", slot, className = "" }: Props) {
-  const { minHeight, label } = SIZE_STYLES[size];
+const AD_CLIENT = "ca-pub-2088845697780578";
+const AD_SLOT   = "3715901846";
 
-  // --- 실제 애드센스 활성화 시 이 블록을 주석 해제 ---
-  // useEffect(() => {
-  //   try {
-  //     ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-  //   } catch {}
-  // }, []);
+export default function AdSlot({ size = "horizontal", className = "" }: Props) {
+  const insRef = useRef<HTMLModElement>(null);
 
-  /* ── placeholder (애드센스 미적용 상태) ── */
-  if (!slot) {
-    return (
-      <div
-        className={`flex items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-xs text-gray-400 ${className}`}
-        style={{ minHeight }}
-        aria-hidden="true"
-      >
-        {label}
-      </div>
-    );
-  }
+  useEffect(() => {
+    try {
+      // 이미 push된 ins는 다시 push하지 않음
+      if (insRef.current && insRef.current.getAttribute("data-adsbygoogle-status") === null) {
+        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+      }
+    } catch {}
+  }, []);
 
-  /* ── 실제 애드센스 ins 태그 ── */
   return (
-    <div className={className} style={{ minHeight }}>
-      {/* <ins
+    <div
+      className={className}
+      style={{ minHeight: SIZE_MIN_HEIGHT[size], overflow: "hidden" }}
+    >
+      <ins
+        ref={insRef}
         className="adsbygoogle"
-        style={{ display: "block", minHeight }}
-        data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-        data-ad-slot={slot}
+        style={{ display: "block" }}
+        data-ad-client={AD_CLIENT}
+        data-ad-slot={AD_SLOT}
         data-ad-format="auto"
         data-full-width-responsive="true"
-      /> */}
+      />
     </div>
   );
 }

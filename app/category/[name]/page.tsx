@@ -37,7 +37,7 @@ export default async function CategoryPage({ params }: Props) {
   const allCategories = getAllCategories();
 
   return (
-    <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8 xl:gap-10">
+    <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 xl:gap-14">
       <aside className="hidden lg:block">
         <Sidebar />
       </aside>
@@ -84,7 +84,7 @@ export default async function CategoryPage({ params }: Props) {
       </div>
 
       {/* Post grid */}
-      <ul className="grid gap-6 sm:grid-cols-2">
+      <ul className="grid gap-8 sm:grid-cols-2">
         {posts.map((post) => (
           <li key={post.slug}>
             <PostCard post={post} />

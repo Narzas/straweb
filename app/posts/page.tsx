@@ -21,7 +21,7 @@ export default async function PostsPage() {
   const posts = getAllPosts();
 
   return (
-    <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8 xl:gap-10">
+    <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 xl:gap-14">
       <aside className="hidden lg:block">
         <Sidebar />
       </aside>
@@ -32,7 +32,7 @@ export default async function PostsPage() {
           <p className="text-gray-500">{posts.length} posts total</p>
         </div>
 
-        <ul className="grid gap-6 sm:grid-cols-2">
+        <ul className="grid gap-8 sm:grid-cols-2">
           {posts.map((post, i) => (
             <li key={post.slug}>
               <PostCard post={post} priority={i < 2} />

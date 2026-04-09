@@ -60,10 +60,10 @@ export default function Sidebar() {
     "$" + n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
   return (
-    <div className="space-y-4 sticky top-24">
+    <div className="space-y-5 sticky top-24">
 
       {/* ── 시세 카드 ── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
           실시간 시세
         </p>
@@ -125,7 +125,7 @@ export default function Sidebar() {
       </div>
 
       {/* ── 실시간 뉴스 카드 ── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
           실시간 뉴스
         </p>

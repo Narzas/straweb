@@ -24,7 +24,7 @@ export default async function HomePage() {
   const categories = getAllCategories();
 
   return (
-    <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8 xl:gap-10">
+    <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 xl:gap-14">
 
       {/* ── 왼쪽 사이드바 (lg 이상에서만 표시) ── */}
       <aside className="hidden lg:block">
@@ -111,7 +111,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <ul className="grid gap-6 sm:grid-cols-2">
+        <ul className="grid gap-8 sm:grid-cols-2">
           {recentPosts.map((post, i) => (
             <li key={post.slug}>
               <PostCard post={post} priority={i < 2} />

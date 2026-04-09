@@ -52,7 +52,7 @@ export default async function PostPage({ params }: Props) {
   const showAds = post.category !== "개발";
 
   return (
-    <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8 xl:gap-10">
+    <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 xl:gap-14">
       <aside className="hidden lg:block">
         <Sidebar />
       </aside>

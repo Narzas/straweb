@@ -34,6 +34,11 @@ img:not([loading]) {
   loading: lazy;
 }
 
+/* ── AdSense: 광고 미게재 슬롯 숨김 ── */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+}
+
 /* ── Post body typography ─────────────────────────────────── */
 .post-body {
   font-size: 1.0625rem;

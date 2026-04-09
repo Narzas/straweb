@@ -53,6 +53,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* DNS prefetch for external services */}
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088845697780578"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="flex min-h-screen flex-col bg-white text-gray-900 antialiased">
         <Header />

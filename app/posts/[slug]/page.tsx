@@ -7,6 +7,7 @@ import { siteConfig } from "@/lib/site";
 import TableOfContents from "@/components/TableOfContents";
 import AdSlot from "@/components/AdSlot";
 import CommentSection from "@/components/CommentSection";
+import Sidebar from "@/components/Sidebar";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -51,7 +52,12 @@ export default async function PostPage({ params }: Props) {
   const showAds = post.category !== "개발";
 
   return (
-    <div className="relative mx-auto max-w-5xl">
+    <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8 xl:gap-10">
+      <aside className="hidden lg:block">
+        <Sidebar />
+      </aside>
+
+    <div className="relative">
       <Link
         href="/posts"
         className="mb-8 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900"
@@ -124,6 +130,7 @@ export default async function PostPage({ params }: Props) {
           </aside>
         )}
       </div>
+    </div>
     </div>
   );
 }

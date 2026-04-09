@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getAllPosts } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
+import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
   title: "Posts",
@@ -20,19 +21,25 @@ export default async function PostsPage() {
   const posts = getAllPosts();
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Posts</h1>
-        <p className="text-gray-500">{posts.length} posts total</p>
-      </div>
+    <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8 xl:gap-10">
+      <aside className="hidden lg:block">
+        <Sidebar />
+      </aside>
 
-      <ul className="grid gap-6 sm:grid-cols-2">
-        {posts.map((post, i) => (
-          <li key={post.slug}>
-            <PostCard post={post} priority={i < 2} />
-          </li>
-        ))}
-      </ul>
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Posts</h1>
+          <p className="text-gray-500">{posts.length} posts total</p>
+        </div>
+
+        <ul className="grid gap-6 sm:grid-cols-2">
+          {posts.map((post, i) => (
+            <li key={post.slug}>
+              <PostCard post={post} priority={i < 2} />
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

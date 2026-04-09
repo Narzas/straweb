@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllCategories, getPostsByCategory } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
+import Sidebar from "@/components/Sidebar";
 
 type Props = {
   params: Promise<{ name: string }>;
@@ -36,6 +37,11 @@ export default async function CategoryPage({ params }: Props) {
   const allCategories = getAllCategories();
 
   return (
+    <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8 xl:gap-10">
+      <aside className="hidden lg:block">
+        <Sidebar />
+      </aside>
+
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-3">
@@ -85,6 +91,7 @@ export default async function CategoryPage({ params }: Props) {
           </li>
         ))}
       </ul>
+    </div>
     </div>
   );
 }

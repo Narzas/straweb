@@ -4,6 +4,7 @@ import { getAllPosts, getAllCategories } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import AdSlot from "@/components/AdSlot";
 import VisitorCounter from "@/components/VisitorCounter";
+import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
   title: "StraWeb",
@@ -23,7 +24,15 @@ export default async function HomePage() {
   const categories = getAllCategories();
 
   return (
-    <div className="space-y-14">
+    <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8 xl:gap-10">
+
+      {/* ── 왼쪽 사이드바 (lg 이상에서만 표시) ── */}
+      <aside className="hidden lg:block">
+        <Sidebar />
+      </aside>
+
+      {/* ── 메인 콘텐츠 ── */}
+      <div className="space-y-14">
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 px-8 py-14 text-white sm:px-12">
@@ -102,7 +111,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-6 sm:grid-cols-2">
           {recentPosts.map((post, i) => (
             <li key={post.slug}>
               <PostCard post={post} priority={i < 2} />
@@ -114,6 +123,7 @@ export default async function HomePage() {
       {/* ── 하단 광고 ── */}
       <AdSlot size="rectangle" className="mx-auto max-w-sm" />
 
+      </div>{/* end 메인 콘텐츠 */}
     </div>
   );
 }

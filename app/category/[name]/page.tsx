@@ -11,7 +11,7 @@ type Props = {
 export async function generateStaticParams() {
   const categories = getAllCategories();
   return categories.map(({ name }) => ({
-    name: encodeURIComponent(name.toLowerCase()),
+    name: name.toLowerCase(),
   }));
 }
 

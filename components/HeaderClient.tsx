@@ -115,9 +115,10 @@ export default function HeaderClient({ categories }: { categories: Category[] })
 
       {/* ── 모바일 메뉴 패널 ── */}
       <div
-        className={`fixed top-0 right-0 z-50 h-full w-72 bg-white shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed top-0 right-0 z-50 h-full w-72 shadow-2xl transition-transform duration-300 md:hidden ${
           mobileOpen ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{ backgroundColor: "#ffffff" }}
       >
         {/* 패널 헤더 */}
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">

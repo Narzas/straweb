@@ -72,52 +72,59 @@ export default function Sidebar() {
       <ClockWeatherWidget />
 
       {/* ── 시세 카드 ── */}
-      <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-sm space-y-2">
         {marketLoading ? (
           <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-4/5" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-10 w-full rounded-lg" />
           </div>
         ) : !market ? (
           <p className="text-xs text-gray-400">데이터를 불러올 수 없습니다.</p>
         ) : (
-          <div className="flex items-center justify-between gap-3">
+          <>
             {/* BTC */}
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs font-medium text-gray-500 shrink-0">₿</span>
-              {market.bitcoin.krw !== null && (
-                <span className="text-[13px] font-bold text-gray-900 truncate">
-                  {fmtKrw(market.bitcoin.krw)}
-                </span>
-              )}
-              {market.bitcoin.change24h !== null && (
-                <span
-                  className={`text-[11px] font-semibold shrink-0 ${
+            <div className="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 border border-amber-100">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">₿</span>
+                <span className="text-[11px] font-semibold text-amber-700">비트코인</span>
+              </div>
+              <div className="text-right">
+                {market.bitcoin.krw !== null && (
+                  <p className="text-[13px] font-bold text-gray-900 tabular-nums">
+                    {fmtKrw(market.bitcoin.krw)}
+                  </p>
+                )}
+                {market.bitcoin.change24h !== null && (
+                  <p className={`text-[11px] font-semibold tabular-nums ${
                     market.bitcoin.change24h >= 0 ? "text-emerald-500" : "text-red-500"
-                  }`}
-                >
-                  {market.bitcoin.change24h >= 0 ? "▲" : "▼"}
-                  {Math.abs(market.bitcoin.change24h).toFixed(1)}%
-                </span>
-              )}
+                  }`}>
+                    {market.bitcoin.change24h >= 0 ? "▲" : "▼"}{" "}
+                    {Math.abs(market.bitcoin.change24h).toFixed(2)}%
+                  </p>
+                )}
+              </div>
             </div>
-
-            <div className="h-4 w-px bg-gray-200 shrink-0" />
 
             {/* USD/KRW */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-xs font-medium text-gray-500">$</span>
+            <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2 border border-blue-100">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">🇺🇸</span>
+                <span className="text-[11px] font-semibold text-blue-700">달러 환율</span>
+              </div>
               {market.usdKrw !== null && (
-                <span className="text-[13px] font-bold text-gray-900">
-                  {market.usdKrw.toLocaleString("ko-KR", {
-                    minimumFractionDigits: 1,
-                    maximumFractionDigits: 1,
-                  })}
-                  <span className="ml-0.5 text-[10px] font-normal text-gray-400">원</span>
-                </span>
+                <div className="text-right">
+                  <p className="text-[13px] font-bold text-gray-900 tabular-nums">
+                    {market.usdKrw.toLocaleString("ko-KR", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                    <span className="ml-0.5 text-[10px] font-normal text-gray-400">원</span>
+                  </p>
+                  <p className="text-[11px] text-gray-400">USD/KRW</p>
+                </div>
               )}
             </div>
-          </div>
+          </>
         )}
       </div>
 

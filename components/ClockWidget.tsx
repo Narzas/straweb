@@ -16,11 +16,23 @@ function getTimeParts() {
   return { date: `${y}.${m}.${d}`, day, hh, mm, ss };
 }
 
+function Colon({ visible }: { visible: boolean }) {
+  return (
+    <span
+      className="transition-opacity duration-100"
+      style={{ opacity: visible ? 1 : 0.15 }}
+    >
+      :
+    </span>
+  );
+}
+
 export default function ClockWidget() {
-  const [parts, setParts] = useState(getTimeParts);
+  const [parts, setParts] = useState<ReturnType<typeof getTimeParts> | null>(null);
   const [colonVisible, setColonVisible] = useState(true);
 
   useEffect(() => {
+    setParts(getTimeParts());
     const tick = setInterval(() => {
       setParts(getTimeParts());
       setColonVisible((v) => !v);
@@ -28,25 +40,20 @@ export default function ClockWidget() {
     return () => clearInterval(tick);
   }, []);
 
-  const sep = (
-    <span
-      className="transition-opacity duration-100"
-      style={{ opacity: colonVisible ? 1 : 0.15 }}
-    >
-      :
-    </span>
-  );
+  if (!parts) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="h-10" />
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       {/* 날짜 */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-gray-400 font-medium">
-          {parts.date}
-        </span>
-        <span className="text-xs font-semibold text-indigo-400">
-          {parts.day}
-        </span>
+        <span className="text-xs text-gray-400 font-medium">{parts.date}</span>
+        <span className="text-xs font-semibold text-indigo-400">{parts.day}</span>
       </div>
 
       {/* 시간 */}
@@ -55,10 +62,15 @@ export default function ClockWidget() {
         style={{
           background: "linear-gradient(to right, #6366f1, #7c3aed)",
           WebkitBackgroundClip: "text",
+          backgroundClip: "text",
           WebkitTextFillColor: "transparent",
         }}
       >
-        {parts.hh}{sep}{parts.mm}{sep}{parts.ss}
+        {parts.hh}
+        <Colon visible={colonVisible} />
+        {parts.mm}
+        <Colon visible={colonVisible} />
+        {parts.ss}
       </p>
     </div>
   );

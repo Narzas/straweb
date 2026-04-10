@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getAllSlugs, getPostBySlug } from "@/lib/posts";
-import { splitContentForAd } from "@/lib/split-content";
 import { siteConfig } from "@/lib/site";
 import TableOfContents from "@/components/TableOfContents";
 import AdSlot from "@/components/AdSlot";
@@ -61,7 +60,6 @@ export default async function PostPage({ params }: Props) {
 
   if (!post) notFound();
 
-  const [topHtml, bottomHtml] = splitContentForAd(post.contentHtml);
   const showAds = post.category !== "개발";
 
   return (
@@ -106,29 +104,13 @@ export default async function PostPage({ params }: Props) {
           <ViewTracker slug={post.slug} />
           </header>
 
-          {/* ── 상단 광고 ─────────────────────────────── */}
-          {showAds && <AdSlot size="horizontal" className="mb-8" />}
-
-          {/* 본문 상단 */}
+          {/* 본문 */}
           <div
             className="post-body"
-            dangerouslySetInnerHTML={{ __html: topHtml }}
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
           />
 
-          {/* ── 중간 광고 (h2 두 번째 직전) ─────────── */}
-          {showAds && bottomHtml && (
-            <AdSlot size="rectangle" className="my-8" />
-          )}
-
-          {/* 본문 하단 */}
-          {bottomHtml && (
-            <div
-              className="post-body"
-              dangerouslySetInnerHTML={{ __html: bottomHtml }}
-            />
-          )}
-
-          {/* ── 하단 광고 ─────────────────────────────── */}
+          {/* ── 하단 광고 (본문 끝 이후) ──────────────── */}
           {showAds && <AdSlot size="horizontal" className="mt-10" />}
 
           {/* ── 댓글 ────────────────────────────────── */}

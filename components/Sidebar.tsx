@@ -73,60 +73,48 @@ export default function Sidebar() {
 
       {/* ── 시세 카드 ── */}
       <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-          실시간 시세
-        </p>
-
         {marketLoading ? (
           <div className="space-y-2">
-            <Skeleton className="h-3.5 w-full" />
-            <Skeleton className="h-5 w-4/5" />
-            <Skeleton className="h-3 w-1/2" />
-            <div className="mt-2 border-t border-gray-100 pt-2 space-y-2">
-              <Skeleton className="h-3.5 w-full" />
-              <Skeleton className="h-5 w-3/5" />
-            </div>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
           </div>
         ) : !market ? (
           <p className="text-xs text-gray-400">데이터를 불러올 수 없습니다.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
             {/* BTC */}
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-500">₿ 비트코인</span>
-                {market.bitcoin.change24h !== null && (
-                  <span
-                    className={`text-[11px] font-semibold ${
-                      market.bitcoin.change24h >= 0 ? "text-emerald-500" : "text-red-500"
-                    }`}
-                  >
-                    {market.bitcoin.change24h >= 0 ? "▲" : "▼"}{" "}
-                    {Math.abs(market.bitcoin.change24h).toFixed(2)}%
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs font-medium text-gray-500 shrink-0">₿</span>
               {market.bitcoin.krw !== null && (
-                <p className="text-[15px] font-bold text-gray-900 leading-tight mt-0.5">
+                <span className="text-[13px] font-bold text-gray-900 truncate">
                   {fmtKrw(market.bitcoin.krw)}
-                </p>
+                </span>
               )}
-              {market.bitcoin.usd !== null && (
-                <p className="text-xs text-gray-400">{fmtUsd(market.bitcoin.usd)}</p>
+              {market.bitcoin.change24h !== null && (
+                <span
+                  className={`text-[11px] font-semibold shrink-0 ${
+                    market.bitcoin.change24h >= 0 ? "text-emerald-500" : "text-red-500"
+                  }`}
+                >
+                  {market.bitcoin.change24h >= 0 ? "▲" : "▼"}
+                  {Math.abs(market.bitcoin.change24h).toFixed(1)}%
+                </span>
               )}
             </div>
 
+            <div className="h-4 w-px bg-gray-200 shrink-0" />
+
             {/* USD/KRW */}
-            <div className="border-t border-gray-100 pt-2">
-              <span className="text-xs font-medium text-gray-500">$ 달러 환율</span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs font-medium text-gray-500">$</span>
               {market.usdKrw !== null && (
-                <p className="text-[15px] font-bold text-gray-900 leading-tight mt-0.5">
+                <span className="text-[13px] font-bold text-gray-900">
                   {market.usdKrw.toLocaleString("ko-KR", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  <span className="text-xs font-normal text-gray-400">KRW</span>
-                </p>
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1,
+                  })}
+                  <span className="ml-0.5 text-[10px] font-normal text-gray-400">원</span>
+                </span>
               )}
             </div>
           </div>
@@ -185,11 +173,6 @@ export default function Sidebar() {
                   >
                     {item.title}
                   </a>
-                  {item.source && (
-                    <span className="mt-0.5 block text-[10px] text-gray-400">
-                      {item.source}
-                    </span>
-                  )}
                 </div>
               </li>
             ))}

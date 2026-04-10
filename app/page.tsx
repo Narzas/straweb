@@ -75,8 +75,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── 상단 광고 ── */}
-      <AdSlot size="horizontal" className="w-full" />
 
       {/* ── 카테고리 바로가기 ── */}
       {categories.length > 0 && (

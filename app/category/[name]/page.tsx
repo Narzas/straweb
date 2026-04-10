@@ -43,6 +43,10 @@ export default async function CategoryPage({ params }: Props) {
       </aside>
 
     <div className="space-y-8">
+        {/* ── 모바일 사이드바 ── */}
+        <div className="lg:hidden">
+          <Sidebar />
+        </div>
       {/* Header */}
       <div className="space-y-3">
         <Link

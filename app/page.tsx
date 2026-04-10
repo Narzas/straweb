@@ -36,6 +36,11 @@ export default async function HomePage() {
       {/* ── 메인 콘텐츠 ── */}
       <div className="space-y-14">
 
+      {/* ── 모바일 사이드바 (lg 미만 상단 표시) ── */}
+      <div className="lg:hidden">
+        <Sidebar />
+      </div>
+
       {/* ── Hero ── */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 px-8 py-8 text-white sm:px-12">
         {/* 배경 장식 */}

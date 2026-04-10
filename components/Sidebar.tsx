@@ -66,7 +66,7 @@ export default function Sidebar() {
   const activeNews = categories[activeTab]?.items ?? [];
 
   return (
-    <div className="space-y-4 sticky top-24">
+    <div className="space-y-4 lg:sticky lg:top-24">
 
       {/* ── 시계 + 날씨 통합 카드 ── */}
       <ClockWeatherWidget />

@@ -14,7 +14,7 @@ type NewsCategory = { key: string; label: string; items: NewsItem[] };
 
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded bg-gray-100 ${className ?? ""}`} />
+    <div className={`animate-pulse rounded bg-gray-100 dark:bg-slate-700 ${className ?? ""}`} />
   );
 }
 
@@ -72,25 +72,25 @@ export default function Sidebar() {
       <ClockWeatherWidget />
 
       {/* ── 시세 카드 ── */}
-      <div className="rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-sm space-y-2">
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 shadow-sm space-y-2">
         {marketLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-10 w-full rounded-lg" />
             <Skeleton className="h-10 w-full rounded-lg" />
           </div>
         ) : !market ? (
-          <p className="text-xs text-gray-400">데이터를 불러올 수 없습니다.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">데이터를 불러올 수 없습니다.</p>
         ) : (
           <>
             {/* BTC */}
-            <div className="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 border border-amber-100">
+            <div className="flex items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 border border-amber-100 dark:border-amber-800/30">
               <div className="flex items-center gap-1.5">
                 <span className="text-base">₿</span>
-                <span className="text-[11px] font-semibold text-amber-700">비트코인</span>
+                <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">비트코인</span>
               </div>
               <div className="text-right">
                 {market.bitcoin.krw !== null && (
-                  <p className="text-[13px] font-bold text-gray-900 tabular-nums">
+                  <p className="text-[13px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
                     {fmtKrw(market.bitcoin.krw)}
                   </p>
                 )}
@@ -106,21 +106,21 @@ export default function Sidebar() {
             </div>
 
             {/* USD/KRW */}
-            <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2 border border-blue-100">
+            <div className="flex items-center justify-between rounded-lg bg-blue-50 dark:bg-blue-900/20 px-3 py-2 border border-blue-100 dark:border-blue-800/30">
               <div className="flex items-center gap-1.5">
                 <span className="text-base">🇺🇸</span>
-                <span className="text-[11px] font-semibold text-blue-700">달러 환율</span>
+                <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">달러 환율</span>
               </div>
               {market.usdKrw !== null && (
                 <div className="text-right">
-                  <p className="text-[13px] font-bold text-gray-900 tabular-nums">
+                  <p className="text-[13px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
                     {market.usdKrw.toLocaleString("ko-KR", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                     <span className="ml-0.5 text-[10px] font-normal text-gray-400">원</span>
                   </p>
-                  <p className="text-[11px] text-gray-400">USD/KRW</p>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500">USD/KRW</p>
                 </div>
               )}
             </div>
@@ -129,8 +129,8 @@ export default function Sidebar() {
       </div>
 
       {/* ── 실시간 뉴스 카드 ── */}
-      <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
           실시간 뉴스
         </p>
 
@@ -144,7 +144,7 @@ export default function Sidebar() {
                 className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
                   i === activeTab
                     ? "bg-indigo-500 text-white"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600"
                 }`}
               >
                 {cat.label}
@@ -163,7 +163,7 @@ export default function Sidebar() {
             ))}
           </div>
         ) : activeNews.length === 0 ? (
-          <p className="text-xs text-gray-400">뉴스를 불러올 수 없습니다.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">뉴스를 불러올 수 없습니다.</p>
         ) : (
           <ol className="space-y-3">
             {activeNews.map((item, i) => (
@@ -176,7 +176,7 @@ export default function Sidebar() {
                     href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block text-xs leading-snug text-gray-700 hover:text-indigo-600 line-clamp-2 transition-colors"
+                    className="block text-xs leading-snug text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-2 transition-colors"
                   >
                     {item.title}
                   </a>
@@ -186,7 +186,7 @@ export default function Sidebar() {
           </ol>
         )}
 
-        <p className="mt-3 text-[10px] text-gray-300 text-right">Google News</p>
+        <p className="mt-3 text-[10px] text-gray-300 dark:text-slate-600 text-right">Google News</p>
       </div>
 
       {/* ── 방명록 미리보기 ── */}

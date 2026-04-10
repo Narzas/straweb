@@ -63,7 +63,7 @@ export default async function PostPage({ params }: Props) {
   const showAds = post.category !== "개발";
 
   return (
-    <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 xl:gap-14">
+    <div className="lg:grid lg:grid-cols-[270px_1fr] lg:gap-8 xl:gap-12">
       <aside className="hidden lg:block">
         <Sidebar />
       </aside>
@@ -96,8 +96,14 @@ export default async function PostPage({ params }: Props) {
                 </span>
               ))}
             </div>
-            <h1 className="text-4xl font-bold leading-tight tracking-tight text-gray-900 break-keep">
-              {post.title}
+            <h1 className="text-4xl font-bold leading-tight tracking-tight text-gray-900 dark:text-gray-100 break-keep">
+              {post.title.includes("—") ? (
+                <>
+                  {post.title.split("—")[0].trimEnd()}
+                  <br />
+                  <span className="text-2xl font-semibold opacity-60">— {post.title.split("—").slice(1).join("—").trimStart()}</span>
+                </>
+              ) : post.title}
             </h1>
             <p className="text-lg leading-relaxed text-gray-500">{post.description}</p>
             <time className="block text-sm text-gray-400">{post.date}</time>

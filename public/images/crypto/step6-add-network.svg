@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Step label -->
+  <rect x="30" y="24" width="80" height="28" rx="14" fill="#f6851b"/>
+  <text x="70" y="43" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">STEP 6</text>
+
+  <text x="30" y="90" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="white">네트워크 추가 (선택)</text>
+
+  <!-- Network dropdown -->
+  <rect x="60" y="110" width="300" height="310" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Header -->
+  <rect x="60" y="110" width="300" height="44" rx="12" fill="#f9fafb"/>
+  <rect x="60" y="136" width="300" height="18" fill="#f9fafb"/>
+  <text x="210" y="138" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#111827" text-anchor="middle">네트워크 선택</text>
+
+  <!-- Ethereum (current) -->
+  <rect x="72" y="162" width="276" height="44" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <circle cx="96" cy="184" r="14" fill="#627eea"/>
+  <text x="96" y="190" font-family="Arial" font-size="12" fill="white" text-anchor="middle">Ξ</text>
+  <text x="118" y="181" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#111827">Ethereum Mainnet</text>
+  <text x="118" y="197" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6b7280">현재 연결됨</text>
+  <text x="330" y="187" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#3b82f6" text-anchor="middle">✓</text>
+
+  <!-- Polygon -->
+  <rect x="72" y="214" width="276" height="44" rx="8" fill="#f9fafb"/>
+  <circle cx="96" cy="236" r="14" fill="#8247e5"/>
+  <text x="96" y="242" font-family="Arial" font-size="10" font-weight="bold" fill="white" text-anchor="middle">POL</text>
+  <text x="118" y="233" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#111827">Polygon</text>
+  <text x="118" y="249" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6b7280">수수료 낮음 • MATIC</text>
+
+  <!-- Base -->
+  <rect x="72" y="266" width="276" height="44" rx="8" fill="#f9fafb"/>
+  <circle cx="96" cy="288" r="14" fill="#0052ff"/>
+  <text x="96" y="294" font-family="Arial" font-size="11" font-weight="bold" fill="white" text-anchor="middle">B</text>
+  <text x="118" y="285" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#111827">Base</text>
+  <text x="118" y="301" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6b7280">Coinbase L2 • ETH</text>
+
+  <!-- Arbitrum -->
+  <rect x="72" y="318" width="276" height="44" rx="8" fill="#f9fafb"/>
+  <circle cx="96" cy="340" r="14" fill="#12aaff"/>
+  <text x="96" y="346" font-family="Arial" font-size="10" font-weight="bold" fill="white" text-anchor="middle">ARB</text>
+  <text x="118" y="337" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#111827">Arbitrum One</text>
+  <text x="118" y="353" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6b7280">이더리움 L2 • ETH</text>
+
+  <!-- Add custom -->
+  <rect x="72" y="372" width="276" height="34" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+  <text x="210" y="394" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#f6851b" text-anchor="middle">+ 커스텀 네트워크 추가</text>
+
+  <!-- Right info panel -->
+  <rect x="390" y="110" width="380" height="310" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="580" y="140" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#f6851b" text-anchor="middle">네트워크별 특징 비교</text>
+  <rect x="406" y="148" width="348" height="1" fill="#334155"/>
+
+  <!-- Table header -->
+  <text x="420" y="168" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#64748b">네트워크</text>
+  <text x="530" y="168" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#64748b">수수료</text>
+  <text x="610" y="168" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#64748b">속도</text>
+  <text x="690" y="168" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#64748b">용도</text>
+
+  <rect x="406" y="174" width="348" height="1" fill="#334155"/>
+
+  <!-- Ethereum row -->
+  <text x="420" y="194" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">Ethereum</text>
+  <text x="530" y="194" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#fca5a5">높음</text>
+  <text x="610" y="194" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#fde68a">보통</text>
+  <text x="690" y="194" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">NFT/DeFi</text>
+
+  <!-- Polygon row -->
+  <text x="420" y="220" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">Polygon</text>
+  <text x="530" y="220" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#86efac">매우 낮음</text>
+  <text x="610" y="220" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#86efac">빠름</text>
+  <text x="690" y="220" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">게임/NFT</text>
+
+  <!-- Base row -->
+  <text x="420" y="246" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">Base</text>
+  <text x="530" y="246" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#86efac">낮음</text>
+  <text x="610" y="246" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#86efac">빠름</text>
+  <text x="690" y="246" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">에어드랍</text>
+
+  <!-- Arbitrum row -->
+  <text x="420" y="272" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">Arbitrum</text>
+  <text x="530" y="272" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#86efac">낮음</text>
+  <text x="610" y="272" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#86efac">빠름</text>
+  <text x="690" y="272" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">DeFi</text>
+
+  <rect x="406" y="284" width="348" height="1" fill="#334155"/>
+
+  <!-- Tip -->
+  <rect x="406" y="294" width="348" height="112" rx="8" fill="#0f172a"/>
+  <text x="422" y="316" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#f6851b">💡 초보자 추천 순서</text>
+  <text x="422" y="336" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">1. Ethereum Mainnet으로 시작</text>
+  <text x="422" y="354" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">2. 에어드랍 노린다면 → Base 추가</text>
+  <text x="422" y="372" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">3. 소액 DeFi 시작 → Polygon/Arbitrum</text>
+  <text x="422" y="390" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b">* chainlist.org에서 원클릭 추가 가능</text>
+</svg>

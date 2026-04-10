@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0.1"/>
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#f6851b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Glow circles -->
+  <circle cx="200" cy="225" r="160" fill="#6366f1" fill-opacity="0.08"/>
+  <circle cx="600" cy="225" r="160" fill="#f6851b" fill-opacity="0.08"/>
+  <circle cx="400" cy="225" r="80" fill="url(#glow)"/>
+
+  <!-- Left: Exchange icon (거래소) -->
+  <rect x="60" y="140" width="160" height="170" rx="20" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <rect x="60" y="140" width="160" height="44" rx="20" fill="#6366f1" fill-opacity="0.8"/>
+  <rect x="60" y="164" width="160" height="20" fill="#6366f1" fill-opacity="0.8"/>
+  <text x="140" y="168" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">거래소</text>
+  <!-- Exchange content -->
+  <rect x="76" y="200" width="128" height="14" rx="7" fill="#334155"/>
+  <rect x="76" y="222" width="96" height="10" rx="5" fill="#475569"/>
+  <rect x="76" y="240" width="110" height="10" rx="5" fill="#475569"/>
+  <!-- Buy button -->
+  <rect x="76" y="262" width="128" height="30" rx="8" fill="#6366f1"/>
+  <text x="140" y="282" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">코인 구매</text>
+  <!-- Exchange label -->
+  <text x="140" y="328" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">업비트 / 빗썸</text>
+
+  <!-- Arrow with coins flowing -->
+  <line x1="242" y1="225" x2="358" y2="225" stroke="url(#arrowGrad)" stroke-width="3"/>
+  <!-- Arrow head -->
+  <polygon points="358,215 374,225 358,235" fill="#f6851b"/>
+  <!-- Coins on arrow -->
+  <circle cx="270" cy="225" r="10" fill="#627eea" stroke="#1e293b" stroke-width="2"/>
+  <text x="270" y="230" font-family="Arial" font-size="9" fill="white" text-anchor="middle">Ξ</text>
+  <circle cx="300" cy="225" r="10" fill="#26a17b" stroke="#1e293b" stroke-width="2"/>
+  <text x="300" y="230" font-family="Arial" font-size="8" font-weight="bold" fill="white" text-anchor="middle">$</text>
+  <circle cx="330" cy="225" r="10" fill="#8247e5" stroke="#1e293b" stroke-width="2"/>
+  <text x="330" y="230" font-family="Arial" font-size="8" font-weight="bold" fill="white" text-anchor="middle">M</text>
+
+  <!-- Right: MetaMask wallet -->
+  <rect x="400" y="140" width="160" height="170" rx="20" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <rect x="400" y="140" width="160" height="44" rx="20" fill="#f6851b"/>
+  <rect x="400" y="164" width="160" height="20" fill="#f6851b"/>
+  <text x="480" y="168" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">🦊 MetaMask</text>
+  <!-- Balance -->
+  <text x="480" y="215" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="800" fill="white" text-anchor="middle">0.05 ETH</text>
+  <text x="480" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">$145.20</text>
+  <!-- Green check (received) -->
+  <circle cx="480" cy="270" r="18" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="480" y="276" font-family="Arial" font-size="14" fill="#22c55e" text-anchor="middle">✓</text>
+  <text x="480" y="328" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">내 지갑</text>
+
+  <!-- Network warning badge -->
+  <rect x="620" y="155" width="150" height="140" rx="14" fill="#1e293b" stroke="#ef4444" stroke-width="2"/>
+  <rect x="620" y="155" width="150" height="36" rx="14" fill="#ef4444"/>
+  <rect x="620" y="175" width="150" height="16" fill="#ef4444"/>
+  <text x="695" y="178" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="800" fill="white" text-anchor="middle">⚠ 네트워크</text>
+  <text x="636" y="210" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#fca5a5">ERC-20 ✅</text>
+  <text x="636" y="228" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#fca5a5">TRC-20 ❌</text>
+  <text x="636" y="246" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#fca5a5">BEP-20 ⚠</text>
+  <text x="636" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#64748b">틀리면 코인 분실!</text>
+
+  <!-- Title -->
+  <text x="400" y="358" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">구매한 코인을 내 지갑으로 옮기는 법</text>
+
+  <!-- Main title (left aligned) -->
+  <text x="30" y="406" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="800" fill="white">코인 출금 &amp; 지갑 전송</text>
+  <text x="30" y="436" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="800" fill="#f6851b">완전 가이드</text>
+</svg>

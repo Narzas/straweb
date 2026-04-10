@@ -25,8 +25,9 @@ export default function GuestbookPage() {
 
   useEffect(() => {
     fetch("/api/guestbook")
-      .then((r) => r.json())
+      .then((r) => r.ok ? r.json() : Promise.resolve([]))
       .then((d) => setEntries(Array.isArray(d) ? d : []))
+      .catch(() => setEntries([]))
       .finally(() => setLoading(false));
   }, []);
 

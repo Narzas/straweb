@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Step badge -->
+  <rect x="30" y="24" width="80" height="28" rx="14" fill="#6366f1"/>
+  <text x="70" y="43" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">STEP 3</text>
+  <text x="30" y="88" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="white">거래소에서 출금 신청</text>
+
+  <!-- Withdrawal form -->
+  <rect x="30" y="108" width="440" height="310" rx="14" fill="#ffffff"/>
+
+  <!-- Form header -->
+  <rect x="30" y="108" width="440" height="50" rx="14" fill="#0062df"/>
+  <rect x="30" y="142" width="440" height="16" fill="#0062df"/>
+  <text x="250" y="140" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="white" text-anchor="middle">ETH 출금</text>
+
+  <!-- Coin & balance -->
+  <text x="50" y="182" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#6b7280">보유 수량</text>
+  <text x="460" y="182" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#111827" text-anchor="end">0.1234 ETH</text>
+
+  <!-- Address input -->
+  <text x="50" y="208" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#6b7280">출금 주소</text>
+  <rect x="50" y="214" width="400" height="40" rx="8" fill="#f9fafb" stroke="#3b82f6" stroke-width="2"/>
+  <text x="66" y="239" font-family="monospace" font-size="11" fill="#111827">0x71C7656EC7ab88b098defB751B7401B5f6d8976F</text>
+
+  <!-- ① address callout -->
+  <circle cx="456" cy="234" r="10" fill="#3b82f6"/>
+  <text x="456" y="238" font-family="Arial" font-size="10" font-weight="bold" fill="white" text-anchor="middle">①</text>
+
+  <!-- Network selector -->
+  <text x="50" y="278" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#6b7280">출금 네트워크</text>
+  <rect x="50" y="284" width="400" height="40" rx="8" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1.5"/>
+  <circle cx="72" cy="304" r="12" fill="#627eea"/>
+  <text x="72" y="309" font-family="Arial" font-size="10" fill="white" text-anchor="middle">Ξ</text>
+  <text x="94" y="308" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#111827">ERC-20 (Ethereum)</text>
+  <text x="440" y="308" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="end">▾</text>
+
+  <!-- ② network callout -->
+  <circle cx="456" cy="304" r="10" fill="#ef4444"/>
+  <text x="456" y="308" font-family="Arial" font-size="10" font-weight="bold" fill="white" text-anchor="middle">②</text>
+
+  <!-- Amount input -->
+  <text x="50" y="348" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#6b7280">출금 수량</text>
+  <rect x="50" y="354" width="304" height="40" rx="8" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1.5"/>
+  <text x="66" y="378" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#111827">0.05</text>
+  <text x="346" y="378" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#6b7280" text-anchor="end">ETH</text>
+  <rect x="362" y="354" width="88" height="40" rx="8" fill="#eff6ff"/>
+  <text x="406" y="378" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#3b82f6" text-anchor="middle">전액</text>
+
+  <!-- Right: callout explanations -->
+  <rect x="490" y="108" width="280" height="310" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="630" y="136" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#f6851b" text-anchor="middle">출금 체크리스트</text>
+  <rect x="506" y="144" width="248" height="1" fill="#334155"/>
+
+  <!-- Callout 1 -->
+  <circle cx="516" cy="172" r="10" fill="#3b82f6"/>
+  <text x="516" y="176" font-family="Arial" font-size="10" font-weight="bold" fill="white" text-anchor="middle">①</text>
+  <text x="534" y="168" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">출금 주소</text>
+  <text x="534" y="186" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">MetaMask 주소 그대로 복사</text>
+  <text x="534" y="202" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">한 글자라도 틀리면 분실</text>
+  <text x="534" y="218" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#fca5a5">⚠ 앞 4자·뒤 4자 반드시 확인</text>
+
+  <rect x="506" y="228" width="248" height="1" fill="#334155"/>
+
+  <!-- Callout 2 -->
+  <circle cx="516" cy="248" r="10" fill="#ef4444"/>
+  <text x="516" y="252" font-family="Arial" font-size="10" font-weight="bold" fill="white" text-anchor="middle">②</text>
+  <text x="534" y="244" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#fca5a5">네트워크 선택</text>
+  <text x="534" y="262" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">ETH 보내기 → ERC-20 선택</text>
+  <text x="534" y="278" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">MetaMask 기본 = 이더리움</text>
+  <text x="534" y="294" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#fca5a5">⚠ 네트워크 불일치 = 코인 소실</text>
+
+  <rect x="506" y="308" width="248" height="1" fill="#334155"/>
+
+  <!-- Fee warning -->
+  <rect x="506" y="316" width="248" height="88" rx="10" fill="#0f172a"/>
+  <text x="522" y="336" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#f6851b">출금 수수료 (가스비)</text>
+  <text x="522" y="354" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">ETH(ERC-20): 변동 0.001~0.01 ETH</text>
+  <text x="522" y="370" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">거래소별 출금 수수료 별도</text>
+  <text x="522" y="386" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">소액 출금 시 수수료 비율 커짐</text>
+</svg>

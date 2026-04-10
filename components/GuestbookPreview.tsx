@@ -19,15 +19,16 @@ export default function GuestbookPreview() {
 
   useEffect(() => {
     fetch("/api/guestbook")
-      .then((r) => r.json())
+      .then((r) => r.ok ? r.json() : Promise.resolve([]))
       .then((d) => setEntries(Array.isArray(d) ? d.slice(0, 3) : []))
+      .catch(() => setEntries([]))
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+    <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">방명록</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">방명록</p>
         <Link
           href="/guestbook"
           className="text-[11px] text-indigo-400 hover:text-indigo-600 transition-colors"
@@ -40,8 +41,8 @@ export default function GuestbookPreview() {
         <div className="space-y-2">
           {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="space-y-1">
-              <div className="animate-pulse rounded bg-gray-100 h-3 w-16" />
-              <div className="animate-pulse rounded bg-gray-100 h-3 w-4/5" />
+              <div className="animate-pulse rounded bg-gray-100 dark:bg-slate-700 h-3 w-16" />
+              <div className="animate-pulse rounded bg-gray-100 dark:bg-slate-700 h-3 w-4/5" />
             </div>
           ))}
         </div>
@@ -57,10 +58,10 @@ export default function GuestbookPreview() {
           {entries.map((entry) => (
             <li key={entry.id}>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-700">{entry.author}</span>
-                <span className="text-[10px] text-gray-400">{timeAgo(entry.created_at)}</span>
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{entry.author}</span>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500">{timeAgo(entry.created_at)}</span>
               </div>
-              <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{entry.message}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">{entry.message}</p>
             </li>
           ))}
         </ul>
@@ -68,7 +69,7 @@ export default function GuestbookPreview() {
 
       <Link
         href="/guestbook"
-        className="mt-3 block w-full rounded-lg border border-indigo-100 bg-indigo-50 py-1.5 text-center text-xs font-medium text-indigo-500 transition-colors hover:bg-indigo-100"
+        className="mt-3 block w-full rounded-lg border border-indigo-100 dark:border-indigo-800/40 bg-indigo-50 dark:bg-indigo-900/20 py-1.5 text-center text-xs font-medium text-indigo-500 dark:text-indigo-400 transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
       >
         ✍️ 방명록 남기기
       </Link>

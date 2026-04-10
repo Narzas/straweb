@@ -106,12 +106,12 @@ export default function ClockWeatherWidget() {
   const weather = city ? getWeatherInfo(city.weatherCode) : null;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+    <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
       {/* ── 시계 ── */}
       <div className="flex items-center justify-between">
         {parts ? (
           <>
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-gray-400 dark:text-gray-500">
               {parts.date} <span className="font-semibold text-indigo-400">{parts.day}</span>
             </span>
             <p
@@ -132,13 +132,13 @@ export default function ClockWeatherWidget() {
       </div>
 
       {/* ── 구분선 ── */}
-      <div className="my-2.5 border-t border-gray-100" />
+      <div className="my-2.5 border-t border-gray-100 dark:border-slate-700" />
 
       {/* ── 날씨 ── */}
       {weatherLoading ? (
         <div className="flex items-center gap-2">
-          <div className="animate-pulse rounded bg-gray-100 h-5 w-5" />
-          <div className="animate-pulse rounded bg-gray-100 h-4 w-24" />
+          <div className="animate-pulse rounded bg-gray-100 dark:bg-slate-700 h-5 w-5" />
+          <div className="animate-pulse rounded bg-gray-100 dark:bg-slate-700 h-4 w-24" />
         </div>
       ) : !city || !weather ? (
         <p className="text-xs text-gray-400">날씨 정보 없음</p>
@@ -152,12 +152,12 @@ export default function ClockWeatherWidget() {
           >
             <div className="flex items-center gap-1.5">
               <span className="text-lg leading-none">{weather.icon}</span>
-              <span className="text-sm font-bold text-gray-800">{city.name}</span>
-              <span className="text-xs text-gray-500">{weather.label}</span>
+              <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{city.name}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{weather.label}</span>
             </div>
             <div className="text-right">
-              <span className="text-base font-extrabold text-gray-900">{city.temp}°C</span>
-              <span className="ml-1 text-[11px] text-gray-400">💧{city.humidity}%</span>
+              <span className="text-base font-extrabold text-gray-900 dark:text-gray-100">{city.temp}°C</span>
+              <span className="ml-1 text-[11px] text-gray-400 dark:text-gray-500">💧{city.humidity}%</span>
             </div>
           </div>
 
@@ -170,7 +170,7 @@ export default function ClockWeatherWidget() {
                 className="relative flex h-4 w-4 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
                 aria-label={c.name}
               >
-                <span className={`h-1.5 w-1.5 rounded-full transition-colors ${i === index ? "bg-indigo-500" : "bg-gray-200"}`} />
+                <span className={`h-1.5 w-1.5 rounded-full transition-colors ${i === index ? "bg-indigo-500" : "bg-gray-200 dark:bg-slate-600"}`} />
               </button>
             ))}
           </div>

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Step label -->
+  <rect x="30" y="24" width="80" height="28" rx="14" fill="#f6851b"/>
+  <text x="70" y="43" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">STEP 1</text>
+
+  <!-- Title -->
+  <text x="30" y="90" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="white">크롬 확장 프로그램 설치</text>
+
+  <!-- Browser window -->
+  <rect x="30" y="115" width="500" height="305" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <!-- Browser chrome -->
+  <rect x="30" y="115" width="500" height="36" rx="10" fill="#334155"/>
+  <rect x="30" y="139" width="500" height="12" fill="#334155"/>
+  <!-- Traffic lights -->
+  <circle cx="58" cy="133" r="6" fill="#ef4444" fill-opacity="0.8"/>
+  <circle cx="78" cy="133" r="6" fill="#f59e0b" fill-opacity="0.8"/>
+  <circle cx="98" cy="133" r="6" fill="#22c55e" fill-opacity="0.8"/>
+  <!-- URL bar -->
+  <rect x="120" y="122" width="280" height="22" rx="11" fill="#0f172a"/>
+  <text x="260" y="137" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">chromewebstore.google.com</text>
+  <!-- Lock icon -->
+  <rect x="128" y="128" width="8" height="8" rx="2" fill="#22c55e" fill-opacity="0.7"/>
+
+  <!-- Web Store content area -->
+  <rect x="44" y="155" width="472" height="251" rx="4" fill="#ffffff"/>
+
+  <!-- Store header -->
+  <rect x="44" y="155" width="472" height="44" fill="#f8f9fa"/>
+  <text x="60" y="183" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#202124">Chrome 웹 스토어</text>
+
+  <!-- Extension card -->
+  <rect x="60" y="215" width="440" height="110" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- MetaMask icon -->
+  <rect x="76" y="231" width="60" height="60" rx="12" fill="#f6851b"/>
+  <text x="106" y="270" font-family="Arial" font-size="28" font-weight="800" fill="white" text-anchor="middle">🦊</text>
+
+  <!-- Extension info -->
+  <text x="152" y="252" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#202124">MetaMask</text>
+  <text x="152" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#5f6368">Ethereum Blockchain Apps에 연결하는 지갑</text>
+  <!-- Stars -->
+  <text x="152" y="288" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#f59e0b">★★★★★</text>
+  <text x="202" y="288" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#5f6368">  10,000,000+ 사용자</text>
+
+  <!-- Install button -->
+  <rect x="392" y="248" width="94" height="34" rx="17" fill="#1a73e8"/>
+  <text x="439" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="white" text-anchor="middle">Chrome에 추가</text>
+
+  <!-- Warning box on right -->
+  <rect x="550" y="115" width="220" height="305" rx="10" fill="#1e293b" stroke="#f6851b" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="660" y="150" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#f6851b" text-anchor="middle">주의사항</text>
+
+  <rect x="566" y="162" width="188" height="1" fill="#334155"/>
+
+  <text x="575" y="188" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">✅ 반드시 공식 사이트에서</text>
+  <text x="575" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">    metamask.io 경유 설치</text>
+
+  <text x="575" y="232" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">⚠️ 검색 광고 링크 클릭</text>
+  <text x="575" y="250" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#f87171">   → 피싱 위험</text>
+
+  <text x="575" y="276" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">✅ 설치 후 핀 고정 권장</text>
+  <text x="575" y="294" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">   (퍼즐 아이콘 클릭)</text>
+
+  <text x="575" y="320" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">✅ 확장 프로그램 개수</text>
+  <text x="575" y="338" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#94a3b8">   ID 확인: nkbihf...</text>
+</svg>

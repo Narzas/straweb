@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Step badge -->
+  <rect x="30" y="24" width="80" height="28" rx="14" fill="#22c55e"/>
+  <text x="70" y="43" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">STEP 4</text>
+  <text x="30" y="88" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="white">MetaMask에서 도착 확인</text>
+
+  <!-- Timeline: 거래소 → 블록체인 → MetaMask -->
+  <!-- 거래소 box -->
+  <rect x="30" y="118" width="140" height="80" rx="12" fill="#1e293b" stroke="#6366f1" stroke-width="2"/>
+  <text x="100" y="148" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#a5b4fc" text-anchor="middle">거래소</text>
+  <text x="100" y="166" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">출금 신청</text>
+  <text x="100" y="184" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">즉시~수 분</text>
+
+  <!-- Arrow 1 -->
+  <line x1="170" y1="158" x2="216" y2="158" stroke="#334155" stroke-width="2"/>
+  <polygon points="210,151 226,158 210,165" fill="#334155"/>
+
+  <!-- 블록체인 box -->
+  <rect x="226" y="118" width="140" height="80" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+  <text x="296" y="148" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#fde68a" text-anchor="middle">블록체인</text>
+  <text x="296" y="166" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">트랜잭션 처리</text>
+  <text x="296" y="184" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#f59e0b" text-anchor="middle">1~5분 (ETH 기준)</text>
+
+  <!-- Arrow 2 -->
+  <line x1="366" y1="158" x2="412" y2="158" stroke="#334155" stroke-width="2"/>
+  <polygon points="406,151 422,158 406,165" fill="#334155"/>
+
+  <!-- MetaMask box -->
+  <rect x="422" y="118" width="140" height="80" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="2"/>
+  <text x="492" y="148" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#86efac" text-anchor="middle">MetaMask</text>
+  <text x="492" y="166" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">잔액 반영</text>
+  <text x="492" y="184" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#22c55e" text-anchor="middle">✓ 완료</text>
+
+  <!-- MetaMask received mockup -->
+  <rect x="30" y="218" width="280" height="200" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <!-- Header -->
+  <rect x="30" y="218" width="280" height="44" rx="14" fill="#f6851b"/>
+  <rect x="30" y="248" width="280" height="14" fill="#f6851b"/>
+  <text x="170" y="244" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">🦊 MetaMask</text>
+  <!-- Network pill -->
+  <rect x="46" y="256" width="110" height="20" rx="10" fill="rgba(0,0,0,0.15)"/>
+  <text x="101" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="white" text-anchor="middle">Ethereum Mainnet</text>
+
+  <!-- Balance (updated) -->
+  <text x="170" y="310" font-family="'Segoe UI', Arial, sans-serif" font-size="28" font-weight="800" fill="#111827" text-anchor="middle">0.05 ETH</text>
+  <text x="170" y="330" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#9ca3af" text-anchor="middle">≈ $145.30</text>
+
+  <!-- Activity item -->
+  <rect x="46" y="344" width="248" height="60" rx="8" fill="#f9fafb"/>
+  <circle cx="68" cy="374" r="14" fill="#22c55e" fill-opacity="0.15"/>
+  <text x="68" y="379" font-family="Arial" font-size="14" fill="#22c55e" text-anchor="middle">↙</text>
+  <text x="92" y="370" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#111827">받음</text>
+  <text x="92" y="386" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#9ca3af">From: 0x71C7...방금 전</text>
+  <text x="282" y="370" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#22c55e" text-anchor="end">+0.05 ETH</text>
+
+  <!-- Right: Etherscan check -->
+  <rect x="330" y="218" width="440" height="200" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="550" y="244" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#f6851b" text-anchor="middle">트랜잭션 조회 — Etherscan</text>
+  <rect x="346" y="252" width="408" height="1" fill="#334155"/>
+
+  <!-- Etherscan mockup -->
+  <rect x="346" y="262" width="408" height="148" rx="8" fill="#0f172a"/>
+  <!-- Status -->
+  <text x="362" y="282" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b">Status:</text>
+  <rect x="408" y="270" width="70" height="20" rx="10" fill="#22c55e" fill-opacity="0.2"/>
+  <text x="443" y="284" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#22c55e" text-anchor="middle">✓ Success</text>
+
+  <text x="362" y="306" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b">From:</text>
+  <text x="408" y="306" font-family="monospace" font-size="10" fill="#93c5fd">0xUpbit거래소주소...8a3f</text>
+
+  <text x="362" y="326" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b">To:</text>
+  <text x="408" y="326" font-family="monospace" font-size="10" fill="#86efac">0x71C7...3E4B (내 주소)</text>
+
+  <text x="362" y="346" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b">Value:</text>
+  <text x="408" y="346" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="white">0.05 ETH ($145.30)</text>
+
+  <text x="362" y="366" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#64748b">Confirmations:</text>
+  <text x="460" y="366" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="white">24</text>
+
+  <text x="362" y="392" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#475569">etherscan.io 에서 TX hash로 조회 가능 — 거래소에서 제공</text>
+</svg>

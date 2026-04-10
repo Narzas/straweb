@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Step badge -->
+  <rect x="30" y="24" width="80" height="28" rx="14" fill="#ef4444"/>
+  <text x="70" y="43" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">STEP 2</text>
+  <text x="122" y="43" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#ef4444">⚠ 가장 중요!</text>
+  <text x="30" y="88" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="white">네트워크를 반드시 맞춰야 한다</text>
+
+  <!-- Center: Network match diagram -->
+  <!-- Left side: 거래소 출금 -->
+  <rect x="30" y="108" width="220" height="310" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <rect x="30" y="108" width="220" height="40" rx="14" fill="#334155"/>
+  <rect x="30" y="134" width="220" height="14" fill="#334155"/>
+  <text x="140" y="133" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">거래소 출금 네트워크</text>
+
+  <!-- ERC-20 -->
+  <rect x="46" y="160" width="188" height="44" rx="10" fill="#1e3a5f"/>
+  <circle cx="66" cy="182" r="12" fill="#627eea"/>
+  <text x="66" y="187" font-family="Arial" font-size="10" fill="white" text-anchor="middle">Ξ</text>
+  <text x="86" y="179" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">ERC-20</text>
+  <text x="86" y="195" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">이더리움 네트워크</text>
+
+  <!-- TRC-20 -->
+  <rect x="46" y="212" width="188" height="44" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <circle cx="66" cy="234" r="12" fill="#ef0027"/>
+  <text x="66" y="239" font-family="Arial" font-size="9" font-weight="bold" fill="white" text-anchor="middle">TRX</text>
+  <text x="86" y="231" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#94a3b8">TRC-20</text>
+  <text x="86" y="247" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">트론 네트워크</text>
+
+  <!-- BEP-20 -->
+  <rect x="46" y="264" width="188" height="44" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <circle cx="66" cy="286" r="12" fill="#f3ba2f"/>
+  <text x="66" y="291" font-family="Arial" font-size="8" font-weight="bold" fill="#1e293b" text-anchor="middle">BNB</text>
+  <text x="86" y="283" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#94a3b8">BEP-20</text>
+  <text x="86" y="299" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">바이낸스 스마트체인</text>
+
+  <!-- Polygon -->
+  <rect x="46" y="316" width="188" height="44" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <circle cx="66" cy="338" r="12" fill="#8247e5"/>
+  <text x="66" y="343" font-family="Arial" font-size="8" font-weight="bold" fill="white" text-anchor="middle">POL</text>
+  <text x="86" y="335" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#94a3b8">Polygon</text>
+  <text x="86" y="351" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">폴리곤 네트워크</text>
+
+  <!-- Right side: MetaMask -->
+  <rect x="550" y="108" width="220" height="310" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <rect x="550" y="108" width="220" height="40" rx="14" fill="#f6851b" fill-opacity="0.8"/>
+  <rect x="550" y="134" width="220" height="14" fill="#f6851b" fill-opacity="0.8"/>
+  <text x="660" y="133" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">MetaMask 네트워크</text>
+
+  <!-- Ethereum -->
+  <rect x="566" y="160" width="188" height="44" rx="10" fill="#1e3a5f"/>
+  <circle cx="586" cy="182" r="12" fill="#627eea"/>
+  <text x="586" y="187" font-family="Arial" font-size="10" fill="white" text-anchor="middle">Ξ</text>
+  <text x="606" y="179" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#93c5fd">Ethereum Mainnet</text>
+  <text x="606" y="195" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">기본 설정됨</text>
+
+  <!-- Tron (not supported) -->
+  <rect x="566" y="212" width="188" height="44" rx="10" fill="#1e293b" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="660" y="228" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#ef4444" text-anchor="middle">❌ 지원 안 함</text>
+  <text x="660" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">트론 주소 형식 다름</text>
+
+  <!-- BSC -->
+  <rect x="566" y="264" width="188" height="44" rx="10" fill="#1e293b" stroke="#f3ba2f" stroke-width="1"/>
+  <circle cx="586" cy="286" r="12" fill="#f3ba2f"/>
+  <text x="586" y="291" font-family="Arial" font-size="8" font-weight="bold" fill="#1e293b" text-anchor="middle">BNB</text>
+  <text x="606" y="283" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#fde68a">BSC 추가 필요</text>
+  <text x="606" y="299" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">chainlist.org에서 추가</text>
+
+  <!-- Polygon -->
+  <rect x="566" y="316" width="188" height="44" rx="10" fill="#1e293b" stroke="#8247e5" stroke-width="1"/>
+  <circle cx="586" cy="338" r="12" fill="#8247e5"/>
+  <text x="586" y="343" font-family="Arial" font-size="8" font-weight="bold" fill="white" text-anchor="middle">POL</text>
+  <text x="606" y="335" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#c4b5fd">Polygon 추가 필요</text>
+  <text x="606" y="351" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b">chainlist.org에서 추가</text>
+
+  <!-- Center arrows -->
+  <!-- Match 1: ERC-20 ↔ Ethereum (green) -->
+  <line x1="250" y1="182" x2="550" y2="182" stroke="#22c55e" stroke-width="2.5"/>
+  <polygon points="540,175 556,182 540,189" fill="#22c55e"/>
+  <text x="400" y="178" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="700" fill="#22c55e" text-anchor="middle">✓ 일치</text>
+
+  <!-- Match 2: TRC-20 ↔ Not supported (red) -->
+  <line x1="250" y1="234" x2="550" y2="234" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="6,4"/>
+  <text x="400" y="228" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="700" fill="#ef4444" text-anchor="middle">⚠ 코인 분실!</text>
+
+  <!-- Match 3: BEP-20 ↔ BSC (yellow) -->
+  <line x1="250" y1="286" x2="550" y2="286" stroke="#f3ba2f" stroke-width="2" stroke-dasharray="6,4"/>
+  <text x="400" y="280" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="700" fill="#f3ba2f" text-anchor="middle">추가 후 사용 가능</text>
+
+  <!-- Match 4: Polygon ↔ Polygon (purple) -->
+  <line x1="250" y1="338" x2="550" y2="338" stroke="#8247e5" stroke-width="2" stroke-dasharray="6,4"/>
+  <text x="400" y="332" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="700" fill="#c4b5fd" text-anchor="middle">추가 후 사용 가능</text>
+
+  <!-- Bottom warning -->
+  <rect x="30" y="428" width="740" height="0" rx="0" fill="none"/>
+</svg>

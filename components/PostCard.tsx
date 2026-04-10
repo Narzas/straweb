@@ -29,10 +29,10 @@ export default function PostCard({
   const gradient = pickGradient(post.slug);
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
 
       {/* Thumbnail */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100 dark:bg-slate-700">
         {post.cover ? (
           <Image
             src={post.cover}
@@ -69,7 +69,7 @@ export default function PostCard({
           {post.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600"
+              className="rounded-full bg-gray-100 dark:bg-slate-600 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300"
             >
               {tag}
             </span>
@@ -77,20 +77,26 @@ export default function PostCard({
         </div>
 
         {/* 제목 — stretched-link: after 가상 요소가 카드 전체를 덮음 */}
-        <h2 className="text-lg font-semibold leading-snug text-gray-900 transition-colors group-hover:text-indigo-600 break-keep">
+        <h2 className="text-lg font-semibold leading-normal text-gray-900 dark:text-gray-100 transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400 break-keep">
           <Link
             href={`/posts/${post.slug}`}
             className="after:absolute after:inset-0 after:z-0"
           >
-            {post.title}
+            {post.title.includes("—") ? (
+              <>
+                {post.title.split("—")[0].trimEnd()}
+                <br />
+                <span className="text-base font-normal opacity-70">— {post.title.split("—").slice(1).join("—").trimStart()}</span>
+              </>
+            ) : post.title}
           </Link>
         </h2>
 
-        <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-gray-500">
+        <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
           {post.description}
         </p>
 
-        <time className="mt-auto text-xs text-gray-400">{post.date}</time>
+        <time className="mt-auto text-xs text-gray-400 dark:text-gray-500">{post.date}</time>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export default async function HomePage() {
   const categories = getAllCategories();
 
   return (
-    <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 xl:gap-14">
+    <div className="lg:grid lg:grid-cols-[270px_1fr] lg:gap-8 xl:gap-12">
 
       {/* ── 왼쪽 사이드바 (lg 이상에서만 표시) ── */}
       <aside className="hidden lg:block">
@@ -79,17 +79,17 @@ export default async function HomePage() {
       {/* ── 카테고리 바로가기 ── */}
       {categories.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">카테고리</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">카테고리</h2>
           <div className="flex flex-wrap gap-2">
             {categories.map(({ name, count }) => (
               <Link
                 key={name}
                 href={`/category/${encodeURIComponent(name.toLowerCase())}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-400"
               >
                 <span>{CATEGORY_ICONS[name] ?? "🗂️"}</span>
                 {name}
-                <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                <span className="rounded-full bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 text-xs text-gray-500 dark:text-gray-400">
                   {count}
                 </span>
               </Link>
@@ -101,7 +101,7 @@ export default async function HomePage() {
       {/* ── 최근 글 ── */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">최근 글</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">최근 글</h2>
           <Link
             href="/posts"
             className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"

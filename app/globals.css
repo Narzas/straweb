@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
+/* class 기반 다크 모드 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
 }
 
 @theme inline {
@@ -42,14 +50,14 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 /* ── Post body typography ─────────────────────────────────── */
 .post-body {
   font-size: 1.0625rem;
-  line-height: 1.85;
+  line-height: 1.9;
   color: #1a1a2e;
   word-break: keep-all;
   overflow-wrap: break-word;
 }
 
 .post-body > * + * {
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
 }
 
 /* Headings */
@@ -58,16 +66,17 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 .post-body h3,
 .post-body h4 {
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.35;
   letter-spacing: -0.02em;
   color: #0f172a;
   scroll-margin-top: 6rem;
+  word-break: keep-all;
 }
 
-.post-body h1 { font-size: 2rem;    margin-top: 2.5rem; }
-.post-body h2 { font-size: 1.5rem;  margin-top: 2.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.4rem; }
-.post-body h3 { font-size: 1.2rem;  margin-top: 1.75rem; }
-.post-body h4 { font-size: 1.05rem; margin-top: 1.5rem; }
+.post-body h1 { font-size: 2rem;    margin-top: 3rem; }
+.post-body h2 { font-size: 1.5rem;  margin-top: 2.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+.post-body h3 { font-size: 1.2rem;  margin-top: 2rem; }
+.post-body h4 { font-size: 1.05rem; margin-top: 1.75rem; }
 
 /* Anchor links in headings */
 .post-body .anchor {
@@ -84,7 +93,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 
 /* Paragraph */
 .post-body p {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
   color: #334155;
 }
 
@@ -181,7 +190,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 .post-body hr {
   border: none;
   border-top: 1px solid #e2e8f0;
-  margin: 2rem 0;
+  margin: 2.5rem 0;
 }
 
 /* Table */
@@ -219,4 +228,51 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 }
 .post-body tr:hover td {
   background: #eef2ff;
+}
+
+/* ── Dark mode: post-body ─────────────────────────────────── */
+.dark .post-body {
+  color: #cbd5e1;
+}
+.dark .post-body h1,
+.dark .post-body h2,
+.dark .post-body h3,
+.dark .post-body h4 {
+  color: #f1f5f9;
+}
+.dark .post-body h2 {
+  border-bottom-color: #334155;
+}
+.dark .post-body p,
+.dark .post-body li {
+  color: #94a3b8;
+}
+.dark .post-body a {
+  color: #818cf8;
+}
+.dark .post-body a:hover {
+  color: #a5b4fc;
+}
+.dark .post-body blockquote {
+  background: #1e1b4b;
+  color: #a5b4fc;
+  border-left-color: #6366f1;
+}
+.dark .post-body :not(pre) > code {
+  background: #1e293b;
+  color: #c084fc;
+  border-color: #334155;
+}
+.dark .post-body td {
+  border-bottom-color: #334155;
+  color: #94a3b8;
+}
+.dark .post-body tbody tr:nth-child(even) td {
+  background: #1e293b;
+}
+.dark .post-body tr:hover td {
+  background: #1e1b4b;
+}
+.dark .post-body hr {
+  border-top-color: #334155;
 }

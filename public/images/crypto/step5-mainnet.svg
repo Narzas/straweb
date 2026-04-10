@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Step label -->
+  <rect x="30" y="24" width="80" height="28" rx="14" fill="#f6851b"/>
+  <text x="70" y="43" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">STEP 5</text>
+
+  <text x="30" y="90" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="white">지갑 생성 완료 확인</text>
+
+  <!-- MetaMask popup (full wallet) -->
+  <rect x="210" y="100" width="360" height="330" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Top bar (orange) -->
+  <rect x="210" y="100" width="360" height="56" rx="16" fill="#f6851b"/>
+  <rect x="210" y="138" width="360" height="18" fill="#f6851b"/>
+
+  <!-- Network selector -->
+  <rect x="226" y="110" width="120" height="24" rx="12" fill="rgba(0,0,0,0.2)"/>
+  <circle cx="240" cy="122" r="6" fill="#627eea"/>
+  <text x="248" y="126" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="white">Ethereum Mainnet ▾</text>
+
+  <!-- 3 dots menu -->
+  <text x="548" y="126" font-family="Arial" font-size="18" fill="white">⋮</text>
+
+  <!-- Account bar -->
+  <rect x="280" y="118" width="110" height="22" rx="11" fill="rgba(0,0,0,0.15)"/>
+  <circle cx="293" cy="129" r="5" fill="#a855f7"/>
+  <text x="348" y="133" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="white" text-anchor="middle">Account 1 ▾</text>
+
+  <!-- Address row -->
+  <rect x="226" y="160" width="328" height="24" rx="12" fill="#f9fafb"/>
+  <text x="390" y="176" font-family="monospace" font-size="10" fill="#6b7280" text-anchor="middle">0x71C7...3E4B</text>
+  <text x="540" y="176" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#f6851b">📋</text>
+
+  <!-- Balance -->
+  <text x="390" y="220" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="800" fill="#111827" text-anchor="middle">0 ETH</text>
+  <text x="390" y="244" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#9ca3af" text-anchor="middle">$0.00 USD</text>
+
+  <!-- Action buttons row -->
+  <rect x="234" y="260" width="70" height="36" rx="18" fill="#f6851b"/>
+  <text x="269" y="283" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Buy</text>
+
+  <rect x="314" y="260" width="70" height="36" rx="18" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="349" y="283" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#374151" text-anchor="middle">Send</text>
+
+  <rect x="394" y="260" width="70" height="36" rx="18" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="429" y="283" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#374151" text-anchor="middle">Receive</text>
+
+  <rect x="474" y="260" width="70" height="36" rx="18" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="509" y="283" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#374151" text-anchor="middle">Swap</text>
+
+  <!-- Divider -->
+  <rect x="226" y="308" width="328" height="1" fill="#f3f4f6"/>
+
+  <!-- Tabs -->
+  <text x="270" y="332" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#374151" text-anchor="middle">토큰</text>
+  <rect x="226" y="334" width="88" height="2" rx="1" fill="#f6851b"/>
+  <text x="390" y="332" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#9ca3af" text-anchor="middle">NFT</text>
+  <text x="510" y="332" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#9ca3af" text-anchor="middle">활동</text>
+
+  <!-- ETH row -->
+  <circle cx="248" cy="368" r="16" fill="#627eea"/>
+  <text x="248" y="374" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Ξ</text>
+  <text x="274" y="364" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#111827">Ethereum</text>
+  <text x="274" y="380" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#9ca3af">0 ETH</text>
+  <text x="530" y="364" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#111827" text-anchor="end">$0.00</text>
+
+  <!-- Completed checkmark -->
+  <circle cx="690" cy="150" r="50" fill="#22c55e" fill-opacity="0.15" stroke="#22c55e" stroke-width="2"/>
+  <text x="690" y="165" font-family="Arial" font-size="40" fill="#22c55e" text-anchor="middle">✓</text>
+  <text x="690" y="220" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#22c55e" text-anchor="middle">지갑 생성 완료!</text>
+
+  <!-- Info box -->
+  <rect x="580" y="240" width="190" height="180" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="675" y="268" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#f6851b" text-anchor="middle">내 지갑 주소</text>
+  <rect x="596" y="276" width="158" height="1" fill="#334155"/>
+  <text x="675" y="298" font-family="monospace" font-size="10" fill="#94a3b8" text-anchor="middle">0x71C7...3E4B</text>
+  <text x="675" y="318" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">이 주소로 코인을 받을 수 있어요</text>
+  <text x="675" y="338" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">은행 계좌번호와 같은 개념</text>
+  <rect x="596" y="350" width="158" height="1" fill="#334155"/>
+  <text x="596" y="370" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#94a3b8">📋 주소 복사: 주소 클릭</text>
+  <text x="596" y="388" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#94a3b8">📷 QR: Receive 탭</text>
+  <text x="596" y="406" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#94a3b8">🌐 공개 가능 (노출 OK)</text>
+</svg>

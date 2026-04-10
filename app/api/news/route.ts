@@ -4,7 +4,7 @@ export async function GET() {
   try {
     const res = await fetch(
       "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko",
-      { next: { revalidate: 300 } }
+      { next: { revalidate: 600 } }
     );
     const xml = await res.text();
 
@@ -37,7 +37,7 @@ export async function GET() {
 
     return NextResponse.json(
       { items },
-      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60" } }
+      { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=120" } }
     );
   } catch {
     return NextResponse.json({ error: "fetch failed" }, { status: 500 });

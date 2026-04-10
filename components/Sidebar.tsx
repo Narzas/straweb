@@ -45,8 +45,8 @@ export default function Sidebar() {
     loadMarket();
     loadNews();
 
-    const t1 = setInterval(loadMarket, 60_000);
-    const t2 = setInterval(loadNews, 300_000);
+    const t1 = setInterval(loadMarket, 300_000);
+    const t2 = setInterval(loadNews, 600_000);
     return () => {
       clearInterval(t1);
       clearInterval(t2);

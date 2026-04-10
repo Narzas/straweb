@@ -5,7 +5,7 @@ export async function GET() {
     const [btcRes, fxRes] = await Promise.all([
       fetch(
         "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,krw&include_24hr_change=true",
-        { next: { revalidate: 60 } }
+        { next: { revalidate: 300 } }
       ),
       fetch("https://open.er-api.com/v6/latest/USD", {
         next: { revalidate: 300 },
@@ -24,7 +24,7 @@ export async function GET() {
         },
         usdKrw: fxData.rates?.KRW ?? null,
       },
-      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" } }
+      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60" } }
     );
   } catch {
     return NextResponse.json({ error: "fetch failed" }, { status: 500 });

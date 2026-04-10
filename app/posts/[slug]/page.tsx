@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getAllSlugs, getPostBySlug } from "@/lib/posts";
 import { splitContentForAd } from "@/lib/split-content";
 import { siteConfig } from "@/lib/site";
@@ -137,12 +138,13 @@ export default async function PostPage({ params }: Props) {
                     rel="noopener"
                     referrerPolicy="unsafe-url"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src="https://image7.coupangcdn.com/image/affiliate/banner/8435a0f6659b4bd159c610105ceb6b0a@2x.jpg"
                       alt="ANBERNIC 앤버닉 RG40XXV 레트로 게임기"
                       width={120}
                       height={240}
+                      unoptimized
+                      referrerPolicy="unsafe-url"
                       className="rounded-lg"
                     />
                   </a>

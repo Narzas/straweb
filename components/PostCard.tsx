@@ -54,19 +54,18 @@ export default function PostCard({
           </div>
         )}
 
-        {/* 카테고리 뱃지 — relative z-10으로 stretched-link 위에 위치 */}
-        <Link
-          href={`/category/${encodeURIComponent(post.category.toLowerCase())}`}
-          className="relative z-10 absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
-        >
-          {post.category}
-        </Link>
       </div>
 
       {/* Content */}
       <div className="flex flex-1 flex-col gap-3 p-5">
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1.5">
+        {/* 카테고리 + 태그 */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Link
+            href={`/category/${encodeURIComponent(post.category.toLowerCase())}`}
+            className="relative z-10 rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors"
+          >
+            {post.category}
+          </Link>
           {post.tags.map((tag) => (
             <span
               key={tag}

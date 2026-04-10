@@ -61,10 +61,6 @@ export default async function PostsPage({ searchParams }: Props) {
       </aside>
 
       <div className="space-y-8">
-        {/* ── 모바일 사이드바 ── */}
-        <div className="lg:hidden">
-          <Sidebar />
-        </div>
         <div className="flex items-end justify-between">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Posts</h1>
@@ -82,6 +78,11 @@ export default async function PostsPage({ searchParams }: Props) {
             </li>
           ))}
         </ul>
+
+        {/* ── 모바일 사이드바 (lg 미만 하단 표시) ── */}
+        <div className="lg:hidden">
+          <Sidebar />
+        </div>
       </div>
     </div>
   );

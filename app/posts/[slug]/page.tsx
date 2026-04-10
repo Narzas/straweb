@@ -69,11 +69,6 @@ export default async function PostPage({ params }: Props) {
       </aside>
 
     <div className="relative">
-      {/* ── 모바일 사이드바 (lg 미만 상단 표시) ── */}
-      <div className="lg:hidden mb-8">
-        <Sidebar />
-      </div>
-
       <Link
         href="/posts"
         className="mb-8 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900"
@@ -153,6 +148,11 @@ export default async function PostPage({ params }: Props) {
             </div>
           </aside>
         )}
+      </div>
+
+      {/* ── 모바일 사이드바 (lg 미만 하단 표시) ── */}
+      <div className="lg:hidden mt-8">
+        <Sidebar />
       </div>
     </div>
     </div>

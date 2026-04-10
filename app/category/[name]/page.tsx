@@ -43,10 +43,6 @@ export default async function CategoryPage({ params }: Props) {
       </aside>
 
     <div className="space-y-8">
-        {/* ── 모바일 사이드바 ── */}
-        <div className="lg:hidden">
-          <Sidebar />
-        </div>
       {/* Header */}
       <div className="space-y-3">
         <Link
@@ -95,6 +91,11 @@ export default async function CategoryPage({ params }: Props) {
           </li>
         ))}
       </ul>
+
+      {/* ── 모바일 사이드바 (lg 미만 하단 표시) ── */}
+      <div className="lg:hidden">
+        <Sidebar />
+      </div>
     </div>
     </div>
   );

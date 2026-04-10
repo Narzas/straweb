@@ -26,9 +26,13 @@ export default function VisitorCounter() {
   if (count === null) return null;
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
-      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-      누적 방문자 <strong className="text-gray-600">{count.toLocaleString()}</strong>명
-    </span>
+    <div className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 backdrop-blur-sm">
+      <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_theme(colors.emerald.400)]" />
+      <span className="text-sm text-indigo-100">
+        누적 방문자{" "}
+        <strong className="text-white text-base font-bold">{count.toLocaleString()}</strong>
+        <span className="ml-0.5 text-indigo-200">명</span>
+      </span>
+    </div>
   );
 }

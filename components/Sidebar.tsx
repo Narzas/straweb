@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ClockWidget from "./ClockWidget";
+import WeatherWidget from "./WeatherWidget";
 
 type MarketData = {
   bitcoin: { usd: number | null; krw: number | null; change24h: number | null };
@@ -61,6 +63,8 @@ export default function Sidebar() {
 
   return (
     <div className="space-y-5 sticky top-24">
+      <ClockWidget />
+      <WeatherWidget />
 
       {/* ── 시세 카드 ── */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">

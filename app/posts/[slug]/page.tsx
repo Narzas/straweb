@@ -8,6 +8,7 @@ import TableOfContents from "@/components/TableOfContents";
 import AdSlot from "@/components/AdSlot";
 import CommentSection from "@/components/CommentSection";
 import Sidebar from "@/components/Sidebar";
+import ViewTracker from "@/components/ViewTracker";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -90,6 +91,7 @@ export default async function PostPage({ params }: Props) {
             </h1>
             <p className="text-lg leading-relaxed text-gray-500">{post.description}</p>
             <time className="block text-sm text-gray-400">{post.date}</time>
+          <ViewTracker slug={post.slug} />
           </header>
 
           {/* ── 상단 광고 ─────────────────────────────── */}

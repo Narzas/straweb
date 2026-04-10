@@ -84,26 +84,25 @@ export function getAllPosts(): PostMeta[] {
       const slug = filename.replace(/\.md$/, "");
       const raw = fs.readFileSync(filePath, "utf8");
       const { data } = matter(raw);
-      const mtime = fs.statSync(filePath).mtimeMs;
+
+      // date가 Date 객체면 ISO 문자열, 아니면 그대로 문자열로 보존 (시간 포함 가능)
+      const rawDate: string = data.date instanceof Date
+        ? data.date.toISOString()
+        : String(data.date);
 
       return {
         slug,
         title: data.title as string,
-        date: data.date instanceof Date
-          ? data.date.toISOString().slice(0, 10)
-          : String(data.date).slice(0, 10),
+        date: rawDate.slice(0, 10),      // 화면 표시용: YYYY-MM-DD
+        _sortKey: rawDate,               // 정렬용: 시간 포함 전체 문자열
         description: (data.description as string) ?? "",
         tags: (data.tags as string[]) ?? [],
         cover: (data.cover as string) ?? undefined,
         category: (data.category as string) ?? "Uncategorized",
-        _mtime: mtime,
       };
     })
-    .sort((a, b) => {
-      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-      return b._mtime - a._mtime; // 같은 날짜면 최근 수정 파일이 앞으로
-    })
-    .map(({ _mtime, ...post }) => post) as PostMeta[];
+    .sort((a, b) => (a._sortKey < b._sortKey ? 1 : -1))
+    .map(({ _sortKey, ...post }) => post) as PostMeta[];
 }
 
 export function getAllCategories(): { name: string; count: number }[] {

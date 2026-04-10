@@ -1,0 +1,102 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type CityWeather = {
+  name: string;
+  temp: number;
+  humidity: number;
+  weatherCode: number;
+};
+
+function getWeatherInfo(code: number): { icon: string; label: string } {
+  if (code === 0)                        return { icon: "☀️",  label: "맑음" };
+  if (code === 1)                        return { icon: "🌤️", label: "구름 조금" };
+  if (code === 2)                        return { icon: "⛅",  label: "구름 많음" };
+  if (code === 3)                        return { icon: "☁️",  label: "흐림" };
+  if (code >= 51 && code <= 67)          return { icon: "🌧️", label: "비" };
+  if (code >= 71 && code <= 77)          return { icon: "❄️",  label: "눈" };
+  if (code >= 80 && code <= 82)          return { icon: "🌦️", label: "소나기" };
+  if (code >= 95 && code <= 99)          return { icon: "⛈️",  label: "천둥번개" };
+  return { icon: "🌡️", label: "알 수 없음" };
+}
+
+export default function WeatherWidget() {
+  const [cities, setCities] = useState<CityWeather[]>([]);
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/weather")
+      .then((r) => r.json())
+      .then((d) => setCities(d.cities ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (cities.length === 0) return;
+    const timer = setInterval(() => {
+      // fade out → 다음 도시 → fade in
+      setVisible(false);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % cities.length);
+        setVisible(true);
+      }, 300);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [cities.length]);
+
+  const city = cities[index];
+  const weather = city ? getWeatherInfo(city.weatherCode) : null;
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+        오늘의 날씨
+      </p>
+
+      {loading ? (
+        <div className="space-y-2">
+          <div className="animate-pulse rounded bg-gray-100 h-8 w-3/5" />
+          <div className="animate-pulse rounded bg-gray-100 h-4 w-2/5" />
+        </div>
+      ) : !city || !weather ? (
+        <p className="text-xs text-gray-400">날씨를 불러올 수 없습니다.</p>
+      ) : (
+        <>
+          {/* 날씨 정보 */}
+          <div
+            className="transition-opacity duration-300"
+            style={{ opacity: visible ? 1 : 0 }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl">{weather.icon}</span>
+              <span className="text-base font-bold text-gray-800">{city.name}</span>
+            </div>
+            <p className="text-2xl font-extrabold text-gray-900 leading-none">
+              {city.temp}°C
+            </p>
+            <p className="mt-1 text-xs text-gray-500">{weather.label}</p>
+            <p className="text-xs text-gray-400">💧 습도 {city.humidity}%</p>
+          </div>
+
+          {/* 도트 인디케이터 */}
+          <div className="mt-3 flex flex-wrap gap-1">
+            {cities.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => { setVisible(false); setTimeout(() => { setIndex(i); setVisible(true); }, 300); }}
+                className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                  i === index ? "bg-indigo-500" : "bg-gray-200"
+                }`}
+                aria-label={cities[i].name}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

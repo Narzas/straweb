@@ -3,13 +3,14 @@ import { NextResponse } from "next/server";
 type NewsItem = { title: string; link: string; source: string };
 
 const CATEGORIES = [
-  { key: "headlines", label: "헤드라인", url: "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko" },
-  { key: "business",  label: "경제",     url: "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=ko&gl=KR&ceid=KR:ko" },
-  { key: "tech",      label: "IT",       url: "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=ko&gl=KR&ceid=KR:ko" },
-  { key: "sports",    label: "스포츠",   url: "https://news.google.com/rss/headlines/section/topic/SPORTS?hl=ko&gl=KR&ceid=KR:ko" },
+  { key: "headlines",     label: "헤드라인", url: "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko" },
+  { key: "business",      label: "경제",     url: "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=ko&gl=KR&ceid=KR:ko" },
+  { key: "tech",          label: "IT",       url: "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=ko&gl=KR&ceid=KR:ko" },
+  { key: "sports",        label: "스포츠",   url: "https://news.google.com/rss/headlines/section/topic/SPORTS?hl=ko&gl=KR&ceid=KR:ko" },
+  { key: "entertainment", label: "연예",     url: "https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=ko&gl=KR&ceid=KR:ko" },
 ];
 
-function parseItems(xml: string, limit = 4): NewsItem[] {
+function parseItems(xml: string, limit = 5): NewsItem[] {
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
     .slice(0, limit)
     .map((m) => {

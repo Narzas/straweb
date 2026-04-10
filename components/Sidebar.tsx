@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ClockWeatherWidget from "./ClockWeatherWidget";
+import GuestbookPreview from "./GuestbookPreview";
 
 type MarketData = {
   bitcoin: { usd: number | null; krw: number | null; change24h: number | null };
@@ -197,6 +198,9 @@ export default function Sidebar() {
 
         <p className="mt-3 text-[10px] text-gray-300 text-right">Google News</p>
       </div>
+
+      {/* ── 방명록 미리보기 ── */}
+      <GuestbookPreview />
     </div>
   );
 }

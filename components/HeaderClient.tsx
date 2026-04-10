@@ -48,6 +48,12 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         >
           Posts
         </Link>
+        <Link
+          href="/guestbook"
+          className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+        >
+          방명록
+        </Link>
 
         {/* 카테고리 드롭다운 (클릭 방식) */}
         <div className="relative" ref={dropdownRef}>
@@ -156,6 +162,13 @@ export default function HeaderClient({ categories }: { categories: Category[] })
             className="rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             About
+          </Link>
+          <Link
+            href="/guestbook"
+            onClick={closeAll}
+            className="rounded-lg px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            방명록
           </Link>
 
           {/* 카테고리 섹션 */}

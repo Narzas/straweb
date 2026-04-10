@@ -80,9 +80,11 @@ export function getAllPosts(): PostMeta[] {
 
   return files
     .map((filename) => {
+      const filePath = path.join(postsDir, filename);
       const slug = filename.replace(/\.md$/, "");
-      const raw = fs.readFileSync(path.join(postsDir, filename), "utf8");
+      const raw = fs.readFileSync(filePath, "utf8");
       const { data } = matter(raw);
+      const mtime = fs.statSync(filePath).mtimeMs;
 
       return {
         slug,
@@ -94,9 +96,14 @@ export function getAllPosts(): PostMeta[] {
         tags: (data.tags as string[]) ?? [],
         cover: (data.cover as string) ?? undefined,
         category: (data.category as string) ?? "Uncategorized",
+        _mtime: mtime,
       };
     })
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return b._mtime - a._mtime; // 같은 날짜면 최근 수정 파일이 앞으로
+    })
+    .map(({ _mtime, ...post }) => post) as PostMeta[];
 }
 
 export function getAllCategories(): { name: string; count: number }[] {

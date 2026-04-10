@@ -17,6 +17,7 @@ function getWeatherInfo(code: number): { icon: string; label: string } {
   if (code >= 45 && code <= 48)          return { icon: "🌫️", label: "안개" };
   if (code >= 51 && code <= 67)          return { icon: "🌧️", label: "비" };
   if (code >= 71 && code <= 77)          return { icon: "❄️",  label: "눈" };
+  if (code === 85 || code === 86)        return { icon: "🌨️", label: "눈 소나기" };
   if (code >= 80 && code <= 82)          return { icon: "🌦️", label: "소나기" };
   if (code >= 95 && code <= 99)          return { icon: "⛈️",  label: "천둥번개" };
   return { icon: "🌡️", label: "알 수 없음" };
@@ -33,7 +34,7 @@ export default function WeatherWidget() {
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/weather", { signal: controller.signal })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("weather api error"); return r.json(); })
       .then((d) => setCities(d.cities ?? []))
       .catch((err) => {
         if (err.name !== "AbortError") setError(true);

@@ -5,6 +5,8 @@ import PostCard from "@/components/PostCard";
 import AdSlot from "@/components/AdSlot";
 import VisitorCounter from "@/components/VisitorCounter";
 import Sidebar from "@/components/Sidebar";
+import HeroTyping from "@/components/HeroTyping";
+import HeroDotGrid from "@/components/HeroDotGrid";
 
 export const metadata: Metadata = {
   title: "StraWeb",
@@ -39,6 +41,7 @@ export default async function HomePage() {
         {/* 배경 장식 */}
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-white/5" />
+        <HeroDotGrid />
 
         <div className="relative space-y-4">
           <p className="text-sm font-medium tracking-widest text-indigo-200 uppercase">
@@ -52,6 +55,7 @@ export default async function HomePage() {
             <br className="hidden sm:block" />
             게임, 투자, 일상 등 다양한 주제를 다룹니다.
           </p>
+          <HeroTyping />
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
               href="/posts"

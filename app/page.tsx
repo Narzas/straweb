@@ -37,16 +37,13 @@ export default async function HomePage() {
       <div className="space-y-14">
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 px-8 py-14 text-white sm:px-12">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 px-8 py-8 text-white sm:px-12">
         {/* 배경 장식 */}
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-white/5" />
         <HeroDotGrid />
 
-        <div className="relative space-y-4">
-          <p className="text-sm font-medium tracking-widest text-indigo-200 uppercase">
-            Welcome to
-          </p>
+        <div className="relative space-y-3">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl break-keep">
             StraWeb
           </h1>
@@ -72,7 +69,7 @@ export default async function HomePage() {
           </div>
 
           {/* 방문자 */}
-          <div className="pt-4">
+          <div className="pt-1">
             <VisitorCounter />
           </div>
         </div>

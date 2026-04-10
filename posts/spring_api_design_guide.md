@@ -1,5 +1,5 @@
 ---
-title: Spring Boot API 설계에서 15년차 개발자가 절대 하지 않는 7가지 — 실무 아키텍처 가이드
+title: 시니어가 절대 하지 않는 Spring Boot API 설계 실수 7가지 — 실무 아키텍처 가이드
 date: 2026-04-10
 cover: /images/dev/spring-api-design.svg
 description: 돌아가는 API가 아니라 유지되는 API를 만들기 위해 반드시 피해야 할 설계 실수들을 실무 기준으로 정리했습니다.

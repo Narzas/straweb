@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#b45309"/>
+      <stop offset="100%" style="stop-color:#92400e"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.08"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.02"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="680" cy="-40" r="200" fill="white" fill-opacity="0.04"/>
+  <circle cx="750" cy="420" r="150" fill="white" fill-opacity="0.04"/>
+  <circle cx="-30" cy="300" r="120" fill="white" fill-opacity="0.04"/>
+
+  <!-- Code block background -->
+  <rect x="380" y="60" width="380" height="330" rx="12" fill="url(#card)" stroke="white" stroke-opacity="0.1" stroke-width="1"/>
+
+  <!-- Code lines -->
+  <rect x="404" y="90" width="60" height="8" rx="4" fill="#fbbf24" fill-opacity="0.8"/>
+  <rect x="472" y="90" width="100" height="8" rx="4" fill="white" fill-opacity="0.5"/>
+  <rect x="404" y="112" width="20" height="8" rx="4" fill="white" fill-opacity="0.3"/>
+  <rect x="432" y="112" width="80" height="8" rx="4" fill="#86efac" fill-opacity="0.8"/>
+  <rect x="520" y="112" width="40" height="8" rx="4" fill="white" fill-opacity="0.3"/>
+  <rect x="420" y="134" width="120" height="8" rx="4" fill="white" fill-opacity="0.4"/>
+  <rect x="420" y="156" width="90" height="8" rx="4" fill="#93c5fd" fill-opacity="0.8"/>
+  <rect x="518" y="156" width="50" height="8" rx="4" fill="white" fill-opacity="0.4"/>
+  <rect x="404" y="178" width="20" height="8" rx="4" fill="white" fill-opacity="0.3"/>
+
+  <rect x="404" y="210" width="60" height="8" rx="4" fill="#fbbf24" fill-opacity="0.8"/>
+  <rect x="472" y="210" width="80" height="8" rx="4" fill="white" fill-opacity="0.5"/>
+  <rect x="420" y="232" width="140" height="8" rx="4" fill="#86efac" fill-opacity="0.7"/>
+  <rect x="420" y="254" width="100" height="8" rx="4" fill="white" fill-opacity="0.4"/>
+  <rect x="420" y="276" width="120" height="8" rx="4" fill="#93c5fd" fill-opacity="0.8"/>
+  <rect x="404" y="298" width="20" height="8" rx="4" fill="white" fill-opacity="0.3"/>
+
+  <rect x="404" y="330" width="180" height="8" rx="4" fill="white" fill-opacity="0.2"/>
+  <rect x="404" y="352" width="140" height="8" rx="4" fill="white" fill-opacity="0.2"/>
+
+  <!-- Left content -->
+  <!-- Java logo mark (simplified cup shape) -->
+  <ellipse cx="110" cy="155" rx="38" ry="12" fill="white" fill-opacity="0.15"/>
+  <path d="M78 110 Q78 155 110 165 Q142 155 142 110 Q130 125 110 128 Q90 125 78 110Z" fill="white" fill-opacity="0.2"/>
+  <path d="M90 100 Q100 90 110 95 Q120 90 130 100" stroke="white" stroke-opacity="0.4" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Steam -->
+  <path d="M100 82 Q104 72 100 62" stroke="white" stroke-opacity="0.3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M110 78 Q114 68 110 58" stroke="white" stroke-opacity="0.3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M120 82 Q124 72 120 62" stroke="white" stroke-opacity="0.3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Title -->
+  <text x="50" y="230" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="800" fill="white">Java</text>
+  <text x="50" y="278" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="800" fill="white" fill-opacity="0.9">실무 팁</text>
+  <text x="50" y="326" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="800" fill="white" fill-opacity="0.8">10가지</text>
+
+  <!-- Subtitle -->
+  <text x="50" y="368" font-family="'Segoe UI', Arial, sans-serif" font-size="16" fill="white" fill-opacity="0.6">신입 개발자를 위한 핵심 가이드</text>
+
+  <!-- Badge -->
+  <rect x="50" y="390" width="80" height="26" rx="13" fill="white" fill-opacity="0.15"/>
+  <text x="90" y="408" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">개발</text>
+</svg>

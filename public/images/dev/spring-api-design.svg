@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0c1f3a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <circle cx="700" cy="-30" r="200" fill="white" fill-opacity="0.03"/>
+  <circle cx="730" cy="460" r="170" fill="white" fill-opacity="0.03"/>
+
+  <!-- API diagram (right side) -->
+  <g transform="translate(390, 55)">
+    <rect width="370" height="340" rx="12" fill="white" fill-opacity="0.05" stroke="white" stroke-opacity="0.08" stroke-width="1"/>
+
+    <!-- GET endpoint -->
+    <rect x="20" y="30" width="50" height="22" rx="4" fill="#4ade80" fill-opacity="0.8"/>
+    <text x="45" y="46" font-family="'Courier New', monospace" font-size="11" font-weight="700" fill="#052e16" text-anchor="middle">GET</text>
+    <rect x="80" y="30" width="260" height="22" rx="4" fill="white" fill-opacity="0.08"/>
+    <text x="92" y="46" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.7">/api/v1/users/{id}</text>
+
+    <!-- POST endpoint -->
+    <rect x="20" y="68" width="50" height="22" rx="4" fill="#60a5fa" fill-opacity="0.8"/>
+    <text x="45" y="84" font-family="'Courier New', monospace" font-size="11" font-weight="700" fill="#0c1f3a" text-anchor="middle">POST</text>
+    <rect x="80" y="68" width="260" height="22" rx="4" fill="white" fill-opacity="0.08"/>
+    <text x="92" y="84" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.7">/api/v1/users</text>
+
+    <!-- PUT endpoint -->
+    <rect x="20" y="106" width="50" height="22" rx="4" fill="#fbbf24" fill-opacity="0.8"/>
+    <text x="45" y="122" font-family="'Courier New', monospace" font-size="11" font-weight="700" fill="#451a03" text-anchor="middle">PUT</text>
+    <rect x="80" y="106" width="260" height="22" rx="4" fill="white" fill-opacity="0.08"/>
+    <text x="92" y="122" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.7">/api/v1/users/{id}</text>
+
+    <!-- DELETE endpoint -->
+    <rect x="20" y="144" width="50" height="22" rx="4" fill="#f87171" fill-opacity="0.8"/>
+    <text x="45" y="160" font-family="'Courier New', monospace" font-size="10" font-weight="700" fill="#450a0a" text-anchor="middle">DELETE</text>
+    <rect x="80" y="144" width="260" height="22" rx="4" fill="white" fill-opacity="0.08"/>
+    <text x="92" y="160" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.7">/api/v1/users/{id}</text>
+
+    <!-- Divider -->
+    <line x1="20" y1="188" x2="350" y2="188" stroke="white" stroke-opacity="0.08" stroke-width="1"/>
+
+    <!-- Response codes -->
+    <text x="20" y="214" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.4">Response</text>
+    <rect x="20" y="224" width="55" height="20" rx="4" fill="#4ade80" fill-opacity="0.2"/>
+    <text x="47" y="238" font-family="'Courier New', monospace" font-size="11" fill="#4ade80" text-anchor="middle">200 OK</text>
+    <rect x="84" y="224" width="65" height="20" rx="4" fill="#fbbf24" fill-opacity="0.2"/>
+    <text x="116" y="238" font-family="'Courier New', monospace" font-size="11" fill="#fbbf24" text-anchor="middle">400 Bad</text>
+    <rect x="158" y="224" width="75" height="20" rx="4" fill="#f87171" fill-opacity="0.2"/>
+    <text x="195" y="238" font-family="'Courier New', monospace" font-size="11" fill="#f87171" text-anchor="middle">500 Error</text>
+
+    <!-- JSON preview -->
+    <rect x="20" y="260" width="330" height="60" rx="6" fill="white" fill-opacity="0.05"/>
+    <text x="32" y="278" font-family="'Courier New', monospace" font-size="10" fill="#4ade80">{"  "}</text>
+    <text x="32" y="278" font-family="'Courier New', monospace" font-size="10" fill="#4ade80">&#123;</text>
+    <text x="44" y="294" font-family="'Courier New', monospace" font-size="10" fill="#93c5fd">  "id"</text>
+    <text x="88" y="294" font-family="'Courier New', monospace" font-size="10" fill="white" fill-opacity="0.6">: 1,  "name": "홍길동"</text>
+    <text x="32" y="310" font-family="'Courier New', monospace" font-size="10" fill="#4ade80">&#125;</text>
+  </g>
+
+  <!-- Title -->
+  <text x="50" y="185" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="800" fill="white">Spring Boot</text>
+  <text x="50" y="232" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="800" fill="#60a5fa">API 설계</text>
+  <text x="50" y="279" font-family="'Segoe UI', Arial, sans-serif" font-size="28" font-weight="700" fill="white" fill-opacity="0.85">아키텍처 가이드</text>
+  <text x="50" y="320" font-family="'Segoe UI', Arial, sans-serif" font-size="15" fill="white" fill-opacity="0.5">15년차가 하지 않는 7가지 실수</text>
+
+  <rect x="50" y="344" width="80" height="26" rx="13" fill="white" fill-opacity="0.12"/>
+  <text x="90" y="362" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">개발</text>
+</svg>

@@ -1,6 +1,7 @@
 ---
 title: Claude 제대로 쓰는 법 — 처음 써보는 사람을 위한 실전 가이드
 date: 2026-04-09
+cover: /images/dev/claude-ai-guide.svg
 description: Anthropic의 Claude AI, 그냥 대화만 하면 반만 쓰는 겁니다. 초보자도 바로 따라할 수 있는 핵심 팁을 정리했습니다.
 category: 개발
 tags: [Claude, AI, 프롬프트, AI활용, Anthropic]

@@ -123,11 +123,34 @@ export default async function PostPage({ params }: Props) {
           <CommentSection postSlug={post.slug} />
         </article>
 
-        {/* TOC Sidebar */}
-        {post.toc.length > 0 && (
+        {/* TOC + 파트너스 광고 Sidebar */}
+        {(post.toc.length > 0 || post.slug === "anbernic-rg40xxv-review") && (
           <aside className="hidden lg:block">
             <div className="sticky top-24 space-y-8">
-              <TableOfContents toc={post.toc} />
+              {post.toc.length > 0 && <TableOfContents toc={post.toc} />}
+
+              {post.slug === "anbernic-rg40xxv-review" && (
+                <div className="flex flex-col items-center gap-1.5">
+                  <a
+                    href="https://link.coupang.com/a/elOIvN"
+                    target="_blank"
+                    rel="noopener"
+                    referrerPolicy="unsafe-url"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="https://image7.coupangcdn.com/image/affiliate/banner/8435a0f6659b4bd159c610105ceb6b0a@2x.jpg"
+                      alt="ANBERNIC 앤버닉 RG40XXV 레트로 게임기"
+                      width={120}
+                      height={240}
+                      className="rounded-lg"
+                    />
+                  </a>
+                  <p className="text-[10px] text-gray-400 text-center leading-snug">
+                    * 쿠팡 파트너스 활동을 통해<br />수수료를 받을 수 있음
+                  </p>
+                </div>
+              )}
             </div>
           </aside>
         )}

@@ -11,6 +11,17 @@ import CommentSection from "@/components/CommentSection";
 import Sidebar from "@/components/Sidebar";
 import ViewTracker from "@/components/ViewTracker";
 
+const COUPANG_ADS: Record<string, { href: string; imageId: string }> = {
+  "anbernic-rg40xxv-review": {
+    href: "https://link.coupang.com/a/elOIvN",
+    imageId: "rg40xxv",
+  },
+  "anbernic-rg34xxsp-review": {
+    href: "https://link.coupang.com/a/elPsEw",
+    imageId: "rg34xxsp",
+  },
+};
+
 type Props = {
   params: Promise<{ slug: string }>;
 };
@@ -125,26 +136,25 @@ export default async function PostPage({ params }: Props) {
         </article>
 
         {/* TOC + 파트너스 광고 Sidebar */}
-        {(post.toc.length > 0 || post.slug === "anbernic-rg40xxv-review") && (
+        {(post.toc.length > 0 || !!COUPANG_ADS[post.slug]) && (
           <aside className="hidden lg:block">
             <div className="sticky top-24 space-y-8">
               {post.toc.length > 0 && <TableOfContents toc={post.toc} />}
 
-              {post.slug === "anbernic-rg40xxv-review" && (
+              {COUPANG_ADS[post.slug] && (
                 <div className="flex flex-col items-center gap-1.5">
                   <a
-                    href="https://link.coupang.com/a/elOIvN"
+                    href={COUPANG_ADS[post.slug].href}
                     target="_blank"
                     rel="noopener"
                     referrerPolicy="unsafe-url"
                   >
                     <Image
-                      src="https://image7.coupangcdn.com/image/affiliate/banner/8435a0f6659b4bd159c610105ceb6b0a@2x.jpg"
-                      alt="ANBERNIC 앤버닉 RG40XXV 레트로 게임기"
+                      src={`/api/partner-image/${COUPANG_ADS[post.slug].imageId}`}
+                      alt="쿠팡 파트너스 상품"
                       width={120}
                       height={240}
                       unoptimized
-                      referrerPolicy="unsafe-url"
                       className="rounded-lg"
                     />
                   </a>

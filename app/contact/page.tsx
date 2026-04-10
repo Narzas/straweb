@@ -19,7 +19,11 @@ export default function ContactPage() {
       <hr className="border-gray-200" />
 
       {/* Contact form */}
-      <form className="space-y-6" action="#" method="POST">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        현재 메일 전송 기능은 준비 중입니다. 아래 이메일로 직접 연락해 주세요.
+      </div>
+
+      <form className="space-y-6 opacity-50 pointer-events-none" aria-disabled="true">
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -79,9 +83,10 @@ export default function ContactPage() {
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition-colors sm:w-auto"
+          disabled
+          className="w-full rounded-lg bg-gray-300 px-6 py-3 text-sm font-semibold text-gray-500 cursor-not-allowed sm:w-auto"
         >
-          보내기
+          보내기 (준비 중)
         </button>
       </form>
 

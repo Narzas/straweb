@@ -28,32 +28,36 @@ const CITIES = [
 ];
 
 export async function GET() {
-  try {
-    const results = await Promise.all(
-      CITIES.map(async ({ name, lat, lon }) => {
-        const url =
-          `https://api.open-meteo.com/v1/forecast` +
-          `?latitude=${lat}&longitude=${lon}` +
-          `&current=temperature_2m,relative_humidity_2m,weathercode` +
-          `&timezone=Asia%2FSeoul`;
-        const res = await fetch(url, { next: { revalidate: 3600 } });
-        if (!res.ok) throw new Error(`fetch failed for ${name}`);
-        const data = await res.json();
-        const c = data.current;
-        return {
-          name,
-          temp: Math.round(c.temperature_2m),
-          humidity: c.relative_humidity_2m,
-          weatherCode: c.weathercode,
-        } satisfies CityWeather;
-      })
-    );
+  const settled = await Promise.allSettled(
+    CITIES.map(async ({ name, lat, lon }) => {
+      const url =
+        `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,relative_humidity_2m,weathercode` +
+        `&timezone=Asia%2FSeoul`;
+      const res = await fetch(url, { next: { revalidate: 3600 } });
+      if (!res.ok) throw new Error(`fetch failed for ${name}`);
+      const data = await res.json();
+      const c = data.current;
+      return {
+        name,
+        temp: Math.round(c.temperature_2m),
+        humidity: c.relative_humidity_2m,
+        weatherCode: c.weathercode,
+      } satisfies CityWeather;
+    })
+  );
 
-    return NextResponse.json(
-      { cities: results },
-      { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=300" } }
-    );
-  } catch {
+  const results: CityWeather[] = settled
+    .filter((r): r is PromiseFulfilledResult<CityWeather> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  if (results.length === 0) {
     return NextResponse.json({ error: "fetch failed" }, { status: 500 });
   }
+
+  return NextResponse.json(
+    { cities: results },
+    { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=300" } }
+  );
 }

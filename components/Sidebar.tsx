@@ -40,7 +40,7 @@ function MarketRow({
   labelColor: string;
 }) {
   return (
-    <div className={`flex items-center justify-between rounded-lg px-3 py-2 border ${bg}`}>
+    <div className={`flex items-center justify-between rounded-lg px-3 py-1.5 border ${bg}`}>
       <div className="flex items-center gap-1.5">
         <span className="text-base leading-none">{icon}</span>
         <span className={`text-[11px] font-semibold ${labelColor}`}>{label}</span>
@@ -116,8 +116,8 @@ export default function Sidebar() {
       <ClockWeatherWidget />
 
       {/* 시세 카드 — 비트코인 / 나스닥 / 코스피 / 코스닥 / 달러 */}
-      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 shadow-sm space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-1 mb-1">
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 shadow-sm space-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-1 mb-0.5">
           실시간 시세
         </p>
         {marketLoading ? (

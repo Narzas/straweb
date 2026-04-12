@@ -9,6 +9,7 @@ import AdSlot from "@/components/AdSlot";
 import CommentSection from "@/components/CommentSection";
 import Sidebar from "@/components/Sidebar";
 import ViewTracker from "@/components/ViewTracker";
+import ViewCount from "@/components/ViewCount";
 
 const COUPANG_ADS: Record<string, { href: string; imageId: string }> = {
   "anbernic-rg40xxv-review": {
@@ -106,7 +107,10 @@ export default async function PostPage({ params }: Props) {
               ) : post.title}
             </h1>
             <p className="text-lg leading-relaxed text-gray-500">{post.description}</p>
-            <time className="block text-sm text-gray-400">{post.date}</time>
+            <div className="flex items-center gap-3">
+              <time className="text-sm text-gray-400">{post.date}</time>
+              <ViewCount slug={post.slug} />
+            </div>
           <ViewTracker slug={post.slug} />
           </header>
 

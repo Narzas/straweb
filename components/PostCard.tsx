@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { PostMeta } from "@/lib/posts";
+import ViewCount from "@/components/ViewCount";
 
 const GRADIENTS = [
   "from-violet-500 to-indigo-600",
@@ -96,7 +97,10 @@ export default function PostCard({
           {post.description}
         </p>
 
-        <time className="mt-auto text-xs text-gray-400 dark:text-gray-500">{post.date}</time>
+        <div className="mt-auto flex items-center justify-between">
+          <time className="text-xs text-gray-400 dark:text-gray-500">{post.date}</time>
+          <ViewCount slug={post.slug} />
+        </div>
       </div>
     </div>
   );

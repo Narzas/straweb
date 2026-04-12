@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 export default function ViewTracker({ slug }: { slug: string }) {
   useEffect(() => {
+    if (window.location.hostname === "localhost") return;
     const key = `viewed:${slug}`;
     if (sessionStorage.getItem(key)) return;
     fetch(`/api/views/${slug}`, { method: "POST" })

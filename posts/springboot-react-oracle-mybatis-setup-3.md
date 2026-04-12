@@ -1,6 +1,6 @@
 ---
 title: "Spring Boot + React + Oracle + MyBatis 셋팅 — 3편: MyBatis 설정 & CRUD API 만들기"
-date: 2026-04-12T02:00:00
+date: 2026-04-12T03:00:00
 description: MyBatis XML 매퍼를 작성해 회원 테이블 CRUD API를 완성합니다. 실무에서 쓰는 패턴 그대로 따라합니다.
 category: 개발
 tags: [SpringBoot, MyBatis, Oracle, CRUD, REST API, 초보자]

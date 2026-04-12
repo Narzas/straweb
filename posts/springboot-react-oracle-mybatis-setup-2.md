@@ -1,6 +1,6 @@
 ---
 title: "Spring Boot + React + Oracle + MyBatis 셋팅 — 2편: Spring Boot 프로젝트 생성 & Oracle 연결"
-date: 2026-04-12T01:00:00
+date: 2026-04-12T02:00:00
 description: Spring Initializr로 프로젝트를 만들고 application.yml에 Oracle 접속 정보를 설정해 실제로 DB에 연결하는 법을 알아봅니다.
 category: 개발
 tags: [SpringBoot, Oracle, MyBatis, 풀스택, 초보자, 백엔드]

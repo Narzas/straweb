@@ -1,6 +1,6 @@
 ---
 title: "Spring Boot + React + Oracle + MyBatis 셋팅 — 1편: 개발 환경 준비"
-date: 2026-04-12T00:00:00
+date: 2026-04-12T01:00:00
 description: 초보도 쉽게 따라하는 풀스택 셋팅 시리즈 1편. JDK, Node.js, Oracle XE, IDE까지 개발 환경을 처음부터 세팅합니다.
 category: 개발
 tags: [SpringBoot, React, Oracle, MyBatis, 풀스택, 초보자]

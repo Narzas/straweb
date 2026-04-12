@@ -3,7 +3,6 @@ import Link from "next/link";
 import { getAllPosts, getAllCategories } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import AdSlot from "@/components/AdSlot";
-import VisitorCounter from "@/components/VisitorCounter";
 import Sidebar from "@/components/Sidebar";
 import RightSidebar from "@/components/RightSidebar";
 import HeroTyping from "@/components/HeroTyping";
@@ -84,10 +83,6 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          {/* 방문자 */}
-          <div className="pt-1">
-            <VisitorCounter />
-          </div>
         </div>
       </section>
 

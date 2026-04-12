@@ -40,6 +40,7 @@ export type PostMeta = {
   title: string;
   date: string;
   description: string;
+  firstHeading?: string;
   tags: string[];
   cover?: string;
   category: string;
@@ -49,6 +50,14 @@ export type Post = PostMeta & {
   contentHtml: string;
   toc: TocItem[];
 };
+
+function extractFirstHeading(markdown: string): string | undefined {
+  for (const line of markdown.split("\n")) {
+    const match = line.match(/^#{1,3}\s+(.+)/);
+    if (match) return match[1].trim().replace(/[`*_]/g, "");
+  }
+  return undefined;
+}
 
 function extractToc(markdown: string): TocItem[] {
   const lines = markdown.split("\n");
@@ -83,7 +92,7 @@ export function getAllPosts(): PostMeta[] {
       const filePath = path.join(postsDir, filename);
       const slug = filename.replace(/\.md$/, "");
       const raw = fs.readFileSync(filePath, "utf8");
-      const { data } = matter(raw);
+      const { data, content } = matter(raw);
 
       // date가 Date 객체면 로컬 시각 기준 문자열로 변환 (toISOString은 UTC 변환 → 시간대 오류)
       const rawDate: string = data.date instanceof Date
@@ -105,6 +114,7 @@ export function getAllPosts(): PostMeta[] {
         date: rawDate.slice(0, 10),      // 화면 표시용: YYYY-MM-DD
         _sortKey: rawDate,               // 정렬용: 시간 포함 전체 문자열
         description: (data.description as string) ?? "",
+        firstHeading: extractFirstHeading(content),
         tags: (data.tags as string[]) ?? [],
         cover: (data.cover as string) ?? undefined,
         category: (data.category as string) ?? "Uncategorized",

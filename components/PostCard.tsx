@@ -93,9 +93,11 @@ export default function PostCard({
           </Link>
         </h2>
 
-        <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-          {post.description}
-        </p>
+        {post.firstHeading && (
+          <p className="line-clamp-1 flex-1 text-sm leading-relaxed text-gray-400 dark:text-gray-500">
+            {post.firstHeading}
+          </p>
+        )}
 
         <div className="mt-auto flex items-center justify-between">
           <time className="text-xs text-gray-400 dark:text-gray-500">{post.date}</time>

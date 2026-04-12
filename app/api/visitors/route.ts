@@ -3,16 +3,20 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("site_stats")
-    .select("visitor_count")
-    .eq("id", 1)
-    .single();
+  const today = new Date().toISOString().split("T")[0];
 
-  if (error) return NextResponse.json({ count: 0 });
-  return NextResponse.json({ count: data.visitor_count ?? 0 }, {
-    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" },
-  });
+  const [statsRes, dailyRes] = await Promise.all([
+    supabase.from("site_stats").select("visitor_count").eq("id", 1).single(),
+    supabase.from("daily_visitors").select("count").eq("date", today).single(),
+  ]);
+
+  return NextResponse.json(
+    {
+      total: statsRes.data?.visitor_count ?? 0,
+      today: dailyRes.data?.count ?? 0,
+    },
+    { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" } }
+  );
 }
 
 export async function POST() {

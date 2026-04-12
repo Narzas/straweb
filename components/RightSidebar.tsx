@@ -74,9 +74,10 @@ export default function RightSidebar() {
                 <div className="min-w-0">
                   <Link
                     href={`/posts/${post.slug}`}
-                    className="block text-xs leading-snug font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-2 transition-colors"
+                    title={post.title}
+                    className="block text-xs leading-snug font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 truncate transition-colors"
                   >
-                    {post.title}
+                    {post.title.length > 20 ? post.title.slice(0, 20) + "…" : post.title}
                   </Link>
                   <div className="mt-0.5 flex items-center gap-1.5">
                     <span className="text-[10px] text-gray-400">

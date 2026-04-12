@@ -17,11 +17,26 @@ function containsBlocked(text: string): boolean {
   return BLOCKED.some((w) => lower.includes(w.toLowerCase()));
 }
 
+function maskIp(ip: string | null): string {
+  if (!ip) return "xxx";
+  const parts = ip.split(".");
+  if (parts.length !== 4) return "xxx";
+  return `${parts[0]}.*.*.${parts[3]}`;
+}
+
+function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
 export async function GET() {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("guestbook")
-    .select("id, author, message, created_at")
+    .select("id, author, message, created_at, ip")
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -29,7 +44,12 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data ?? [], {
+  const masked = (data ?? []).map((row) => ({
+    ...row,
+    ip: maskIp(row.ip),
+  }));
+
+  return NextResponse.json(masked, {
     headers: { "Cache-Control": "no-store" },
   });
 }
@@ -52,16 +72,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "부적절한 표현이 포함되어 있습니다." }, { status: 400 });
   }
 
+  const ip = getClientIp(req);
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("guestbook")
-    .insert({ author, message })
-    .select("id, author, message, created_at")
+    .insert({ author, message, ip })
+    .select("id, author, message, created_at, ip")
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data, { status: 201 });
+  return NextResponse.json({ ...data, ip: maskIp(data.ip) }, { status: 201 });
 }

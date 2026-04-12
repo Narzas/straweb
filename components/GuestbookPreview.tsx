@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type Entry = { id: string; author: string; message: string; created_at: string };
+type Entry = { id: string; author: string; message: string; created_at: string; ip?: string };
 
 function timeAgo(iso: string) {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -58,7 +58,12 @@ export default function GuestbookPreview() {
           {entries.map((entry) => (
             <li key={entry.id}>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{entry.author}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{entry.author}</span>
+                  {entry.ip && (
+                    <span className="text-[10px] text-gray-400 font-mono">{entry.ip}</span>
+                  )}
+                </div>
                 <span className="text-[10px] text-gray-400 dark:text-gray-500">{timeAgo(entry.created_at)}</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">{entry.message}</p>

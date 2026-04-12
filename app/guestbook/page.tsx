@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Metadata } from "next";
 
-type Entry = { id: string; author: string; message: string; created_at: string };
+type Entry = { id: string; author: string; message: string; created_at: string; ip?: string };
 
 function timeAgo(iso: string) {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -121,7 +121,12 @@ export default function GuestbookPage() {
               className="rounded-xl border border-gray-100 bg-white px-5 py-4 shadow-sm"
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-semibold text-gray-800">{entry.author}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-800">{entry.author}</span>
+                  {entry.ip && (
+                    <span className="text-[11px] text-gray-400 font-mono">{entry.ip}</span>
+                  )}
+                </div>
                 <span className="text-xs text-gray-400">{timeAgo(entry.created_at)}</span>
               </div>
               <p className="text-sm text-gray-600 whitespace-pre-wrap break-words leading-relaxed">

@@ -71,7 +71,7 @@ export default async function PostsPage({ searchParams }: Props) {
           </Suspense>
         </div>
 
-        <ul className="grid gap-8 sm:grid-cols-2">
+        <ul className="grid gap-6 sm:grid-cols-2">
           {posts.map((post, i) => (
             <li key={post.slug}>
               <PostCard post={post} priority={i < 2} />

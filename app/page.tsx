@@ -5,6 +5,7 @@ import PostCard from "@/components/PostCard";
 import AdSlot from "@/components/AdSlot";
 import VisitorCounter from "@/components/VisitorCounter";
 import Sidebar from "@/components/Sidebar";
+import RightSidebar from "@/components/RightSidebar";
 import HeroTyping from "@/components/HeroTyping";
 import HeroDotGrid from "@/components/HeroDotGrid";
 import SeasonalEffect from "@/components/SeasonalEffect";
@@ -41,7 +42,7 @@ export default async function HomePage() {
     <>
     <ClientOnly><SeasonalEffect season={season} /></ClientOnly>
 
-    <div className="relative z-[1] lg:grid lg:grid-cols-[270px_1fr] lg:gap-8 xl:gap-12">
+    <div className="relative z-[1] lg:grid lg:grid-cols-[240px_1fr_220px] lg:gap-6 xl:gap-8">
 
       {/* ── 왼쪽 사이드바 (lg 이상에서만 표시) ── */}
       <aside className="hidden lg:block">
@@ -137,12 +138,18 @@ export default async function HomePage() {
       {/* ── 하단 광고 ── */}
       <AdSlot size="rectangle" className="mx-auto max-w-sm" />
 
-      {/* ── 모바일 사이드바 (lg 미만 하단 표시) ── */}
-      <div className="lg:hidden">
+      {/* ── 모바일: 사이드바 하단 표시 ── */}
+      <div className="lg:hidden space-y-6">
         <Sidebar />
+        <RightSidebar />
       </div>
 
       </div>{/* end 메인 콘텐츠 */}
+
+      {/* ── 오른쪽 사이드바 (lg 이상에서만 표시) ── */}
+      <aside className="hidden lg:block">
+        <RightSidebar />
+      </aside>
     </div>
     </>
   );

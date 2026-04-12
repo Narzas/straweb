@@ -4,6 +4,7 @@ date: 2026-04-12T03:00:00
 description: Vite로 React 프로젝트를 만들고 axios로 Spring Boot API를 호출해 회원 목록을 화면에 출력합니다. 프론트와 백이 연결되는 순간입니다.
 category: 개발
 tags: [React, SpringBoot, axios, 풀스택, 초보자, 프론트엔드]
+cover: /images/dev/springboot-fullstack-4.svg
 ---
 
 > **시리즈 목차**

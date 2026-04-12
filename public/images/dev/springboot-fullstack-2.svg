@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#14532d"/>
+      <stop offset="100%" style="stop-color:#052e16"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <circle cx="680" cy="-20" r="240" fill="white" fill-opacity="0.02"/>
+  <circle cx="740" cy="460" r="170" fill="white" fill-opacity="0.02"/>
+
+  <!-- Right panel: project structure -->
+  <g transform="translate(400, 50)">
+    <rect width="360" height="340" rx="14" fill="white" fill-opacity="0.04" stroke="white" stroke-opacity="0.08" stroke-width="1"/>
+
+    <!-- spring initializr mockup -->
+    <rect x="20" y="20" width="320" height="36" rx="8" fill="#166534" fill-opacity="0.5"/>
+    <text x="36" y="43" font-family="'Courier New', monospace" font-size="13" fill="#4ade80">$ spring init myproject</text>
+
+    <!-- pom.xml dependencies -->
+    <text x="24" y="84" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.4">pom.xml</text>
+    <rect x="24" y="92" width="312" height="220" rx="6" fill="black" fill-opacity="0.2"/>
+    <text x="36" y="112" font-family="'Courier New', monospace" font-size="11" fill="#86efac">&lt;dependency&gt;</text>
+    <text x="48" y="128" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.7">  spring-boot-starter-web</text>
+    <text x="36" y="144" font-family="'Courier New', monospace" font-size="11" fill="#86efac">&lt;/dependency&gt;</text>
+    <text x="36" y="164" font-family="'Courier New', monospace" font-size="11" fill="#86efac">&lt;dependency&gt;</text>
+    <text x="48" y="180" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.7">  ojdbc11</text>
+    <text x="36" y="196" font-family="'Courier New', monospace" font-size="11" fill="#86efac">&lt;/dependency&gt;</text>
+    <text x="36" y="216" font-family="'Courier New', monospace" font-size="11" fill="#86efac">&lt;dependency&gt;</text>
+    <text x="48" y="232" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.7">  mybatis-spring-boot</text>
+    <text x="36" y="248" font-family="'Courier New', monospace" font-size="11" fill="#86efac">&lt;/dependency&gt;</text>
+    <text x="36" y="268" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.3">  ...</text>
+
+    <!-- connected badge -->
+    <rect x="24" y="326" width="100" height="24" rx="12" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-opacity="0.4" stroke-width="1"/>
+    <text x="74" y="343" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="#fca5a5" text-anchor="middle">Oracle 연결</text>
+    <circle cx="240" cy="338" r="5" fill="#4ade80"/>
+    <text x="252" y="342" font-family="'Segoe UI', Arial" font-size="11" fill="#4ade80">Connected</text>
+
+    <rect x="298" y="326" width="36" height="24" rx="12" fill="#4ade80" fill-opacity="0.2" stroke="#4ade80" stroke-opacity="0.4" stroke-width="1"/>
+    <text x="316" y="343" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="#4ade80" text-anchor="middle">2/4</text>
+  </g>
+
+  <!-- Spring leaf -->
+  <g transform="translate(46, 52)">
+    <ellipse cx="44" cy="44" rx="40" ry="22" fill="#4ade80" fill-opacity="0.18" transform="rotate(-30, 44, 44)"/>
+    <ellipse cx="44" cy="44" rx="40" ry="22" fill="#4ade80" fill-opacity="0.12" transform="rotate(30, 44, 44)"/>
+    <circle cx="44" cy="44" r="7" fill="#4ade80" fill-opacity="0.45"/>
+  </g>
+
+  <text x="50" y="185" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#4ade80" fill-opacity="0.9" letter-spacing="2">SPRING BOOT SERIES</text>
+  <text x="50" y="228" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="800" fill="white">프로젝트 생성</text>
+  <text x="50" y="272" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="800" fill="#4ade80">&amp; Oracle 연결</text>
+  <text x="50" y="315" font-family="'Segoe UI', Arial, sans-serif" font-size="16" fill="white" fill-opacity="0.55">Spring Initializr · pom.xml · DB 연결</text>
+
+  <rect x="50" y="345" width="72" height="26" rx="13" fill="white" fill-opacity="0.1"/>
+  <text x="86" y="363" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">개발</text>
+</svg>

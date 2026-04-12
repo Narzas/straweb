@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0c2340"/>
+      <stop offset="100%" style="stop-color:#050e1a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <circle cx="680" cy="-20" r="240" fill="white" fill-opacity="0.02"/>
+  <circle cx="740" cy="460" r="170" fill="white" fill-opacity="0.02"/>
+
+  <!-- Right panel: React + API connection -->
+  <g transform="translate(400, 50)">
+    <rect width="360" height="340" rx="14" fill="white" fill-opacity="0.04" stroke="white" stroke-opacity="0.08" stroke-width="1"/>
+
+    <!-- React code snippet -->
+    <text x="24" y="44" font-family="'Courier New', monospace" font-size="11" fill="white" fill-opacity="0.4">App.jsx</text>
+    <rect x="24" y="52" width="312" height="150" rx="6" fill="black" fill-opacity="0.25"/>
+    <text x="36" y="72" font-family="'Courier New', monospace" font-size="10" fill="#67e8f9">const</text>
+    <text x="74" y="72" font-family="'Courier New', monospace" font-size="10" fill="white" fill-opacity="0.8"> [data, setData] = useState([])</text>
+    <text x="36" y="92" font-family="'Courier New', monospace" font-size="10" fill="#67e8f9">useEffect</text>
+    <text x="96" y="92" font-family="'Courier New', monospace" font-size="10" fill="white" fill-opacity="0.8">(() =&gt; &#123;</text>
+    <text x="48" y="108" font-family="'Courier New', monospace" font-size="10" fill="#67e8f9">  fetch</text>
+    <text x="84" y="108" font-family="'Courier New', monospace" font-size="10" fill="white" fill-opacity="0.8">('/api/users')</text>
+    <text x="48" y="124" font-family="'Courier New', monospace" font-size="10" fill="white" fill-opacity="0.6">    .then(r =&gt; r.json())</text>
+    <text x="48" y="140" font-family="'Courier New', monospace" font-size="10" fill="white" fill-opacity="0.6">    .then(setData)</text>
+    <text x="36" y="160" font-family="'Courier New', monospace" font-size="10" fill="white" fill-opacity="0.8">&#125;, [])</text>
+    <text x="36" y="188" font-family="'Courier New', monospace" font-size="10" fill="white" fill-opacity="0.3">  ...</text>
+
+    <!-- API flow arrow -->
+    <text x="24" y="228" font-family="'Segoe UI', Arial" font-size="11" fill="white" fill-opacity="0.4">연동 구조</text>
+
+    <!-- React box -->
+    <rect x="24" y="238" width="76" height="36" rx="8" fill="#0ea5e9" fill-opacity="0.2" stroke="#0ea5e9" stroke-opacity="0.5" stroke-width="1"/>
+    <text x="62" y="260" font-family="'Segoe UI', Arial" font-size="12" font-weight="700" fill="#7dd3fc" text-anchor="middle">React</text>
+
+    <!-- arrow -->
+    <text x="108" y="260" font-family="Arial" font-size="18" fill="white" fill-opacity="0.4">⇄</text>
+
+    <!-- Spring Boot box -->
+    <rect x="134" y="238" width="100" height="36" rx="8" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-opacity="0.5" stroke-width="1"/>
+    <text x="184" y="260" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="#86efac" text-anchor="middle">Spring Boot</text>
+
+    <!-- arrow -->
+    <text x="242" y="260" font-family="Arial" font-size="18" fill="white" fill-opacity="0.4">⇄</text>
+
+    <!-- Oracle box -->
+    <rect x="268" y="238" width="68" height="36" rx="8" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-opacity="0.5" stroke-width="1"/>
+    <text x="302" y="260" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="#fca5a5" text-anchor="middle">Oracle</text>
+
+    <!-- CORS note -->
+    <rect x="24" y="294" width="260" height="26" rx="6" fill="white" fill-opacity="0.05"/>
+    <text x="36" y="312" font-family="'Segoe UI', Arial" font-size="11" fill="white" fill-opacity="0.6">CORS 설정 · Proxy · Axios 사용법</text>
+
+    <rect x="298" y="294" width="36" height="26" rx="13" fill="#67e8f9" fill-opacity="0.2" stroke="#67e8f9" stroke-opacity="0.4" stroke-width="1"/>
+    <text x="316" y="312" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="#67e8f9" text-anchor="middle">4/4</text>
+  </g>
+
+  <!-- React atom icon (simplified) -->
+  <g transform="translate(46, 52)">
+    <circle cx="44" cy="44" r="8" fill="#67e8f9" fill-opacity="0.45"/>
+    <ellipse cx="44" cy="44" rx="38" ry="16" fill="none" stroke="#67e8f9" stroke-opacity="0.2" stroke-width="2" transform="rotate(0, 44, 44)"/>
+    <ellipse cx="44" cy="44" rx="38" ry="16" fill="none" stroke="#67e8f9" stroke-opacity="0.15" stroke-width="2" transform="rotate(60, 44, 44)"/>
+    <ellipse cx="44" cy="44" rx="38" ry="16" fill="none" stroke="#67e8f9" stroke-opacity="0.15" stroke-width="2" transform="rotate(120, 44, 44)"/>
+  </g>
+
+  <text x="50" y="185" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#67e8f9" fill-opacity="0.9" letter-spacing="2">SPRING BOOT SERIES</text>
+  <text x="50" y="228" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="800" fill="white">React 생성</text>
+  <text x="50" y="272" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="800" fill="#67e8f9">&amp; API 연동</text>
+  <text x="50" y="315" font-family="'Segoe UI', Arial, sans-serif" font-size="16" fill="white" fill-opacity="0.55">fetch · CORS · 풀스택 완성</text>
+
+  <rect x="50" y="345" width="72" height="26" rx="13" fill="white" fill-opacity="0.1"/>
+  <text x="86" y="363" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">개발</text>
+</svg>

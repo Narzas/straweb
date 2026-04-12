@@ -114,15 +114,20 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         {/* 검색 */}
         {searchOpen ? (
           <form onSubmit={handleSearchSubmit} className="flex items-center">
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
-              placeholder="검색..."
-              className="w-40 rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-indigo-400 dark:focus:border-indigo-500 transition-colors"
-            />
+            <div className="flex items-center rounded-full border border-indigo-400 dark:border-indigo-500 bg-white dark:bg-slate-800 px-3 py-1.5 gap-2 shadow-sm">
+              <svg className="h-4 w-4 flex-shrink-0 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 1116.65 16.65z" />
+              </svg>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
+                placeholder="검색..."
+                className="w-36 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none"
+              />
+            </div>
             <button
               type="button"
               onClick={() => setSearchOpen(false)}
@@ -137,12 +142,13 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         ) : (
           <button
             onClick={() => setSearchOpen(true)}
-            className="rounded-lg p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            className="flex items-center gap-2 rounded-full border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors shadow-sm"
             aria-label="검색"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 1116.65 16.65z" />
             </svg>
+            <span>검색</span>
           </button>
         )}
 

@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase";
 import PostCard from "@/components/PostCard";
 import PostSortTabs from "@/components/PostSortTabs";
 import Sidebar from "@/components/Sidebar";
+import RightSidebar from "@/components/RightSidebar";
 
 export const metadata: Metadata = {
   title: "Posts",
@@ -55,7 +56,7 @@ export default async function PostsPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 xl:gap-14">
+    <div className="lg:grid lg:grid-cols-[240px_1fr_220px] lg:gap-6 xl:gap-8">
       <aside className="hidden lg:block">
         <Sidebar />
       </aside>
@@ -80,10 +81,15 @@ export default async function PostsPage({ searchParams }: Props) {
         </ul>
 
         {/* ── 모바일 사이드바 (lg 미만 하단 표시) ── */}
-        <div className="lg:hidden">
+        <div className="lg:hidden space-y-6">
           <Sidebar />
+          <RightSidebar />
         </div>
       </div>
+
+      <aside className="hidden lg:block">
+        <RightSidebar />
+      </aside>
     </div>
   );
 }

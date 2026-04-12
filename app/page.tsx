@@ -121,7 +121,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <ul className="grid gap-6 sm:grid-cols-2">
+        <ul className="grid gap-3">
           {recentPosts.map((post, i) => (
             <li key={post.slug}>
               <PostCard post={post} priority={i < 2} />

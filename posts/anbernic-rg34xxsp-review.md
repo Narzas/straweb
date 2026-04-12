@@ -4,6 +4,7 @@ date: 2025-04-05
 description: 레트로 게임기 입문으로 앤버닉 RG34XX SP를 질렀습니다. GBA SP 감성에 현대 기술을 얹은 이 녀석, 솔직하게 털어놓겠습니다.
 category: 리뷰
 tags: [앤버닉, 레트로게임기, RG34XXSP, 휴대용게임기, 구매후기]
+cover: /images/rg34xxsp/thumbnail.svg
 ---
 
 ## 지르게 된 사연

@@ -30,17 +30,17 @@ export default function PostCard({
   const gradient = pickGradient(post.slug);
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <div className="group relative flex flex-row overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
 
       {/* Thumbnail */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100 dark:bg-slate-700">
+      <div className="relative w-36 shrink-0 self-stretch overflow-hidden bg-gray-100 dark:bg-slate-700 sm:w-44 min-h-[120px]">
         {post.cover ? (
           <Image
             src={post.cover}
             alt={post.title}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="176px"
+            className={`transition-transform duration-300 group-hover:scale-105 ${post.cover.endsWith(".svg") ? "object-cover object-center" : "object-contain"}`}
             priority={priority}
             loading={priority ? "eager" : "lazy"}
             decoding={priority ? "sync" : "async"}
@@ -49,16 +49,15 @@ export default function PostCard({
           <div
             className={`h-full w-full bg-gradient-to-br ${gradient} flex items-center justify-center transition-transform duration-300 group-hover:scale-105`}
           >
-            <span className="select-none text-5xl font-bold text-white/30">
+            <span className="select-none text-4xl font-bold text-white/30">
               {post.title.charAt(0).toUpperCase()}
             </span>
           </div>
         )}
-
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      <div className="flex flex-1 flex-col gap-2 p-4 min-w-0">
         {/* 카테고리 + 태그 */}
         <div className="flex flex-wrap items-center gap-1.5">
           <Link
@@ -67,7 +66,7 @@ export default function PostCard({
           >
             {post.category}
           </Link>
-          {post.tags.map((tag) => (
+          {post.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
               className="rounded-full bg-gray-100 dark:bg-slate-600 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300"
@@ -78,7 +77,7 @@ export default function PostCard({
         </div>
 
         {/* 제목 — stretched-link: after 가상 요소가 카드 전체를 덮음 */}
-        <h2 className="text-lg font-semibold leading-normal text-gray-900 dark:text-gray-100 transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400 break-keep">
+        <h2 className="text-base font-semibold leading-snug text-gray-900 dark:text-gray-100 transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400 break-keep line-clamp-2">
           <Link
             href={`/posts/${post.slug}`}
             className="after:absolute after:inset-0 after:z-0"
@@ -86,20 +85,19 @@ export default function PostCard({
             {post.title.includes("—") ? (
               <>
                 {post.title.split("—")[0].trimEnd()}
-                <br />
-                <span className="text-base font-normal opacity-70">— {post.title.split("—").slice(1).join("—").trimStart()}</span>
+                <span className="font-normal opacity-60"> — {post.title.split("—").slice(1).join("—").trimStart()}</span>
               </>
             ) : post.title}
           </Link>
         </h2>
 
         {post.firstHeading && (
-          <p className="line-clamp-1 flex-1 text-sm leading-relaxed text-gray-400 dark:text-gray-500">
+          <p className="line-clamp-1 text-sm leading-relaxed text-gray-400 dark:text-gray-500">
             {post.firstHeading}
           </p>
         )}
 
-        <div className="mt-auto flex items-center justify-between">
+        <div className="mt-auto flex items-center justify-between pt-1">
           <time className="text-xs text-gray-400 dark:text-gray-500">{post.date}</time>
           <ViewCount slug={post.slug} />
         </div>

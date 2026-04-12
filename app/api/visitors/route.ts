@@ -10,7 +10,9 @@ export async function GET() {
     .single();
 
   if (error) return NextResponse.json({ count: 0 });
-  return NextResponse.json({ count: data.visitor_count ?? 0 });
+  return NextResponse.json({ count: data.visitor_count ?? 0 }, {
+    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" },
+  });
 }
 
 export async function POST() {

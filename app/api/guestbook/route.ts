@@ -50,7 +50,7 @@ export async function GET() {
   }));
 
   return NextResponse.json(masked, {
-    headers: { "Cache-Control": "no-store" },
+    headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
   });
 }
 

@@ -6,6 +6,7 @@ export default function VisitorCounter() {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
+    if (window.location.hostname === "localhost") return;
     // 세션 내 중복 카운트 방지
     const alreadyCounted = sessionStorage.getItem("visited");
 

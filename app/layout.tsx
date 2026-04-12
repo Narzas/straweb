@@ -76,7 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin="anonymous"
         />
         {/* Google Tag Manager (noscript) */}
-        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-56CDQRKW" height="0" width="0" style={{ display: "none", visibility: "hidden" }} /></noscript>
+        <noscript dangerouslySetInnerHTML={{ __html: '<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-56CDQRKW" height="0" width="0" style="display:none;visibility:hidden"></iframe>' }} />
         <Header />
         <main className="mx-auto w-full max-w-screen-xl flex-1 px-4 sm:px-6 lg:px-8 py-10">
           {children}

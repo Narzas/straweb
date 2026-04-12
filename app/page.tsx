@@ -50,7 +50,7 @@ export default async function HomePage() {
       </aside>
 
       {/* ── 메인 콘텐츠 ── */}
-      <div className="space-y-14">
+      <div className="space-y-6">
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#1a1f2e] px-8 py-8 text-white sm:px-12 ring-1 ring-white/[0.06]">

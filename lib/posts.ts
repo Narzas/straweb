@@ -85,9 +85,18 @@ export function getAllPosts(): PostMeta[] {
       const raw = fs.readFileSync(filePath, "utf8");
       const { data } = matter(raw);
 
-      // date가 Date 객체면 ISO 문자열, 아니면 그대로 문자열로 보존 (시간 포함 가능)
+      // date가 Date 객체면 로컬 시각 기준 문자열로 변환 (toISOString은 UTC 변환 → 시간대 오류)
       const rawDate: string = data.date instanceof Date
-        ? data.date.toISOString()
+        ? (() => {
+            const d = data.date as Date;
+            const Y = d.getFullYear();
+            const M = String(d.getMonth() + 1).padStart(2, "0");
+            const D = String(d.getDate()).padStart(2, "0");
+            const h = String(d.getHours()).padStart(2, "0");
+            const m = String(d.getMinutes()).padStart(2, "0");
+            const s = String(d.getSeconds()).padStart(2, "0");
+            return `${Y}-${M}-${D}T${h}:${m}:${s}`;
+          })()
         : String(data.date);
 
       return {
@@ -160,7 +169,10 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     slug,
     title: data.title as string,
     date: data.date instanceof Date
-      ? data.date.toISOString().slice(0, 10)
+      ? (() => {
+          const d = data.date as Date;
+          return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+        })()
       : String(data.date).slice(0, 10),
     description: (data.description as string) ?? "",
     tags: (data.tags as string[]) ?? [],

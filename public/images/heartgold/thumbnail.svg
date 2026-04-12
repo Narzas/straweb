@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="390" viewBox="0 0 390 390">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#78350f"/>
+      <stop offset="100%" style="stop-color:#1c0a00"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="100%" style="stop-color:#d97706"/>
+    </linearGradient>
+    <linearGradient id="ball-top" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ef4444"/>
+      <stop offset="100%" style="stop-color:#b91c1c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="ball-shine" cx="35%" cy="30%" r="40%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="390" height="390" fill="url(#bg)"/>
+  <rect width="390" height="390" fill="url(#glow)"/>
+
+  <!-- Gold sparkles -->
+  <circle cx="55"  cy="45"  r="2"   fill="#fbbf24" opacity="0.6"/>
+  <circle cx="340" cy="30"  r="1.5" fill="#fbbf24" opacity="0.5"/>
+  <circle cx="360" cy="80"  r="2.5" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="30"  cy="200" r="1.5" fill="#fbbf24" opacity="0.5"/>
+  <circle cx="365" cy="260" r="2"   fill="#fbbf24" opacity="0.4"/>
+  <circle cx="70"  cy="320" r="1.5" fill="#fbbf24" opacity="0.5"/>
+  <circle cx="350" cy="350" r="2"   fill="#fbbf24" opacity="0.35"/>
+
+  <!-- Ho-Oh silhouette (불사조 새) -->
+  <!-- 몸통 -->
+  <ellipse cx="195" cy="108" rx="32" ry="22" fill="#d97706" fill-opacity="0.75"/>
+  <!-- 머리 -->
+  <ellipse cx="228" cy="92" rx="16" ry="13" fill="#f59e0b" fill-opacity="0.8"/>
+  <!-- 눈 -->
+  <circle cx="234" cy="89" r="3" fill="#1c0a00"/>
+  <circle cx="235" cy="88" r="1" fill="white" fill-opacity="0.8"/>
+  <!-- 부리 -->
+  <path d="M240 93 L250 97 L240 98 Z" fill="#ef4444" fill-opacity="0.9"/>
+  <!-- 왼쪽 날개 -->
+  <path d="M168 105 Q130 75 110 90 Q128 102 145 108 Q130 115 115 130 Q140 120 163 115 Z" fill="#d97706" fill-opacity="0.7"/>
+  <!-- 오른쪽 날개 -->
+  <path d="M215 100 Q240 68 265 72 Q248 88 238 98 Q255 88 272 96 Q250 108 227 110 Z" fill="#f59e0b" fill-opacity="0.7"/>
+  <!-- 꼬리 깃털 -->
+  <path d="M175 125 Q155 155 145 175" stroke="#ef4444" stroke-width="4" fill="none" stroke-opacity="0.7" stroke-linecap="round"/>
+  <path d="M185 128 Q170 162 165 185" stroke="#fbbf24" stroke-width="4" fill="none" stroke-opacity="0.7" stroke-linecap="round"/>
+  <path d="M196 130 Q188 168 188 192" stroke="#22c55e" stroke-width="4" fill="none" stroke-opacity="0.6" stroke-linecap="round"/>
+  <path d="M207 128 Q205 162 210 185" stroke="#3b82f6" stroke-width="4" fill="none" stroke-opacity="0.6" stroke-linecap="round"/>
+  <path d="M217 125 Q220 155 228 175" stroke="#a855f7" stroke-width="4" fill="none" stroke-opacity="0.6" stroke-linecap="round"/>
+
+  <!-- 포켓볼 -->
+  <!-- 하단 흰색 반구 -->
+  <path d="M145 250 Q145 300 195 300 Q245 300 245 250 Z" fill="white"/>
+  <!-- 상단 빨간 반구 -->
+  <path d="M145 250 Q145 200 195 200 Q245 200 245 250 Z" fill="url(#ball-top)"/>
+  <!-- 중앙 밴드 -->
+  <rect x="145" y="246" width="100" height="8" fill="#111"/>
+  <!-- 중앙 버튼 -->
+  <circle cx="195" cy="250" r="14" fill="white" stroke="#111" stroke-width="3"/>
+  <circle cx="195" cy="250" r="8"  fill="white"/>
+  <!-- 볼 광택 -->
+  <path d="M145 250 Q145 200 195 200 Q245 200 245 250 Z" fill="url(#ball-shine)"/>
+  <!-- 볼 테두리 -->
+  <circle cx="195" cy="250" r="50" fill="none" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.6"/>
+
+  <!-- 제목 -->
+  <text x="195" y="330" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="700" fill="#fbbf24" fill-opacity="0.85" letter-spacing="3" text-anchor="middle">POKÉMON</text>
+  <text x="195" y="355" font-family="'Segoe UI', Arial, sans-serif" font-size="26" font-weight="900" fill="url(#gold)" text-anchor="middle">하트골드</text>
+
+  <!-- 배지 -->
+  <rect x="148" y="366" width="94" height="22" rx="11" fill="#d97706" fill-opacity="0.3" stroke="#fbbf24" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="195" y="382" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#fde68a" text-anchor="middle">게임리뷰 · NDS</text>
+</svg>

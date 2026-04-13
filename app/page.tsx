@@ -60,11 +60,8 @@ export default async function HomePage() {
         <div className="relative">
           <ClientOnly><HeroBattleScene /></ClientOnly>
 
-          {/* StraWeb + HeroTyping — 좌상단 고정 */}
-          <div className="absolute top-3 left-5 z-[1] space-y-1">
-            <h1 className="text-base font-bold tracking-tight text-white/90">
-              StraWeb
-            </h1>
+          {/* HeroTyping — 좌상단 고정 */}
+          <div className="absolute top-3 left-5 z-[1]">
             <HeroTyping />
           </div>
         </div>

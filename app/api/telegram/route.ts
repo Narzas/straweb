@@ -25,9 +25,9 @@ function parseMessages(html: string): TelegramMessage[] {
     if (!idMatch) continue;
     const id = idMatch[1];
 
-    // 사진 URL — background-image:url('...')
-    const photoMatch = block.match(/background-image:url\('([^']+)'\)/);
-    const photo = photoMatch?.[1] ?? null;
+    // 사진 URL — 메시지 사진 래퍼에서만 추출 (아바타/프로필 사진 제외)
+    const photoWrapMatch = block.match(/tgme_widget_message_photo_wrap[^>]*style="[^"]*background-image:url\('([^']+)'\)/);
+    const photo = photoWrapMatch?.[1] ?? null;
 
     // 텍스트 — .tgme_widget_message_text 내부
     const textMatch = block.match(

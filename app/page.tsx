@@ -6,7 +6,7 @@ import AdSlot from "@/components/AdSlot";
 import Sidebar from "@/components/Sidebar";
 import RightSidebar from "@/components/RightSidebar";
 import HeroTyping from "@/components/HeroTyping";
-import HeroDotGrid from "@/components/HeroDotGrid";
+import HeroBattleScene from "@/components/HeroBattleScene";
 import SeasonalEffect from "@/components/SeasonalEffect";
 import ClientOnly from "@/components/ClientOnly";
 
@@ -56,7 +56,7 @@ export default async function HomePage() {
         {/* 배경 장식 */}
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-white/5" />
-        <ClientOnly><HeroDotGrid /></ClientOnly>
+        <ClientOnly><HeroBattleScene /></ClientOnly>
 
         <div className="relative z-[1] space-y-3">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl break-keep">

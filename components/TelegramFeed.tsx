@@ -66,9 +66,11 @@ export default function TelegramFeed() {
   async function load(first = false) {
     try {
       const res = await fetch("/api/telegram");
-      if (!res.ok) return;
+      if (!res.ok) return; // 실패 시 기존 데이터 유지
       const data = await res.json();
       const msgs: TelegramMessage[] = data.messages ?? [];
+
+      if (!msgs.length) return; // 빈 응답이면 기존 데이터 유지
 
       if (!first) {
         const incoming = new Set(msgs.map((m) => m.id));

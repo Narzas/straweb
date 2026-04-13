@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>FF6 Battle Preview v2</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d0d14; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: monospace; color: #fff; gap: 8px; }
+h2 { font-size: 15px; color: #a78bfa; letter-spacing: 2px; }
+.sub { font-size: 11px; color: #555; }
+
+.canvas-wrap {
+  width: 620px; height: 240px;
+  background: linear-gradient(180deg, #060410 0%, #140820 45%, #0c0d18 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(100,80,200,0.25);
+  position: relative; overflow: hidden;
+}
+
+/* ── STARS ── */
+.star { position: absolute; background: #fff; border-radius: 50%; animation: twinkle var(--d,2s) ease-in-out infinite; opacity: 0; }
+@keyframes twinkle { 0%,100%{opacity:0.05} 50%{opacity:var(--m,0.6)} }
+
+/* ── MOUNTAINS ── */
+.mountains { position: absolute; bottom: 50px; left: 0; width: 100%; height: 55px; }
+
+/* ── GROUND ── */
+.ground { position: absolute; bottom: 48px; left: 0; right: 0; height: 2px; background: rgba(160,140,220,0.15); }
+
+/* ── SCREEN FLASH ── */
+.flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; border-radius: 12px; z-index: 30; transition: opacity 0.05s; }
+
+/* ── ENEMY GROUP ── */
+.enemy-group { position: absolute; bottom: 50px; left: 14px; display: flex; align-items: flex-end; gap: 8px; }
+
+/* Boss dragon bob */
+.boss-dragon { animation: boss-bob 1.5s ease-in-out infinite; transform-origin: bottom center; }
+@keyframes boss-bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+/* Wyvern hover */
+.wyvern { animation: wyv-bob 1.8s ease-in-out infinite; transform-origin: bottom center; }
+.wyvern:nth-child(2){animation-delay:.4s}
+.wyvern:nth-child(3){animation-delay:.8s}
+@keyframes wyv-bob { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-5px) rotate(2deg)} }
+
+/* ── SUMMON CENTER ── */
+.summon-wrap {
+  position: absolute; top: 2px; left: 50%; transform: translateX(-50%);
+  width: 160px; text-align: center; pointer-events: none;
+}
+.summon-name {
+  font-size: 11px; color: #ffd700; letter-spacing: 4px; font-weight: bold;
+  text-shadow: 0 0 10px #ff8c00, 0 0 24px #ff4400;
+  animation: name-pulse 2.2s ease-in-out infinite;
+  margin-top: 4px;
+}
+@keyframes name-pulse {
+  0%,100%{opacity:0.55;text-shadow:0 0 8px #ff8c00}
+  50%{opacity:1;text-shadow:0 0 18px #ff8c00,0 0 36px #ff4400,0 0 60px #ff0000}
+}
+.dragon-anim { animation: dragon-float 3s ease-in-out infinite; margin-top: 2px; }
+@keyframes dragon-float { 0%,100%{transform:translateY(0) rotate(-1.5deg)} 50%{transform:translateY(-10px) rotate(1.5deg)} }
+
+/* ── MEGA FLARE BEAM ── */
+.mf-beam {
+  position: absolute;
+  /* from center toward left/enemies */
+  right: 52%; left: 14px;
+  top: 78px;
+  height: 18px;
+  background: linear-gradient(90deg, rgba(255,100,0,0.1) 0%, #ff6600 30%, #ffd700 65%, #ffffff 90%, rgba(255,255,255,0.8) 100%);
+  border-radius: 9px;
+  filter: blur(5px);
+  transform: scaleX(0);
+  transform-origin: right center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.mf-beam.fire { animation: beam-fire 1.4s ease-out forwards; }
+@keyframes beam-fire {
+  0%   {opacity:0;transform:scaleX(0)}
+  15%  {opacity:1;transform:scaleX(0.3)}
+  35%  {opacity:1;transform:scaleX(1)}
+  70%  {opacity:1;transform:scaleX(1)}
+  100% {opacity:0;transform:scaleX(1)}
+}
+
+/* Beam glow core */
+.mf-core {
+  position: absolute;
+  right: 52%; left: 40px;
+  top: 82px;
+  height: 8px;
+  background: linear-gradient(90deg, transparent, #fff 60%, #fff);
+  border-radius: 4px;
+  filter: blur(1px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 11;
+}
+.mf-core.fire { animation: core-fire 1.4s ease-out forwards; }
+@keyframes core-fire {
+  0%   {opacity:0;transform:scaleX(0)}
+  20%  {opacity:1;transform:scaleX(0.4)}
+  40%  {opacity:1;transform:scaleX(1)}
+  65%  {opacity:1;transform:scaleX(1)}
+  100% {opacity:0;transform:scaleX(1)}
+}
+
+/* ── MAGIC CIRCLE (summon call) ── */
+.magic-ring {
+  position: absolute; border-radius: 50%;
+  border: 2px solid #a855f7;
+  box-shadow: 0 0 12px #a855f7, inset 0 0 12px #7c3aed;
+  opacity: 0; pointer-events: none;
+}
+.magic-ring-outer { width: 64px; height: 64px; bottom: 52px; right: 36px; }
+.magic-ring-inner { width: 40px; height: 40px; bottom: 64px; right: 48px; border-color: #c084fc; }
+.magic-ring.spin {
+  animation: ring-spin 1.8s ease-out forwards;
+}
+@keyframes ring-spin {
+  0%  {opacity:0;transform:scale(0.2) rotate(0deg)}
+  25% {opacity:0.9;transform:scale(1.1) rotate(120deg)}
+  60% {opacity:0.7;transform:scale(1) rotate(260deg)}
+  100%{opacity:0;transform:scale(1.6) rotate(360deg)}
+}
+
+/* ── PARTY (right, vertical column) ── */
+.party {
+  position: absolute; right: 16px; bottom: 50px;
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 3px;
+}
+.member {
+  display: flex; align-items: flex-end; gap: 5px;
+  animation: mem-bob 1.1s ease-in-out infinite;
+  position: relative;
+}
+.member:nth-child(1){animation-delay:0s}
+.member:nth-child(2){animation-delay:0.22s}
+.member:nth-child(3){animation-delay:0.44s}
+.member:nth-child(4){animation-delay:0.66s}
+@keyframes mem-bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
+
+/* Attack lunge */
+.member.attack { animation: lunge 0.75s ease-in-out forwards; }
+@keyframes lunge {
+  0%  {transform:translateX(0) translateY(0)}
+  28% {transform:translateX(-55px) translateY(-3px)}
+  55% {transform:translateX(-50px) translateY(-3px)}
+  100%{transform:translateX(0) translateY(0)}
+}
+
+/* Cast glow */
+.member.cast { animation: cast-fx 1.6s ease-in-out forwards; }
+@keyframes cast-fx {
+  0%,100%{filter:brightness(1)}
+  40%{filter:brightness(2.2) saturate(2) hue-rotate(20deg)}
+  70%{filter:brightness(1.6) saturate(1.5)}
+}
+
+/* Slash effect */
+.slash {
+  position: absolute; left: -195px; top: 4px;
+  width: 44px; height: 44px;
+  opacity: 0; pointer-events: none;
+}
+.slash.show { animation: slash-pop 0.55s ease-out forwards; }
+@keyframes slash-pop {
+  0%  {opacity:0;transform:scale(0.4) rotate(-25deg)}
+  35% {opacity:1;transform:scale(1.3) rotate(8deg)}
+  100%{opacity:0;transform:scale(1.1) rotate(0deg)}
+}
+
+/* ── ATB PANEL ── */
+.atb-panel {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 48px;
+  background: rgba(2,2,22,0.94);
+  border-top: 1px solid rgba(120,100,220,0.3);
+  display: flex; align-items: center; padding: 0 10px; gap: 7px;
+}
+.atb-slot { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.aname { font-size: 7px; letter-spacing: 1px; }
+.bar { height: 4px; background: #0f0f1a; border-radius: 2px; overflow: hidden; }
+.hp-bar { height: 100%; border-radius: 2px; }
+.atb-bar { height: 100%; border-radius: 2px; animation: atb-fill var(--spd,3s) linear infinite; }
+@keyframes atb-fill { 0%{width:4%} 100%{width:100%} }
+.sep { width: 1px; height: 30px; background: rgba(255,255,255,0.06); flex-shrink: 0; }
+
+/* Floating numbers */
+.num {
+  position: absolute; font-size: 13px; font-weight: bold;
+  font-family: monospace; pointer-events: none;
+  animation: num-rise 1.5s ease-out forwards;
+}
+@keyframes num-rise { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-52px)} }
+</style>
+</head>
+<body>
+<h2>⚔ FF6 BATTLE SCENE — v2 PREVIEW</h2>
+<p class="sub">Terra / Celes (여성) · 드래곤 적 · 검 슬래시 · 소환 마법진 · Mega Flare 빔</p>
+
+<div class="canvas-wrap" id="scene">
+
+  <!-- Screen flash overlay -->
+  <div class="flash" id="flash"></div>
+
+  <!-- Stars -->
+  <div class="star" style="width:2px;height:2px;left:4%;top:7%;--d:2.1s;--m:0.6"></div>
+  <div class="star" style="width:2px;height:2px;left:13%;top:14%;--d:1.8s;--m:0.5"></div>
+  <div class="star" style="width:3px;height:3px;left:28%;top:5%;--d:2.5s;--m:0.75"></div>
+  <div class="star" style="width:2px;height:2px;left:44%;top:11%;--d:1.9s;--m:0.8"></div>
+  <div class="star" style="width:2px;height:2px;left:58%;top:4%;--d:2.3s;--m:0.5"></div>
+  <div class="star" style="width:2px;height:2px;left:72%;top:9%;--d:1.7s;--m:0.6"></div>
+  <div class="star" style="width:2px;height:2px;left:86%;top:6%;--d:2.6s;--m:0.7"></div>
+  <div class="star" style="width:2px;height:2px;left:19%;top:19%;--d:3.1s;--m:0.4"></div>
+  <div class="star" style="width:2px;height:2px;left:67%;top:17%;--d:2.2s;--m:0.45"></div>
+
+  <!-- Mountains -->
+  <svg class="mountains" viewBox="0 0 620 55" preserveAspectRatio="none">
+    <polygon points="0,55 72,12 144,55" fill="#0f1520"/>
+    <polygon points="95,55 178,4 262,55" fill="#141e30"/>
+    <polygon points="210,55 306,16 402,55" fill="#0f1520"/>
+    <polygon points="340,55 445,8 550,55" fill="#141e30"/>
+    <polygon points="480,55 562,18 640,55" fill="#0f1520"/>
+  </svg>
+  <div class="ground"></div>
+
+  <!-- Mega Flare beam layers -->
+  <div class="mf-beam" id="mf-beam" style="transform-origin:right center;"></div>
+  <div class="mf-core" id="mf-core" style="transform-origin:right center;"></div>
+
+  <!-- Magic circle rings -->
+  <div class="magic-ring magic-ring-outer" id="ring-outer"></div>
+  <div class="magic-ring magic-ring-inner" id="ring-inner"></div>
+
+  <!-- ── BAHAMUT (center top) ── -->
+  <div class="summon-wrap">
+    <div class="summon-name">BAHAMUT</div>
+    <div class="dragon-anim" id="dragon-wrap">
+      <svg width="118" height="86" viewBox="0 0 118 86">
+        <!-- wings -->
+        <polygon points="59,14 6,52 24,56" fill="#3b1278" opacity="0.78"/>
+        <polygon points="59,14 112,52 94,56" fill="#3b1278" opacity="0.78"/>
+        <!-- wing veins -->
+        <polyline points="6,52 20,32 32,46" stroke="#7c3aed" stroke-width="1.5" fill="none" opacity="0.55"/>
+        <polyline points="112,52 98,32 86,46" stroke="#7c3aed" stroke-width="1.5" fill="none" opacity="0.55"/>
+        <!-- body -->
+        <ellipse cx="59" cy="56" rx="22" ry="26" fill="#6d28d9" opacity="0.97"/>
+        <!-- belly -->
+        <ellipse cx="59" cy="60" rx="12" ry="16" fill="#7c3aed" opacity="0.4"/>
+        <!-- scale lines -->
+        <path d="M 42 48 Q 59 40 76 48" stroke="#4c1d95" stroke-width="3" fill="none"/>
+        <path d="M 40 58 Q 59 50 78 58" stroke="#4c1d95" stroke-width="2.5" fill="none"/>
+        <!-- neck -->
+        <rect x="49" y="18" width="20" height="20" fill="#6d28d9" rx="3"/>
+        <!-- head -->
+        <ellipse cx="59" cy="22" rx="15" ry="16" fill="#5b21b6" opacity="0.97"/>
+        <!-- snout -->
+        <polygon points="50,14 68,14 65,6 53,6" fill="#6d28d9"/>
+        <!-- nostrils -->
+        <circle cx="54" cy="10" r="1.5" fill="#4c1d95"/>
+        <circle cx="64" cy="10" r="1.5" fill="#4c1d95"/>
+        <!-- eyes -->
+        <ellipse cx="49" cy="20" rx="4" ry="4.5" fill="#fff"/>
+        <ellipse cx="69" cy="20" rx="4" ry="4.5" fill="#fff"/>
+        <ellipse cx="49.5" cy="20.5" rx="3" ry="3.5" fill="#ea580c"/>
+        <ellipse cx="69.5" cy="20.5" rx="3" ry="3.5" fill="#ea580c"/>
+        <ellipse cx="49.5" cy="20.5" rx="1" ry="2.5" fill="#7f1d1d"/>
+        <ellipse cx="69.5" cy="20.5" rx="1" ry="2.5" fill="#7f1d1d"/>
+        <!-- horns -->
+        <polygon points="47,10 38,0 52,8" fill="#c4b5fd"/>
+        <polygon points="71,10 80,0 66,8" fill="#c4b5fd"/>
+        <line x1="47" y1="10" x2="39" y2="1" stroke="#ddd6fe" stroke-width="1" opacity="0.7"/>
+        <line x1="71" y1="10" x2="79" y2="1" stroke="#ddd6fe" stroke-width="1" opacity="0.7"/>
+        <!-- tail -->
+        <path d="M 59 82 Q 84 90 100 78 Q 112 68 106 58" stroke="#6d28d9" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <polygon points="104,62 110,56 112,64" fill="#7c3aed"/>
+        <!-- glow -->
+        <circle cx="59" cy="50" r="12" fill="#a855f7" opacity="0.12"/>
+        <!-- mouth glow (for mega flare) -->
+        <ellipse cx="59" cy="8" rx="6" ry="3" fill="#ff8800" opacity="0" id="mouth-glow"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── ENEMIES (left) ── -->
+  <div class="enemy-group">
+
+    <!-- Boss: Large Dragon -->
+    <div class="boss-dragon" id="boss">
+      <svg width="82" height="98" viewBox="0 0 82 98">
+        <!-- tail -->
+        <path d="M 40 90 Q 10 96 4 82 Q 0 68 12 62" stroke="#1e3a8a" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <polygon points="8,72 2,64 12,66" fill="#1d4ed8"/>
+        <!-- wings -->
+        <polygon points="41,12 2,46 18,50" fill="#172554" opacity="0.82"/>
+        <polygon points="41,12 80,46 64,50" fill="#172554" opacity="0.82"/>
+        <polyline points="2,46 16,28 28,42" stroke="#1d4ed8" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <polyline points="80,46 66,28 54,42" stroke="#1d4ed8" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <!-- body -->
+        <ellipse cx="41" cy="60" rx="28" ry="32" fill="#1e40af" opacity="0.97"/>
+        <!-- belly -->
+        <ellipse cx="41" cy="64" rx="15" ry="20" fill="#2563eb" opacity="0.3"/>
+        <!-- scale rows -->
+        <path d="M 20 46 Q 41 36 62 46" stroke="#1e3a8a" stroke-width="3.5" fill="none"/>
+        <path d="M 16 57 Q 41 47 66 57" stroke="#1e3a8a" stroke-width="3" fill="none"/>
+        <path d="M 18 68 Q 41 60 64 68" stroke="#1e3a8a" stroke-width="2.5" fill="none"/>
+        <!-- neck -->
+        <rect x="31" y="16" width="20" height="22" fill="#1e40af" rx="4"/>
+        <!-- head -->
+        <ellipse cx="41" cy="20" rx="20" ry="18" fill="#1e3a8a" opacity="0.97"/>
+        <!-- jaw (lower) -->
+        <path d="M 26 24 Q 41 34 56 24" fill="#1d4ed8"/>
+        <!-- teeth -->
+        <rect x="32" y="22" width="5" height="8" fill="#e2e8f0" rx="1.5"/>
+        <rect x="39" y="24" width="4" height="6" fill="#e2e8f0" rx="1.5"/>
+        <rect x="45" y="22" width="5" height="8" fill="#e2e8f0" rx="1.5"/>
+        <!-- snout -->
+        <ellipse cx="41" cy="13" rx="11" ry="9" fill="#1e40af"/>
+        <!-- nostrils -->
+        <circle cx="36" cy="11" r="2" fill="#172554"/>
+        <circle cx="46" cy="11" r="2" fill="#172554"/>
+        <!-- eyes -->
+        <ellipse cx="30" cy="17" rx="6" ry="6" fill="#fff"/>
+        <ellipse cx="52" cy="17" rx="6" ry="6" fill="#fff"/>
+        <ellipse cx="30" cy="17" rx="4" ry="4.5" fill="#dc2626"/>
+        <ellipse cx="52" cy="17" rx="4" ry="4.5" fill="#dc2626"/>
+        <ellipse cx="30" cy="17" rx="1.2" ry="2.8" fill="#7f1d1d"/>
+        <ellipse cx="52" cy="17" rx="1.2" ry="2.8" fill="#7f1d1d"/>
+        <!-- eye glow -->
+        <circle cx="30" cy="17" r="1.5" fill="#ff4400" opacity="0.6"/>
+        <circle cx="52" cy="17" r="1.5" fill="#ff4400" opacity="0.6"/>
+        <!-- horns -->
+        <polygon points="28,8 18,0 34,10" fill="#93c5fd"/>
+        <polygon points="54,8 64,0 48,10" fill="#93c5fd"/>
+        <!-- arms/claws -->
+        <rect x="4" y="50" width="20" height="14" fill="#1e40af" rx="3"/>
+        <polygon points="4,56 0,52 4,48 8,52" fill="#93c5fd"/>
+        <polygon points="4,60 0,56 4,52 8,57" fill="#93c5fd"/>
+        <rect x="58" y="50" width="20" height="14" fill="#1e40af" rx="3"/>
+        <polygon points="78,56 82,52 78,48 74,52" fill="#93c5fd"/>
+        <polygon points="78,60 82,56 78,52 74,57" fill="#93c5fd"/>
+        <!-- legs -->
+        <rect x="20" y="84" width="16" height="12" fill="#1d4ed8" rx="2"/>
+        <polygon points="20,94 14,98 22,96 28,98 36,94" fill="#3b82f6"/>
+        <rect x="46" y="84" width="16" height="12" fill="#1d4ed8" rx="2"/>
+        <polygon points="46,94 40,98 48,96 54,98 62,94" fill="#3b82f6"/>
+      </svg>
+    </div>
+
+    <!-- Wyvern 1 -->
+    <div class="wyvern" id="wy1">
+      <svg width="40" height="50" viewBox="0 0 40 50">
+        <polygon points="20,8 1,26 11,28" fill="#172554" opacity="0.75"/>
+        <polygon points="20,8 39,26 29,28" fill="#172554" opacity="0.75"/>
+        <ellipse cx="20" cy="32" rx="12" ry="15" fill="#1e40af" opacity="0.92"/>
+        <ellipse cx="20" cy="36" rx="7" ry="10" fill="#2563eb" opacity="0.25"/>
+        <ellipse cx="20" cy="17" rx="10" ry="10" fill="#1e3a8a"/>
+        <ellipse cx="20" cy="10" rx="6" ry="5" fill="#1e40af"/>
+        <!-- teeth -->
+        <rect x="16" y="14" width="3" height="5" fill="#e2e8f0" rx="1"/>
+        <rect x="21" y="15" width="3" height="4" fill="#e2e8f0" rx="1"/>
+        <ellipse cx="14" cy="14" rx="3" ry="3" fill="#dc2626"/>
+        <ellipse cx="26" cy="14" rx="3" ry="3" fill="#dc2626"/>
+        <path d="M 20 46 Q 32 52 38 44" stroke="#1d4ed8" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <polygon points="34,46 40,42 40,48" fill="#2563eb"/>
+        <polygon points="8,38 2,44 10,42 14,46 18,38" fill="#3b82f6"/>
+        <polygon points="30,38 24,44 28,42 32,46 34,38" fill="#3b82f6"/>
+      </svg>
+    </div>
+
+    <!-- Wyvern 2 -->
+    <div class="wyvern" id="wy2">
+      <svg width="38" height="48" viewBox="0 0 38 48">
+        <polygon points="19,7 1,24 10,26" fill="#172554" opacity="0.75"/>
+        <polygon points="19,7 37,24 28,26" fill="#172554" opacity="0.75"/>
+        <ellipse cx="19" cy="30" rx="11" ry="14" fill="#1e40af" opacity="0.92"/>
+        <ellipse cx="19" cy="16" rx="9" ry="9" fill="#1e3a8a"/>
+        <ellipse cx="19" cy="9" rx="5" ry="5" fill="#1e40af"/>
+        <rect x="15" y="13" width="3" height="5" fill="#e2e8f0" rx="1"/>
+        <rect x="20" y="14" width="3" height="4" fill="#e2e8f0" rx="1"/>
+        <ellipse cx="13" cy="13" rx="2.5" ry="2.5" fill="#dc2626"/>
+        <ellipse cx="25" cy="13" rx="2.5" ry="2.5" fill="#dc2626"/>
+        <path d="M 19 44 Q 30 50 36 42" stroke="#1d4ed8" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <polygon points="8,36 2,42 10,40 14,44 16,36" fill="#3b82f6"/>
+        <polygon points="28,36 22,42 26,40 30,44 32,36" fill="#3b82f6"/>
+      </svg>
+    </div>
+
+  </div><!-- /enemy-group -->
+
+  <!-- ── PARTY (right, vertical column) ── -->
+  <div class="party">
+
+    <!-- Terra — female mage, green hair, purple robe, staff -->
+    <div class="member" id="m0">
+      <svg width="24" height="30" viewBox="0 0 24 30">
+        <!-- staff -->
+        <line x1="2" y1="0" x2="2" y2="24" stroke="#92400e" stroke-width="2"/>
+        <circle cx="2" cy="1" r="3" fill="#fbbf24"/>
+        <circle cx="2" cy="1" r="1.5" fill="#fff" opacity="0.7"/>
+        <!-- hair + ponytail -->
+        <ellipse cx="14" cy="5" rx="7" ry="6" fill="#16a34a"/>
+        <path d="M 20 7 Q 24 10 22 18" stroke="#16a34a" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <!-- face -->
+        <ellipse cx="13" cy="10" rx="6" ry="7" fill="#fde8d0"/>
+        <!-- feminine eyes (lashes) -->
+        <ellipse cx="10" cy="9" rx="1.6" ry="1.3" fill="#1a1a1a"/>
+        <ellipse cx="16" cy="9" rx="1.6" ry="1.3" fill="#1a1a1a"/>
+        <path d="M 8 8 Q 10 7 12 8" stroke="#1a1a1a" stroke-width="0.8" fill="none"/>
+        <path d="M 14 8 Q 16 7 18 8" stroke="#1a1a1a" stroke-width="0.8" fill="none"/>
+        <!-- robe -->
+        <path d="M 6 17 Q 14 15 21 17 L 22 30 L 5 30 Z" fill="#7e22ce"/>
+        <ellipse cx="4" cy="21" rx="3.5" ry="5" fill="#6b21a8"/>
+        <ellipse cx="21" cy="21" rx="3" ry="4" fill="#6b21a8"/>
+        <!-- robe belt -->
+        <rect x="6" y="20" width="15" height="2" fill="#a855f7" opacity="0.6"/>
+      </svg>
+      <!-- Slash (magic bolt for Terra) -->
+      <div class="slash" id="sl0">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <line x1="40" y1="4" x2="4" y2="40" stroke="#c084fc" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="4" y1="4" x2="40" y2="40" stroke="#e879f9" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+          <circle cx="22" cy="22" r="6" fill="#f0abfc" opacity="0.3"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Celes — female knight, blonde, blue eyes, silver armor, sword -->
+    <div class="member" id="m1">
+      <svg width="24" height="30" viewBox="0 0 24 30">
+        <!-- sword (held out right) -->
+        <line x1="22" y1="6" x2="22" y2="28" stroke="#cbd5e1" stroke-width="2.5"/>
+        <line x1="18" y1="14" x2="26" y2="14" stroke="#94a3b8" stroke-width="2"/>
+        <rect x="21" y="25" width="2" height="5" fill="#78716c"/>
+        <!-- blonde hair -->
+        <ellipse cx="11" cy="5" rx="7" ry="5.5" fill="#fbbf24"/>
+        <path d="M 16 8 Q 20 12 18 20" stroke="#f59e0b" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <!-- face -->
+        <ellipse cx="11" cy="10" rx="6" ry="7" fill="#fde8d0"/>
+        <!-- blue eyes with lashes -->
+        <ellipse cx="8" cy="9" rx="1.6" ry="1.3" fill="#1d4ed8"/>
+        <ellipse cx="14" cy="9" rx="1.6" ry="1.3" fill="#1d4ed8"/>
+        <path d="M 6 8 Q 8 7 10 8" stroke="#1a1a1a" stroke-width="0.8" fill="none"/>
+        <path d="M 12 8 Q 14 7 16 8" stroke="#1a1a1a" stroke-width="0.8" fill="none"/>
+        <!-- armor body -->
+        <rect x="4" y="17" width="15" height="13" fill="#cbd5e1" rx="2"/>
+        <!-- armor lines -->
+        <line x1="11" y1="17" x2="11" y2="30" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="4" y="20" width="15" height="2" fill="#94a3b8" opacity="0.6"/>
+        <!-- pauldrons -->
+        <ellipse cx="3" cy="19" rx="3" ry="3.5" fill="#94a3b8"/>
+        <ellipse cx="19" cy="19" rx="3" ry="3.5" fill="#94a3b8"/>
+        <!-- blue cape -->
+        <path d="M 4 19 Q 0 25 2 30 L 5 30 Z" fill="#2563eb" opacity="0.8"/>
+      </svg>
+      <div class="slash" id="sl1">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <line x1="40" y1="6" x2="6" y2="40" stroke="#e2e8f0" stroke-width="4" stroke-linecap="round"/>
+          <line x1="8" y1="10" x2="36" y2="38" stroke="#93c5fd" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+          <line x1="38" y1="16" x2="16" y2="38" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Locke — male thief, brown hair, white bandana, blue jacket, dagger -->
+    <div class="member" id="m2">
+      <svg width="24" height="30" viewBox="0 0 24 30">
+        <!-- dagger -->
+        <line x1="2" y1="10" x2="5" y2="26" stroke="#e2e8f0" stroke-width="2"/>
+        <polygon points="2,10 0,7 5,8" fill="#cbd5e1"/>
+        <!-- brown hair -->
+        <ellipse cx="13" cy="5" rx="7" ry="5" fill="#92400e"/>
+        <!-- bandana -->
+        <rect x="6" y="3" width="14" height="5" fill="#f8fafc" rx="2.5" opacity="0.9"/>
+        <rect x="14" y="6" width="6" height="2" fill="#f8fafc" opacity="0.7" rx="1"/>
+        <!-- face -->
+        <ellipse cx="13" cy="10" rx="6" ry="7" fill="#fde8d0"/>
+        <!-- eyes -->
+        <ellipse cx="10" cy="9.5" rx="1.5" ry="1.5" fill="#1a1a1a"/>
+        <ellipse cx="16" cy="9.5" rx="1.5" ry="1.5" fill="#1a1a1a"/>
+        <!-- jacket -->
+        <rect x="5" y="17" width="15" height="13" fill="#1d4ed8" rx="2"/>
+        <line x1="12" y1="17" x2="12" y2="30" stroke="#1e40af" stroke-width="1.5"/>
+        <ellipse cx="4" cy="20" rx="3" ry="3.5" fill="#1d4ed8"/>
+        <ellipse cx="20" cy="20" rx="3" ry="3.5" fill="#1d4ed8"/>
+      </svg>
+      <div class="slash" id="sl2">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <line x1="38" y1="6" x2="6" y2="38" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="38" y1="18" x2="12" y2="40" stroke="#fde68a" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Edgar — male king, gold crown, green armor -->
+    <div class="member" id="m3">
+      <svg width="24" height="30" viewBox="0 0 24 30">
+        <!-- crossbow/tool on back -->
+        <rect x="0" y="14" width="6" height="3" fill="#6b7280" rx="1"/>
+        <rect x="1" y="13" width="1.5" height="8" fill="#9ca3af"/>
+        <!-- crown -->
+        <polygon points="5,5 8,0 12,3 16,0 19,5" fill="#fbbf24"/>
+        <rect x="5" y="4" width="14" height="4" fill="#f59e0b"/>
+        <!-- hair -->
+        <ellipse cx="12" cy="7" rx="7" ry="4.5" fill="#d97706"/>
+        <!-- face -->
+        <ellipse cx="12" cy="12" rx="6" ry="7" fill="#fde8d0"/>
+        <!-- eyes -->
+        <ellipse cx="9" cy="11" rx="1.5" ry="1.5" fill="#1a1a1a"/>
+        <ellipse cx="15" cy="11" rx="1.5" ry="1.5" fill="#1a1a1a"/>
+        <!-- armor body -->
+        <rect x="3" y="19" width="17" height="11" fill="#166534" rx="2"/>
+        <ellipse cx="11" cy="22" rx="5.5" ry="4" fill="#15803d"/>
+        <ellipse cx="2" cy="21" rx="3.5" ry="3.5" fill="#166534"/>
+        <ellipse cx="21" cy="21" rx="3.5" ry="3.5" fill="#166534"/>
+        <!-- armor trim -->
+        <rect x="3" y="19" width="17" height="2" fill="#f59e0b" opacity="0.5"/>
+      </svg>
+      <div class="slash" id="sl3">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <line x1="40" y1="8" x2="8" y2="40" stroke="#4ade80" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="26" y1="4" x2="4" y2="26" stroke="#86efac" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+        </svg>
+      </div>
+    </div>
+
+  </div><!-- /party -->
+
+  <!-- ── ATB PANEL ── -->
+  <div class="atb-panel">
+    <div class="atb-slot">
+      <div class="aname" style="color:#22c55e;">TERRA</div>
+      <div class="bar"><div class="hp-bar" id="hp0" style="width:88%;background:#22c55e;"></div></div>
+      <div class="bar"><div class="atb-bar" style="background:#ffd700;--spd:3.2s;"></div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="atb-slot">
+      <div class="aname" style="color:#93c5fd;">CELES</div>
+      <div class="bar"><div class="hp-bar" id="hp1" style="width:76%;background:#60a5fa;"></div></div>
+      <div class="bar"><div class="atb-bar" style="background:#ffd700;--spd:2.7s;"></div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="atb-slot">
+      <div class="aname" style="color:#fbbf24;">LOCKE</div>
+      <div class="bar"><div class="hp-bar" id="hp2" style="width:93%;background:#f59e0b;"></div></div>
+      <div class="bar"><div class="atb-bar" style="background:#ffd700;--spd:2.3s;"></div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="atb-slot">
+      <div class="aname" style="color:#4ade80;">EDGAR</div>
+      <div class="bar"><div class="hp-bar" id="hp3" style="width:61%;background:#22c55e;"></div></div>
+      <div class="bar"><div class="atb-bar" style="background:#ffd700;--spd:3.8s;"></div></div>
+    </div>
+    <div style="margin-left:auto;font-size:9px;color:#ff4444;font-family:monospace;font-weight:bold;text-shadow:0 0 5px #ff0000;min-width:44px;text-align:right;" id="dmg-disp"></div>
+  </div>
+
+</div><!-- /canvas-wrap -->
+
+<script>
+const scene = document.getElementById('scene');
+const boss = document.getElementById('boss');
+const wy1 = document.getElementById('wy1');
+const wy2 = document.getElementById('wy2');
+const flashEl = document.getElementById('flash');
+const mfBeam = document.getElementById('mf-beam');
+const mfCore = document.getElementById('mf-core');
+const ringOuter = document.getElementById('ring-outer');
+const ringInner = document.getElementById('ring-inner');
+const dragonWrap = document.getElementById('dragon-wrap');
+const mouthGlow = document.getElementById('mouth-glow');
+const dmgDisp = document.getElementById('dmg-disp');
+
+const members = [0,1,2,3].map(i => document.getElementById('m'+i));
+const slashes  = [0,1,2,3].map(i => document.getElementById('sl'+i));
+const hpBars   = [0,1,2,3].map(i => document.getElementById('hp'+i));
+
+function flash(color, alpha, ms) {
+  flashEl.style.background = color;
+  flashEl.style.opacity = alpha;
+  setTimeout(() => flashEl.style.opacity = 0, ms * 0.35);
+}
+
+function spawnNum(x, y, text, color) {
+  const el = document.createElement('div');
+  el.className = 'num';
+  el.style.cssText = `left:${x}px;top:${y}px;color:${color};text-shadow:0 0 6px ${color};`;
+  el.textContent = text;
+  scene.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+function enemyHit(el, strong) {
+  el.style.transition = 'filter 0.05s';
+  el.style.filter = strong ? 'brightness(5) saturate(0)' : 'brightness(3) saturate(0)';
+  setTimeout(() => el.style.filter = '', strong ? 500 : 300);
+}
+
+function memberAttack(idx, isSlash = true) {
+  const m = members[idx];
+  const sl = slashes[idx];
+  // remove then re-add to restart
+  m.classList.remove('attack', 'cast');
+  sl.classList.remove('show');
+  void m.offsetWidth;
+  m.classList.add('attack');
+
+  setTimeout(() => {
+    sl.classList.add('show');
+    flash('white', 0.18, 160);
+    const dmg = Math.floor(Math.random() * 900 + 180);
+    dmgDisp.textContent = `-${dmg}`;
+    enemyHit(boss, false);
+    spawnNum(70 + Math.random()*30, 50 + Math.random()*30, `-${dmg}`, '#ff4444');
+  }, 230);
+
+  setTimeout(() => {
+    m.classList.remove('attack');
+    sl.classList.remove('show');
+  }, 780);
+}
+
+function doSummonCall() {
+  // Terra casts
+  const m = members[0];
+  m.classList.remove('cast');
+  void m.offsetWidth;
+  m.classList.add('cast');
+
+  // magic rings
+  [ringOuter, ringInner].forEach(r => {
+    r.classList.remove('spin');
+    void r.offsetWidth;
+  });
+  setTimeout(() => ringOuter.classList.add('spin'), 0);
+  setTimeout(() => ringInner.classList.add('spin'), 200);
+
+  // dragon brightens
+  dragonWrap.style.transition = 'filter 0.4s';
+  dragonWrap.style.filter = 'brightness(1.8) saturate(1.8)';
+  spawnNum(390, 75, 'BAHAMUT!', '#c084fc');
+
+  setTimeout(() => {
+    dragonWrap.style.filter = '';
+    m.classList.remove('cast');
+  }, 1700);
+}
+
+function doMegaFlare() {
+  // Mouth glows
+  if (mouthGlow) {
+    mouthGlow.style.opacity = '0.9';
+    mouthGlow.style.transition = 'opacity 0.3s';
+  }
+  dragonWrap.style.filter = 'brightness(2.5) saturate(2)';
+
+  setTimeout(() => {
+    // Fire beam
+    mfBeam.classList.remove('fire');
+    mfCore.classList.remove('fire');
+    void mfBeam.offsetWidth;
+    mfBeam.classList.add('fire');
+    mfCore.classList.add('fire');
+
+    setTimeout(() => {
+      flash('#ff6600', 0.65, 450);
+      [boss, wy1, wy2].forEach(e => enemyHit(e, true));
+      spawnNum(52, 48, `-5240`, '#ff6600');
+      spawnNum(138, 68, `-3870`, '#ff6600');
+      spawnNum(176, 52, `-3120`, '#ff6600');
+      dmgDisp.textContent = `-5240`;
+
+      // Enemies stagger
+      [boss, wy1, wy2].forEach(e => {
+        setTimeout(() => {
+          e.style.transition = 'transform 0.15s';
+          e.style.transform = 'translateX(16px)';
+          setTimeout(() => {
+            e.style.transform = 'translateX(-8px)';
+            setTimeout(() => e.style.transform = '', 150);
+          }, 150);
+        }, 80);
+      });
+    }, 650);
+
+    setTimeout(() => {
+      mfBeam.classList.remove('fire');
+      mfCore.classList.remove('fire');
+      if (mouthGlow) mouthGlow.style.opacity = '0';
+      dragonWrap.style.filter = '';
+    }, 1500);
+  }, 350);
+}
+
+// Combat sequence
+const steps = [
+  () => memberAttack(2),          // Locke dagger
+  () => memberAttack(1),          // Celes sword
+  () => memberAttack(3),          // Edgar
+  () => {                          // Locke + heal
+    memberAttack(2);
+    setTimeout(() => {
+      spawnNum(480, 120, '+1440', '#44ff88');
+      const b = hpBars[1];
+      b.style.width = Math.min(100, parseFloat(b.style.width) + 14) + '%';
+    }, 900);
+  },
+  () => doSummonCall(),            // Terra summons
+  () => doMegaFlare(),             // MEGA FLARE
+  () => memberAttack(0),           // Terra magic slash
+  () => memberAttack(1),           // Celes sword again
+];
+
+let tick = 0;
+setTimeout(() => {
+  steps[0]();
+  tick = 1;
+  setInterval(() => {
+    steps[tick % steps.length]();
+    tick++;
+  }, 2500);
+}, 900);
+</script>
+</body>
+</html>

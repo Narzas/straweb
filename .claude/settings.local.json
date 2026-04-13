@@ -71,7 +71,8 @@
       "Bash(node:*)",
       "Bash(npm list:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "Bash(git:*)"
     ]
   }
 }

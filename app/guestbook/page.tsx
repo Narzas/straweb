@@ -57,14 +57,14 @@ export default function GuestbookPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="mb-1 text-2xl font-extrabold text-gray-900">방명록</h1>
-      <p className="mb-8 text-sm text-gray-400">방문 흔적을 남겨주세요. 짧은 인사도 환영합니다.</p>
+      <h1 className="mb-1 text-2xl font-extrabold text-gray-900 dark:text-gray-100">방명록</h1>
+      <p className="mb-8 text-sm text-gray-400 dark:text-gray-500">방문 흔적을 남겨주세요. 짧은 인사도 환영합니다.</p>
 
       {/* ── 작성 폼 ── */}
       <form
         ref={formRef}
         onSubmit={handleSubmit}
-        className="mb-10 rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-3"
+        className="mb-10 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm space-y-3"
       >
         <div className="flex gap-3">
           <input
@@ -74,7 +74,7 @@ export default function GuestbookPage() {
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             required
-            className="w-36 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none"
+            className="w-36 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-indigo-400 focus:outline-none"
           />
         </div>
         <textarea
@@ -84,7 +84,7 @@ export default function GuestbookPage() {
           onChange={(e) => setMessage(e.target.value)}
           required
           rows={3}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none focus:border-indigo-400 focus:outline-none"
+          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none focus:border-indigo-400 focus:outline-none"
         />
         <div className="flex items-center justify-between">
           {error ? <p className="text-xs text-red-500">{error}</p> : <span />}
@@ -118,18 +118,18 @@ export default function GuestbookPage() {
           {entries.map((entry) => (
             <li
               key={entry.id}
-              className="rounded-xl border border-gray-100 bg-white px-5 py-4 shadow-sm"
+              className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4 shadow-sm"
             >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-800">{entry.author}</span>
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{entry.author}</span>
                   {entry.ip && (
-                    <span className="text-[11px] text-gray-400 font-mono">{entry.ip}</span>
+                    <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">{entry.ip}</span>
                   )}
                 </div>
-                <span className="text-xs text-gray-400">{timeAgo(entry.created_at)}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(entry.created_at)}</span>
               </div>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap break-words leading-relaxed">
+              <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words leading-relaxed">
                 {entry.message}
               </p>
             </li>

@@ -1,0 +1,189 @@
+<h2>A+B 통합 — 4인 파티 우측 배치</h2>
+<p class="subtitle">FF6 정석 레이아웃: 적 좌측 / 파티 우측 / 하단 ATB UI</p>
+
+<div class="mockup">
+  <div class="mockup-header">Hero Section 배경 캔버스 미리보기 (픽셀아트 스타일)</div>
+  <div class="mockup-body" style="padding:0;">
+    <div style="background:linear-gradient(180deg,#0d1117 0%,#1a0a2e 55%,#0d1117 100%);border-radius:0 0 8px 8px;height:180px;position:relative;overflow:hidden;font-family:monospace;">
+
+      <!-- Stars -->
+      <div style="position:absolute;top:6px;left:18px;width:2px;height:2px;background:#fff;opacity:0.5;"></div>
+      <div style="position:absolute;top:14px;left:75px;width:2px;height:2px;background:#fff;opacity:0.35;"></div>
+      <div style="position:absolute;top:4px;left:160px;width:2px;height:2px;background:#fff;opacity:0.6;"></div>
+      <div style="position:absolute;top:20px;left:240px;width:2px;height:2px;background:#fff;opacity:0.4;"></div>
+      <div style="position:absolute;top:8px;right:40px;width:2px;height:2px;background:#fff;opacity:0.55;"></div>
+      <div style="position:absolute;top:18px;right:100px;width:2px;height:2px;background:#fff;opacity:0.3;"></div>
+
+      <!-- Battle background: dark rocky ground -->
+      <svg style="position:absolute;bottom:38px;left:0;width:100%;height:60px;" viewBox="0 0 500 60" preserveAspectRatio="none">
+        <polygon points="0,60 60,20 120,60" fill="#141824" opacity="0.9"/>
+        <polygon points="80,60 150,12 220,60" fill="#1a2030" opacity="0.9"/>
+        <polygon points="180,60 250,18 320,60" fill="#141824" opacity="0.9"/>
+        <polygon points="290,60 370,8 450,60" fill="#1a2030" opacity="0.9"/>
+        <polygon points="400,60 460,22 520,60" fill="#141824" opacity="0.9"/>
+      </svg>
+
+      <!-- Ground line -->
+      <div style="position:absolute;bottom:36px;left:0;right:0;height:2px;background:rgba(255,255,255,0.08);"></div>
+
+      <!-- ── 적 (좌측) ── -->
+      <!-- 보스 몬스터 -->
+      <div style="position:absolute;bottom:38px;left:18px;">
+        <svg width="52" height="58" viewBox="0 0 52 58">
+          <!-- body -->
+          <rect x="12" y="8" width="28" height="28" fill="#5c0080" opacity="0.95"/>
+          <!-- head -->
+          <rect x="16" y="0" width="20" height="12" fill="#7a00a8" opacity="0.95"/>
+          <!-- eyes -->
+          <rect x="19" y="3" width="4" height="4" fill="#ff3300"/>
+          <rect x="29" y="3" width="4" height="4" fill="#ff3300"/>
+          <!-- arms -->
+          <rect x="2" y="12" width="12" height="8" fill="#5c0080" opacity="0.9"/>
+          <rect x="38" y="12" width="12" height="8" fill="#5c0080" opacity="0.9"/>
+          <!-- legs -->
+          <rect x="14" y="36" width="8" height="16" fill="#4a0068"/>
+          <rect x="30" y="36" width="8" height="16" fill="#4a0068"/>
+          <!-- claws -->
+          <rect x="0" y="18" width="4" height="3" fill="#ff6600"/>
+          <rect x="48" y="18" width="4" height="3" fill="#ff6600"/>
+        </svg>
+      </div>
+
+      <!-- 소형 적 2마리 -->
+      <div style="position:absolute;bottom:38px;left:80px;">
+        <svg width="22" height="28" viewBox="0 0 22 28">
+          <rect x="5" y="0" width="12" height="10" fill="#880088" opacity="0.9"/>
+          <rect x="3" y="10" width="16" height="12" fill="#aa00aa" opacity="0.9"/>
+          <rect x="0" y="13" width="4" height="7" fill="#880088"/>
+          <rect x="18" y="13" width="4" height="7" fill="#880088"/>
+          <rect x="5" y="22" width="4" height="6" fill="#660066"/>
+          <rect x="13" y="22" width="4" height="6" fill="#660066"/>
+          <rect x="7" y="3" width="2" height="2" fill="#ff0"/>
+          <rect x="13" y="3" width="2" height="2" fill="#ff0"/>
+        </svg>
+      </div>
+      <div style="position:absolute;bottom:38px;left:110px;">
+        <svg width="22" height="28" viewBox="0 0 22 28">
+          <rect x="5" y="0" width="12" height="10" fill="#880088" opacity="0.9"/>
+          <rect x="3" y="10" width="16" height="12" fill="#aa00aa" opacity="0.9"/>
+          <rect x="0" y="13" width="4" height="7" fill="#880088"/>
+          <rect x="18" y="13" width="4" height="7" fill="#880088"/>
+          <rect x="5" y="22" width="4" height="6" fill="#660066"/>
+          <rect x="13" y="22" width="4" height="6" fill="#660066"/>
+          <rect x="7" y="3" width="2" height="2" fill="#ff0"/>
+          <rect x="13" y="3" width="2" height="2" fill="#ff0"/>
+        </svg>
+      </div>
+
+      <!-- ── 소환 이펙트 (중앙) ── -->
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;">
+        <div style="font-size:10px;color:#ffd700;text-shadow:0 0 8px #ff8c00,0 0 20px #ff4400;letter-spacing:3px;font-weight:bold;">BAHAMUT</div>
+        <svg width="60" height="44" viewBox="0 0 60 44" style="margin-top:2px;">
+          <!-- dragon body -->
+          <polygon points="30,2 42,16 54,8 46,24 58,28 42,32 30,44 18,32 2,28 14,24 6,8 18,16" fill="#7c3aed" opacity="0.8"/>
+          <polygon points="30,8 40,19 50,14 44,25 52,28 40,30 30,40 20,30 8,28 16,25 10,14 20,19" fill="#a855f7" opacity="0.65"/>
+          <circle cx="30" cy="22" r="5" fill="#e879f9" opacity="0.7"/>
+        </svg>
+        <!-- Mega Flare beam -->
+        <div style="width:80px;height:6px;margin:2px auto 0;background:linear-gradient(90deg,transparent,#ff8c00,#ffd700,#ff8c00,transparent);border-radius:3px;filter:blur(1px);opacity:0.8;"></div>
+      </div>
+
+      <!-- ── 파티 (우측 4인) ── -->
+      <!-- Terra - 초록 머리 마법사 -->
+      <div style="position:absolute;bottom:38px;right:90px;">
+        <svg width="14" height="22" viewBox="0 0 14 22">
+          <rect x="3" y="0" width="8" height="7" fill="#50c878"/><!-- hair -->
+          <rect x="2" y="4" width="10" height="8" fill="#f5c5a3"/><!-- face -->
+          <rect x="4" y="6" width="2" height="2" fill="#1a1a1a"/><!-- eye -->
+          <rect x="8" y="6" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="1" y="12" width="12" height="8" fill="#cc44cc"/><!-- robe -->
+          <rect x="0" y="13" width="3" height="6" fill="#cc44cc"/>
+          <rect x="11" y="13" width="3" height="6" fill="#cc44cc"/>
+        </svg>
+      </div>
+      <!-- Locke - 모험가 -->
+      <div style="position:absolute;bottom:38px;right:68px;">
+        <svg width="14" height="22" viewBox="0 0 14 22">
+          <rect x="3" y="0" width="8" height="7" fill="#8b6914"/><!-- hair -->
+          <rect x="2" y="4" width="10" height="8" fill="#f5c5a3"/>
+          <rect x="4" y="6" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="8" y="6" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="1" y="12" width="12" height="8" fill="#4a90d9"/><!-- jacket -->
+          <rect x="0" y="13" width="3" height="6" fill="#4a90d9"/>
+          <rect x="11" y="13" width="3" height="6" fill="#4a90d9"/>
+          <rect x="2" y="1" width="10" height="3" fill="#ffffff" opacity="0.5"/><!-- bandana -->
+        </svg>
+      </div>
+      <!-- Edgar - 왕 -->
+      <div style="position:absolute;bottom:38px;right:46px;">
+        <svg width="14" height="22" viewBox="0 0 14 22">
+          <rect x="2" y="0" width="10" height="7" fill="#d4a017"/><!-- crown/hair -->
+          <rect x="2" y="4" width="10" height="8" fill="#f5c5a3"/>
+          <rect x="4" y="6" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="8" y="6" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="0" y="12" width="14" height="8" fill="#1a6b3c"/><!-- armor -->
+          <rect x="0" y="13" width="3" height="6" fill="#1a6b3c"/>
+          <rect x="11" y="13" width="3" height="6" fill="#1a6b3c"/>
+          <rect x="4" y="0" width="2" height="3" fill="#ffd700"/><!-- crown tip -->
+          <rect x="8" y="0" width="2" height="3" fill="#ffd700"/>
+        </svg>
+      </div>
+      <!-- Sabin - 격투가 -->
+      <div style="position:absolute;bottom:38px;right:24px;">
+        <svg width="16" height="24" viewBox="0 0 16 24">
+          <rect x="3" y="0" width="10" height="8" fill="#3d2b1f"/><!-- hair -->
+          <rect x="2" y="4" width="12" height="9" fill="#f5c5a3"/>
+          <rect x="4" y="7" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="9" y="7" width="2" height="2" fill="#1a1a1a"/>
+          <rect x="0" y="13" width="16" height="9" fill="#8b3a3a"/><!-- gi -->
+          <rect x="0" y="14" width="4" height="7" fill="#8b3a3a"/>
+          <rect x="12" y="14" width="4" height="7" fill="#8b3a3a"/>
+        </svg>
+      </div>
+
+      <!-- ── 하단 ATB UI ── -->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:34px;background:rgba(0,0,20,0.90);border-top:1px solid rgba(100,120,200,0.3);display:flex;align-items:center;padding:0 8px;gap:4px;">
+        <!-- Terra -->
+        <div style="display:flex;align-items:center;gap:3px;flex:1;">
+          <span style="font-size:6px;color:#50c878;font-family:monospace;white-space:nowrap;">TERRA</span>
+          <div style="flex:1;max-width:32px;">
+            <div style="height:3px;background:#111;border-radius:1px;margin-bottom:2px;"><div style="width:82%;height:100%;background:#50c878;border-radius:1px;"></div></div>
+            <div style="height:3px;background:#111;border-radius:1px;"><div style="width:65%;height:100%;background:#ffd700;border-radius:1px;"></div></div>
+          </div>
+        </div>
+        <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);"></div>
+        <!-- Locke -->
+        <div style="display:flex;align-items:center;gap:3px;flex:1;">
+          <span style="font-size:6px;color:#4a90d9;font-family:monospace;white-space:nowrap;">LOCKE</span>
+          <div style="flex:1;max-width:32px;">
+            <div style="height:3px;background:#111;border-radius:1px;margin-bottom:2px;"><div style="width:91%;height:100%;background:#4a90d9;border-radius:1px;"></div></div>
+            <div style="height:3px;background:#111;border-radius:1px;"><div style="width:100%;height:100%;background:#ffd700;border-radius:1px;"></div></div>
+          </div>
+        </div>
+        <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);"></div>
+        <!-- Edgar -->
+        <div style="display:flex;align-items:center;gap:3px;flex:1;">
+          <span style="font-size:6px;color:#d4a017;font-family:monospace;white-space:nowrap;">EDGAR</span>
+          <div style="flex:1;max-width:32px;">
+            <div style="height:3px;background:#111;border-radius:1px;margin-bottom:2px;"><div style="width:55%;height:100%;background:#d4a017;border-radius:1px;"></div></div>
+            <div style="height:3px;background:#111;border-radius:1px;"><div style="width:38%;height:100%;background:#ffd700;border-radius:1px;"></div></div>
+          </div>
+        </div>
+        <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);"></div>
+        <!-- Sabin -->
+        <div style="display:flex;align-items:center;gap:3px;flex:1;">
+          <span style="font-size:6px;color:#cc5555;font-family:monospace;white-space:nowrap;">SABIN</span>
+          <div style="flex:1;max-width:32px;">
+            <div style="height:3px;background:#111;border-radius:1px;margin-bottom:2px;"><div style="width:74%;height:100%;background:#cc5555;border-radius:1px;"></div></div>
+            <div style="height:3px;background:#111;border-radius:1px;"><div style="width:80%;height:100%;background:#ffd700;border-radius:1px;"></div></div>
+          </div>
+        </div>
+        <!-- HP 데미지 플로팅 힌트 -->
+        <div style="margin-left:auto;font-size:8px;color:#ff4444;font-family:monospace;font-weight:bold;text-shadow:0 0 4px #ff0000;">-1284</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:12px;">이 레이아웃 기반으로 진행할까요? 수정할 부분 있으면 알려주세요.</p>

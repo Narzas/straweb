@@ -109,9 +109,9 @@ export default function HeroBattleScene() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = canvasRef.current as HTMLCanvasElement;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) return;
 
     const resize = () => {
@@ -130,7 +130,7 @@ export default function HeroBattleScene() {
       size: Math.random() < 0.2 ? 2 : 1,
     }));
 
-    function drawMountains(w: number, groundY: number) {
+    function drawMountains(w: number, groundY: number, ctx: CanvasRenderingContext2D) {
       const cols: [number, number][] = [
         [0,    0.73], [0.14, 0.61], [0.28, 0.74], [0.42, 0.63],
         [0.56, 0.75], [0.70, 0.62], [0.84, 0.76], [1.0,  0.80],
@@ -422,7 +422,7 @@ export default function HeroBattleScene() {
       ctx.globalAlpha = 1;
 
       // Mountains
-      drawMountains(width, groundY);
+      drawMountains(width, groundY, ctx);
 
       // Ground line
       ctx.fillStyle = "rgba(160,140,220,0.15)";

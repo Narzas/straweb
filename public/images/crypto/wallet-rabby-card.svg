@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1c1c1e"/>
+      <stop offset="100%" style="stop-color:#2c2c2e"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="600" height="300" fill="url(#bg)" rx="16"/>
+
+  <!-- Purple accent bar -->
+  <rect x="0" y="0" width="6" height="300" fill="#8b5cf6" rx="3"/>
+
+  <!-- Rabby icon -->
+  <circle cx="72" cy="80" r="36" fill="#8b5cf6" fill-opacity="0.15"/>
+  <text x="72" y="92" font-family="Arial" font-size="34" text-anchor="middle">🐰</text>
+
+  <!-- Title -->
+  <text x="124" y="68" font-family="'Segoe UI', Arial, sans-serif" font-size="28" font-weight="800" fill="white">Rabby</text>
+  <text x="124" y="96" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#a78bfa">보안에 진심인 MetaMask 대안</text>
+
+  <!-- Divider -->
+  <rect x="36" y="120" width="528" height="1" fill="white" fill-opacity="0.08"/>
+
+  <!-- Simulation preview box -->
+  <rect x="36" y="132" width="240" height="64" rx="8" fill="#8b5cf6" fill-opacity="0.1" stroke="#8b5cf6" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="48" y="150" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#a78bfa" font-weight="700">트랜잭션 시뮬레이션 미리보기</text>
+  <text x="48" y="167" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#d1d5db">보낼 금액: -0.5 ETH</text>
+  <text x="48" y="182" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4ade80">받을 금액: +1,200 USDC ✓ 안전</text>
+
+  <!-- Pros -->
+  <text x="36" y="218" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#4ade80">✓ 장점</text>
+  <text x="36" y="238" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#d1d5db">• 승인 전 시뮬레이션 — 악성 컨트랙트 사전 차단</text>
+  <text x="36" y="258" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#d1d5db">• 멀티체인 자산 한눈에 파악  •  피싱 사이트 경고</text>
+
+  <!-- Cons -->
+  <text x="310" y="218" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#f87171">✗ 단점</text>
+  <text x="310" y="238" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#9ca3af">• MetaMask보다 검증 역사 짧음</text>
+  <text x="310" y="258" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#9ca3af">• 일부 오래된 dApp 미지원</text>
+
+  <!-- Tag -->
+  <rect x="466" y="20" width="112" height="26" rx="13" fill="#8b5cf6" fill-opacity="0.2"/>
+  <text x="522" y="38" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#a78bfa" text-anchor="middle">보안 민감자 추천</text>
+</svg>

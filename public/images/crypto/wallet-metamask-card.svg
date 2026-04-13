@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1c1c1e"/>
+      <stop offset="100%" style="stop-color:#2c2c2e"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="600" height="300" fill="url(#bg)" rx="16"/>
+
+  <!-- Orange accent bar -->
+  <rect x="0" y="0" width="6" height="300" fill="#f6851b" rx="3"/>
+
+  <!-- Fox icon circle -->
+  <circle cx="72" cy="80" r="36" fill="#f6851b" fill-opacity="0.15"/>
+  <text x="72" y="92" font-family="Arial" font-size="36" text-anchor="middle">🦊</text>
+
+  <!-- Title -->
+  <text x="124" y="68" font-family="'Segoe UI', Arial, sans-serif" font-size="28" font-weight="800" fill="white">MetaMask</text>
+  <text x="124" y="96" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#f6851b">가장 널리 쓰이는 표준 지갑</text>
+
+  <!-- Divider -->
+  <rect x="36" y="120" width="528" height="1" fill="white" fill-opacity="0.08"/>
+
+  <!-- Pros -->
+  <text x="36" y="150" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#4ade80">✓ 장점</text>
+  <text x="36" y="172" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#d1d5db">• dApp 호환성 압도적 — 어떤 서비스든 MetaMask는 지원</text>
+  <text x="36" y="192" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#d1d5db">• BTC·SOL·TRON 포함 멀티체인 지원 (2025~ 업데이트)</text>
+  <text x="36" y="212" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#d1d5db">• 렛저 하드웨어 지갑 연동 가능</text>
+
+  <!-- Cons -->
+  <text x="36" y="244" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#f87171">✗ 단점</text>
+  <text x="36" y="264" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#9ca3af">• UI 복잡도 증가  •  기본 승인 화면에 컨트랙트 내용 미표시</text>
+
+  <!-- Tag -->
+  <rect x="502" y="20" width="76" height="26" rx="13" fill="#f6851b" fill-opacity="0.2"/>
+  <text x="540" y="38" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#f6851b" text-anchor="middle">입문 추천</text>
+</svg>

@@ -13,6 +13,21 @@ interface Star {
   size: number;
 }
 
+interface AttackAnim {
+  memberIdx: number;
+  frame: number; // 0–45
+}
+interface SlashFx {
+  x: number; y: number;
+  frame: number; // 0–33
+  color: string;
+}
+interface FloatingNum {
+  x: number; y: number;
+  text: string; color: string;
+  frame: number; maxFrame: number;
+}
+
 type Pixel = [number, number, string];
 function px(x: number, y: number, c: string): Pixel { return [x, y, c]; }
 
@@ -308,8 +323,29 @@ export default function HeroBattleScene() {
 
     let bahamutGlow = 0; // 0–1, elevated during summon/megaflare
 
+    let attackAnim:    AttackAnim | null = null;
+    let slashFx:       SlashFx   | null = null;
+    const floatingNums: FloatingNum[]    = [];
+    let enemyFlashTtl  = 0;  // frames remaining for enemy white flash
+    let screenFlashAlpha = 0; // 0–1 screen-wide flash
+
     let t = 0;
     let raf: number;
+
+    const SLASH_COLORS = ["#c084fc", "#e2e8f0", "#fbbf24", "#4ade80"];
+
+    function spawnNum(x: number, y: number, amount: number, heal = false) {
+      floatingNums.push({
+        x, y,
+        text: heal ? `+${amount}` : `-${amount}`,
+        color: heal ? "#44ff88" : "#ff4444",
+        frame: 0, maxFrame: 90,
+      });
+    }
+
+    function triggerAttack(memberIdx: number) {
+      attackAnim = { memberIdx, frame: 0 };
+    }
 
     const loop = () => {
       t++;
@@ -378,11 +414,86 @@ export default function HeroBattleScene() {
       const partyX    = width - SPRITE_W - S * 6;
       const partyTopY = groundY - TOTAL_PARTY_H;
 
-      // Party — vertical column, right side, idle bob
+      // Party — vertical column with lunge offset for attacking member
       for (let i = 0; i < PARTY.length; i++) {
-        const bobY   = Math.round(Math.sin(t * 0.055 + i * 0.7) * S);
+        const bobY    = Math.round(Math.sin(t * 0.055 + i * 0.7) * S);
         const memberY = partyTopY + i * (SPRITE_H + MEMBER_GAP) + bobY;
-        drawSprite(ctx, PARTY[i], partyX, memberY);
+        let lungeX    = 0;
+        if (attackAnim && attackAnim.memberIdx === i) {
+          const f = attackAnim.frame;
+          // 0–13: slide left; 13–22: hold at peak; 22–45: return
+          if      (f < 14) lungeX = -Math.floor((f / 13) * S * 18);
+          else if (f < 23) lungeX = -S * 18;
+          else             lungeX = -Math.floor(((45 - f) / 22) * S * 18);
+        }
+        drawSprite(ctx, PARTY[i], partyX + lungeX, memberY);
+      }
+
+      // Advance attack anim — trigger slash/flash at peak frame
+      if (attackAnim) {
+        if (attackAnim.frame === 13) {
+          // peak of lunge: slash appears at boss position
+          slashFx = {
+            x: BOSS_X + Math.floor(BOSS_W / 2),
+            y: groundY - Math.floor(BOSS_H * 0.6),
+            frame: 0,
+            color: SLASH_COLORS[attackAnim.memberIdx],
+          };
+          enemyFlashTtl  = 18;
+          screenFlashAlpha = 0.16;
+          spawnNum(
+            BOSS_X + S * 2 + Math.floor(Math.random() * 12),
+            groundY - BOSS_H + Math.floor(Math.random() * 10),
+            Math.floor(Math.random() * 900 + 200),
+          );
+        }
+        attackAnim.frame++;
+        if (attackAnim.frame >= 45) attackAnim = null;
+      }
+
+      // Slash effect
+      if (slashFx) {
+        const progress = slashFx.frame / 33;
+        const alpha    = progress < 0.5 ? progress * 2 : (1 - progress) * 2;
+        const size     = Math.floor(S * 7 * (0.4 + progress * 0.8));
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = slashFx.color;
+        for (let i = -size; i <= size; i += S) {
+          ctx.fillRect(slashFx.x + i, slashFx.y + i, S, S);
+          ctx.fillRect(slashFx.x + i, slashFx.y - i, S, S);
+        }
+        ctx.globalAlpha = 1;
+        slashFx.frame++;
+        if (slashFx.frame >= 33) slashFx = null;
+      }
+
+      // Enemy flash overlay (white rect over boss area)
+      if (enemyFlashTtl > 0) {
+        ctx.fillStyle = `rgba(255,255,255,${(enemyFlashTtl / 18) * 0.55})`;
+        ctx.fillRect(BOSS_X - S * 5, bossY, BOSS_W + S * 10, BOSS_H);
+        enemyFlashTtl--;
+      }
+
+      // Screen flash (decays each frame)
+      if (screenFlashAlpha > 0) {
+        ctx.fillStyle = "white";
+        ctx.globalAlpha = screenFlashAlpha;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = 1;
+        screenFlashAlpha = Math.max(0, screenFlashAlpha - 0.022);
+      }
+
+      // Floating damage/heal numbers
+      for (let i = floatingNums.length - 1; i >= 0; i--) {
+        const fn = floatingNums[i];
+        const p  = fn.frame / fn.maxFrame;
+        ctx.globalAlpha = 1 - p;
+        ctx.fillStyle   = fn.color;
+        ctx.font        = `bold ${S * 4}px monospace`;
+        ctx.fillText(fn.text, fn.x, fn.y - Math.floor(p * S * 16));
+        ctx.globalAlpha = 1;
+        fn.frame++;
+        if (fn.frame >= fn.maxFrame) floatingNums.splice(i, 1);
       }
 
       // ATB panel

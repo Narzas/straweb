@@ -68,20 +68,6 @@ export default async function HomePage() {
             게임, 투자, 일상 등 다양한 주제를 다룹니다.
           </p>
           <HeroTyping />
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link
-              href="/posts"
-              className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
-            >
-              글 목록 보기
-            </Link>
-            <Link
-              href="/about"
-              className="rounded-lg border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/20"
-            >
-              소개
-            </Link>
-          </div>
 
         </div>
       </section>

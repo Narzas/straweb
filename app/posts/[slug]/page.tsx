@@ -39,6 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.title,
     description: post.description,
+    keywords: post.tags?.length ? post.tags : [...siteConfig.keywords],
+    authors: [{ name: siteConfig.author, url: siteConfig.url }],
+    creator: siteConfig.author,
     alternates: { canonical: `/posts/${slug}` },
     openGraph: {
       title: post.title,
@@ -46,6 +49,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       url: `${siteConfig.url}/posts/${slug}`,
       publishedTime: post.date,
+      authors: [siteConfig.author],
+      tags: post.tags,
     },
     twitter: {
       card: "summary_large_image",
@@ -63,7 +68,31 @@ export default async function PostPage({ params }: Props) {
 
   const showAds = post.category !== "개발";
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    author: { "@type": "Person", name: siteConfig.author, url: siteConfig.url },
+    datePublished: post.date,
+    dateModified: post.date,
+    url: `${siteConfig.url}/posts/${slug}`,
+    publisher: {
+      "@type": "Organization",
+      name: siteConfig.name,
+      url: siteConfig.url,
+    },
+    keywords: post.tags?.join(", "),
+    inLanguage: "ko-KR",
+    ...(post.cover ? { image: `${siteConfig.url}${post.cover}` } : {}),
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div className="lg:grid lg:grid-cols-[270px_1fr] lg:gap-8 xl:gap-12">
       <aside className="hidden lg:block">
         <Sidebar />
@@ -166,5 +195,6 @@ export default async function PostPage({ params }: Props) {
       </div>
     </div>
     </div>
+    </>
   );
 }

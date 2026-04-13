@@ -123,9 +123,6 @@ export default function GuestbookPage() {
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{entry.author}</span>
-                  {entry.ip && (
-                    <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">{entry.ip}</span>
-                  )}
                 </div>
                 <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(entry.created_at)}</span>
               </div>

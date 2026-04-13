@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import GuestbookPreview from "./GuestbookPreview";
+import TelegramFeed from "./TelegramFeed";
 
 type IndexData = { price: number | null; change: number | null };
 type MarketData = {
@@ -50,7 +51,7 @@ function MarketRow({
 export default function RightSidebar() {
   const [market, setMarket] = useState<MarketData | null>(null);
   const [marketLoading, setMarketLoading] = useState(true);
-  const [marketOpen, setMarketOpen] = useState(true);
+  const [marketOpen, setMarketOpen] = useState(false);
 
   useEffect(() => {
     async function loadMarket() {
@@ -148,6 +149,19 @@ export default function RightSidebar() {
             )}
           </div>
         )}
+      </div>
+
+      {/* 텔레그램 피드 */}
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-1.5 px-4 py-3 border-b border-gray-100 dark:border-slate-700">
+          <span className="text-sm">📡</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            크립토 실시간
+          </span>
+        </div>
+        <div className="p-3">
+          <TelegramFeed />
+        </div>
       </div>
 
       {/* 방명록 */}

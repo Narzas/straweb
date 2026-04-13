@@ -143,7 +143,7 @@ public void process() {
 }
 
 @Transactional
-private void step3Transactional() {
+public void step3Transactional() {
     // DB 저장 로직
 }
 ```

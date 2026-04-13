@@ -4,7 +4,7 @@ date: 2026-04-11T15:00:00
 cover: /images/review/ct.jpg
 description: 고등학교 때 클리어했던 크로노 트리거를 다시 돌아봤다. 왜 1995년작이 아직도 역대 최고 JRPG로 꼽히는지, 직접 겪은 감상과 공략 포인트까지 정리했다.
 category: 리뷰
-tags: [크로노트리거, JRPG, 슈퍼패미콤, SNES, 레트로게임, RPG, 게임리뷰, 스퀘어]
+tags: [크로노트리거, JRPG, 슈퍼패미컴, SNES, 레트로게임, RPG, 게임리뷰, 스퀘어]
 ---
 
 크로노 트리거(Chrono Trigger)는 고등학교 때 클리어했다.

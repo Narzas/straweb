@@ -124,9 +124,10 @@ export default function TelegramFeed() {
 
   useEffect(() => {
     load(true);
-    const t = setInterval(() => load(false), 60_000);
+    // 데이터 없으면 15초, 있으면 60초마다 폴링
+    const t = setInterval(() => load(false), messages.length ? 60_000 : 15_000);
     return () => clearInterval(t);
-  }, []);
+  }, [messages.length]);
 
   useEffect(() => {
     if (newIds.size === 0) return;

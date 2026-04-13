@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 
 const CHANNEL = "korean_alpha_TG";
 
+// 마지막 성공한 결과를 메모리에 보관 — t.me 일시 차단 시에도 데이터 유지
+let lastGood: TelegramMessage[] = [];
+let lastFetchAt = 0;
+const CACHE_TTL = 55_000; // 55초
+
 export type TelegramMessage = {
   id: string;
   text: string;
@@ -53,6 +58,13 @@ function parseMessages(html: string): TelegramMessage[] {
 }
 
 export async function GET() {
+  const now = Date.now();
+
+  // 캐시가 신선하면 바로 반환
+  if (lastGood.length && now - lastFetchAt < CACHE_TTL) {
+    return NextResponse.json({ messages: lastGood });
+  }
+
   try {
     const res = await fetch(`https://t.me/s/${CHANNEL}`, {
       cache: "no-store",
@@ -69,12 +81,17 @@ export async function GET() {
     const all = parseMessages(html);
     const latest = all.slice(-1).reverse(); // 최신 1개
 
-    return NextResponse.json(
-      { messages: latest },
-      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" } }
-    );
+    if (latest.length) {
+      lastGood = latest;
+      lastFetchAt = now;
+    }
   } catch (e) {
     console.error("[telegram]", e);
-    return NextResponse.json({ messages: [] }, { status: 500 });
+    // 실패해도 마지막 성공 데이터 반환
   }
+
+  return NextResponse.json(
+    { messages: lastGood },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }

@@ -34,7 +34,6 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
           maxHeight: "88vh",
           width: "auto",
           height: "auto",
-          imageRendering: "high-quality",
         }}
         onClick={(e) => e.stopPropagation()}
       />

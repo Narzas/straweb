@@ -136,6 +136,116 @@ export default function HeroBattleScene() {
       }
     }
 
+    // Dragon boss: 14w × 28h logical body, drawn at bossX/bossY
+    function drawDragonBoss(bx: number, by: number) {
+      const s = S;
+      // wings (dark navy triangles, one row at a time)
+      ctx.fillStyle = "#172554";
+      for (let row = 0; row < 10; row++) {
+        const span = row * 2;
+        ctx.fillRect(bx - span * s - s * 4, by + row * s, span * s + s * 3, s);
+        ctx.fillRect(bx + s * 14,            by + row * s, span * s + s * 3, s);
+      }
+      // tail (left, lower body)
+      ctx.fillStyle = "#1e3a8a";
+      ctx.fillRect(bx - s * 8, by + s * 14, s * 6, s * 2);
+      ctx.fillRect(bx - s * 12,by + s * 16, s * 5, s * 2);
+      ctx.fillRect(bx - s * 14,by + s * 18, s * 3, s * 2);
+      // body
+      ctx.fillStyle = "#1e40af";
+      ctx.fillRect(bx, by + s * 6, s * 14, s * 18);
+      // belly
+      ctx.fillStyle = "#3b82f6";
+      ctx.globalAlpha = 0.28;
+      ctx.fillRect(bx + s * 3, by + s * 9, s * 8, s * 12);
+      ctx.globalAlpha = 1;
+      // scale rows
+      ctx.fillStyle = "#172554";
+      for (let row = 0; row < 5; row++) {
+        ctx.fillRect(bx + s, by + s * 7 + row * s * 3, s * 12, s);
+      }
+      // neck
+      ctx.fillStyle = "#1e40af";
+      ctx.fillRect(bx + s * 4, by + s * 2, s * 6, s * 5);
+      // head
+      ctx.fillStyle = "#1e3a8a";
+      ctx.fillRect(bx + s * 2, by, s * 10, s * 6);
+      // snout
+      ctx.fillStyle = "#1e40af";
+      ctx.fillRect(bx + s * 3, by - s * 2, s * 8, s * 3);
+      // teeth
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillRect(bx + s * 4,  by + s * 4, s * 2, s * 3);
+      ctx.fillRect(bx + s * 7,  by + s * 5, s * 2, s * 2);
+      ctx.fillRect(bx + s * 10, by + s * 4, s * 2, s * 3);
+      // eyes
+      ctx.fillStyle = "#dc2626";
+      ctx.fillRect(bx + s * 3, by + s, s * 3, s * 3);
+      ctx.fillRect(bx + s * 8, by + s, s * 3, s * 3);
+      // slit pupils
+      ctx.fillStyle = "#ff6600";
+      ctx.fillRect(bx + s * 4, by + s * 2, s, s * 2);
+      ctx.fillRect(bx + s * 9, by + s * 2, s, s * 2);
+      // horns
+      ctx.fillStyle = "#93c5fd";
+      ctx.fillRect(bx + s * 3, by - s * 5, s * 2, s * 4);
+      ctx.fillRect(bx + s * 9, by - s * 5, s * 2, s * 4);
+      // arms / claws
+      ctx.fillStyle = "#1e40af";
+      ctx.fillRect(bx - s * 3, by + s * 14, s * 4, s * 4);
+      ctx.fillRect(bx + s * 13,by + s * 14, s * 4, s * 4);
+      ctx.fillStyle = "#93c5fd";
+      ctx.fillRect(bx - s * 4, by + s * 17, s * 2, s);
+      ctx.fillRect(bx - s * 5, by + s * 18, s * 2, s);
+      ctx.fillRect(bx + s * 16,by + s * 17, s * 2, s);
+      ctx.fillRect(bx + s * 17,by + s * 18, s * 2, s);
+      // legs
+      ctx.fillStyle = "#1d4ed8";
+      ctx.fillRect(bx + s * 2, by + s * 23, s * 4, s * 5);
+      ctx.fillRect(bx + s * 8, by + s * 23, s * 4, s * 5);
+      // toes
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillRect(bx,         by + s * 27, s * 5, s);
+      ctx.fillRect(bx + s * 8, by + s * 27, s * 5, s);
+    }
+
+    // Wyvern: 7w × 13h logical body
+    function drawWyvern(wx: number, wy: number) {
+      const s = S;
+      // wings
+      ctx.fillStyle = "#172554";
+      for (let row = 0; row < 5; row++) {
+        const span = row * 2;
+        ctx.fillRect(wx - span * s - s * 2, wy + row * s, span * s + s * 2, s);
+        ctx.fillRect(wx + s * 7,             wy + row * s, span * s + s * 2, s);
+      }
+      // body
+      ctx.fillStyle = "#1e40af";
+      ctx.fillRect(wx, wy + s * 4, s * 7, s * 7);
+      // head
+      ctx.fillStyle = "#1e3a8a";
+      ctx.fillRect(wx + s, wy + s, s * 6, s * 5);
+      // snout
+      ctx.fillStyle = "#1e40af";
+      ctx.fillRect(wx + s * 2, wy - s, s * 4, s * 3);
+      // teeth
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillRect(wx + s * 2, wy + s * 4, s, s * 2);
+      ctx.fillRect(wx + s * 5, wy + s * 4, s, s * 2);
+      // eyes
+      ctx.fillStyle = "#dc2626";
+      ctx.fillRect(wx + s * 2, wy + s * 2, s * 2, s * 2);
+      ctx.fillRect(wx + s * 5, wy + s * 2, s * 2, s * 2);
+      // tail
+      ctx.fillStyle = "#1d4ed8";
+      ctx.fillRect(wx + s,     wy + s * 10, s * 4, s * 2);
+      ctx.fillRect(wx + s * 3, wy + s * 12, s * 3, s);
+      // claws
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillRect(wx - s,     wy + s * 9, s * 3, s);
+      ctx.fillRect(wx + s * 5, wy + s * 9, s * 3, s);
+    }
+
     let t = 0;
     let raf: number;
 
@@ -168,6 +278,24 @@ export default function HeroBattleScene() {
       ctx.fillStyle = "rgba(160,140,220,0.15)";
       ctx.fillRect(0, groundY, width, S);
 
+      // Enemy layout constants (also used by animation tasks)
+      const BOSS_W  = 14 * S;
+      const BOSS_H  = 28 * S; // includes horns/head above body
+      const BOSS_X  = S * 8;
+      const WY_H    = 13 * S;
+      const WY1_X   = BOSS_X + BOSS_W + S * 14;
+      const WY2_X   = WY1_X + 7 * S + S * 10;
+
+      const bossBob = Math.round(Math.sin(t * 0.04) * S * 1.5);
+      const bossY   = groundY - BOSS_H + bossBob;
+      drawDragonBoss(BOSS_X, bossY);
+
+      const wy1Bob = Math.round(Math.sin(t * 0.05 + 1.2) * S * 1.5);
+      drawWyvern(WY1_X, groundY - WY_H + wy1Bob);
+
+      const wy2Bob = Math.round(Math.sin(t * 0.05 + 2.5) * S * 1.5);
+      drawWyvern(WY2_X, groundY - WY_H + wy2Bob);
+
       // Layout constants used by multiple draw sections
       const partyX    = width - SPRITE_W - S * 6;
       const partyTopY = groundY - TOTAL_PARTY_H;
@@ -179,7 +307,7 @@ export default function HeroBattleScene() {
         drawSprite(ctx, PARTY[i], partyX, memberY);
       }
 
-      // TODO enemies + Bahamut + ATB
+      // TODO Bahamut + ATB
       raf = requestAnimationFrame(loop);
     };
 

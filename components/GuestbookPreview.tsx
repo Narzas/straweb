@@ -60,9 +60,6 @@ export default function GuestbookPreview() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{entry.author}</span>
-                  {entry.ip && (
-                    <span className="text-[10px] text-gray-400 font-mono">{entry.ip}</span>
-                  )}
                 </div>
                 <span className="text-[10px] text-gray-400 dark:text-gray-500">{timeAgo(entry.created_at)}</span>
               </div>

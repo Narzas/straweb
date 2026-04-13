@@ -27,6 +27,8 @@ interface FloatingNum {
   text: string; color: string;
   frame: number; maxFrame: number;
 }
+interface MagicCircle { cx: number; cy: number; frame: number; }
+interface MegaFlare   { frame: number; }
 
 type Pixel = [number, number, string];
 function px(x: number, y: number, c: string): Pixel { return [x, y, c]; }
@@ -328,6 +330,9 @@ export default function HeroBattleScene() {
     const floatingNums: FloatingNum[]    = [];
     let enemyFlashTtl  = 0;  // frames remaining for enemy white flash
     let screenFlashAlpha = 0; // 0–1 screen-wide flash
+    let magicCircle:    MagicCircle | null = null;
+    let megaFlare:      MegaFlare   | null = null;
+    let enemyStaggerTtl = 0; // frames of stagger after Mega Flare
 
     let t = 0;
     let raf: number;
@@ -347,13 +352,39 @@ export default function HeroBattleScene() {
       attackAnim = { memberIdx, frame: 0 };
     }
 
+    function triggerSummonCall() {
+      // Magic circle appears near Terra (top member of party column)
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const gY = ch - ATB_H - 4;
+      const cx = cw - SPRITE_W - S * 3;
+      const cy = gY - TOTAL_PARTY_H + Math.floor(SPRITE_H / 2);
+      magicCircle = { cx, cy, frame: 0 };
+      bahamutGlow = 0.6;
+      // "BAHAMUT!" float above the scene
+      floatingNums.push({
+        x: Math.floor(cw / 2) - S * 12,
+        y: 24,
+        text: "BAHAMUT!",
+        color: "#c084fc",
+        frame: 0,
+        maxFrame: 108,
+      });
+      setTimeout(() => { bahamutGlow = 0; }, 1600);
+    }
+
+    function triggerMegaFlare() {
+      megaFlare   = { frame: 0 };
+      bahamutGlow = 1.0;
+    }
+
     const loop = () => {
       t++;
       const { width, height } = canvas;
+      const groundY  = height - ATB_H - 4;
+      const bxCenter = Math.floor(width / 2);
       ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, width, height);
-
-      const groundY = height - ATB_H - 4;
 
       // Stars
       for (const star of stars) {
@@ -377,7 +408,6 @@ export default function HeroBattleScene() {
       ctx.fillRect(0, groundY, width, S);
 
       // Bahamut (center top, floating)
-      const bxCenter    = Math.floor(width / 2);
       const bahamutFloat = Math.round(Math.sin(t * 0.035) * S * 3);
       const bahamutCY   = 20 + bahamutFloat;
       drawBahamut(bxCenter, bahamutCY, bahamutGlow);
@@ -402,13 +432,18 @@ export default function HeroBattleScene() {
 
       const bossBob = Math.round(Math.sin(t * 0.04) * S * 1.5);
       const bossY   = groundY - BOSS_H + bossBob;
-      drawDragonBoss(BOSS_X, bossY);
+
+      const staggerX  = enemyStaggerTtl > 0
+        ? Math.round(Math.sin(enemyStaggerTtl * 0.9) * S * 2)
+        : 0;
+      if (enemyStaggerTtl > 0) enemyStaggerTtl--;
 
       const wy1Bob = Math.round(Math.sin(t * 0.05 + 1.2) * S * 1.5);
-      drawWyvern(WY1_X, groundY - WY_H + wy1Bob);
-
       const wy2Bob = Math.round(Math.sin(t * 0.05 + 2.5) * S * 1.5);
-      drawWyvern(WY2_X, groundY - WY_H + wy2Bob);
+
+      drawDragonBoss(BOSS_X + staggerX, bossY);
+      drawWyvern(WY1_X + staggerX, groundY - WY_H + wy1Bob);
+      drawWyvern(WY2_X + staggerX, groundY - WY_H + wy2Bob);
 
       // Layout constants used by multiple draw sections
       const partyX    = width - SPRITE_W - S * 6;
@@ -494,6 +529,77 @@ export default function HeroBattleScene() {
         ctx.globalAlpha = 1;
         fn.frame++;
         if (fn.frame >= fn.maxFrame) floatingNums.splice(i, 1);
+      }
+
+      // Magic circle (summon call)
+      if (magicCircle) {
+        const mc       = magicCircle;
+        const progress = mc.frame / 108;
+        const maxR     = S * 11;
+        const radius   = Math.floor(
+          maxR * (progress < 0.4 ? progress / 0.4 : 1 + (progress - 0.4) * 0.6),
+        );
+        const alpha    = progress < 0.4
+          ? progress / 0.4
+          : 1 - (progress - 0.4) / 0.6;
+        ctx.globalAlpha  = alpha * 0.85;
+        ctx.strokeStyle  = "#a855f7";
+        ctx.lineWidth    = S;
+        ctx.beginPath();
+        ctx.arc(mc.cx, mc.cy, Math.max(1, radius), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(
+          mc.cx, mc.cy,
+          Math.max(1, Math.floor(radius * 0.55)),
+          -mc.frame * 0.08,
+          Math.PI * 2 - mc.frame * 0.08,
+        );
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        mc.frame++;
+        if (mc.frame >= 108) magicCircle = null;
+      }
+
+      // Mega Flare beam
+      if (megaFlare) {
+        const mf       = megaFlare;
+        const progress = mf.frame / 84;
+        // Beam fires from Bahamut (center) leftward toward enemies
+        const beamRight = bxCenter;
+        const beamLeft  = BOSS_X - S * 4;
+        const beamLen   = beamRight - beamLeft;
+        const beamY     = Math.floor(height * 0.38);
+        const beamH     = S * 4;
+
+        let pct: number, alpha: number;
+        if      (progress < 0.25) { pct = progress / 0.25; alpha = 1; }
+        else if (progress < 0.70) { pct = 1;               alpha = 1; }
+        else                      { pct = 1;                alpha = 1 - (progress - 0.70) / 0.30; }
+
+        const drawnLeft = Math.floor(beamRight - beamLen * pct);
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.fillStyle   = "#ff6600";
+        ctx.fillRect(drawnLeft, beamY - beamH, beamRight - drawnLeft, beamH * 3);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle   = "#ffd700";
+        ctx.fillRect(drawnLeft, beamY - beamH / 2, beamRight - drawnLeft, beamH * 2);
+        ctx.fillStyle   = "#ffffff";
+        ctx.fillRect(drawnLeft, beamY, beamRight - drawnLeft, beamH);
+        ctx.globalAlpha = 1;
+
+        // Impact at frame 21 (beam fully reaches enemies)
+        if (mf.frame === 21) {
+          screenFlashAlpha = 0.65;
+          enemyFlashTtl    = 30;
+          enemyStaggerTtl  = 40;
+          spawnNum(BOSS_X + S * 2, groundY - BOSS_H,     5240);
+          spawnNum(WY1_X + S,      groundY - WY_H - S * 4, 3870);
+          spawnNum(WY2_X + S,      groundY - WY_H,       3120);
+        }
+
+        mf.frame++;
+        if (mf.frame >= 84) { megaFlare = null; bahamutGlow = 0; }
       }
 
       // ATB panel

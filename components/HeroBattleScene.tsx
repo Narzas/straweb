@@ -13,6 +13,81 @@ interface Star {
   size: number;
 }
 
+type Pixel = [number, number, string];
+function px(x: number, y: number, c: string): Pixel { return [x, y, c]; }
+
+function drawSprite(
+  ctx: CanvasRenderingContext2D,
+  pixels: Pixel[],
+  ox: number, oy: number,
+  scale = S,
+) {
+  for (const [x, y, color] of pixels) {
+    ctx.fillStyle = color;
+    ctx.fillRect(ox + x * scale, oy + y * scale, scale, scale);
+  }
+}
+
+// Sprite size: 6w × 8h logical pixels
+const sk = "#fde8d0"; // skin
+const ey = "#1a1a1a"; // eye dark
+
+// Terra — green hair, purple robe, female
+const TERRA: Pixel[] = [
+  px(1,0,"#16a34a"), px(2,0,"#16a34a"), px(3,0,"#16a34a"),
+  px(0,1,"#16a34a"), px(1,1,"#16a34a"), px(2,1,"#16a34a"), px(3,1,"#16a34a"), px(4,1,"#16a34a"),
+  px(1,2,sk), px(2,2,sk), px(3,2,sk), px(4,2,sk),
+  px(1,3,sk), px(2,3,ey), px(3,3,sk), px(4,3,ey), px(5,3,sk),
+  px(1,4,sk), px(2,4,sk), px(3,4,sk), px(4,4,sk),
+  px(1,5,"#7e22ce"), px(2,5,"#7e22ce"), px(3,5,"#7e22ce"), px(4,5,"#7e22ce"), px(5,5,"#7e22ce"),
+  px(0,6,"#7e22ce"), px(1,6,"#7e22ce"), px(2,6,"#7e22ce"), px(3,6,"#7e22ce"), px(4,6,"#7e22ce"), px(5,6,"#7e22ce"),
+  px(1,7,"#6b21a8"), px(2,7,"#6b21a8"), px(4,7,"#6b21a8"), px(5,7,"#6b21a8"),
+];
+
+// Celes — blonde hair, blue eyes, silver armor, female
+const CELES: Pixel[] = [
+  px(1,0,"#fbbf24"), px(2,0,"#fbbf24"), px(3,0,"#fbbf24"), px(4,0,"#fbbf24"),
+  px(0,1,"#fbbf24"), px(1,1,"#fbbf24"), px(2,1,"#fbbf24"), px(3,1,"#fbbf24"), px(4,1,"#fbbf24"),
+  px(1,2,sk), px(2,2,sk), px(3,2,sk), px(4,2,sk),
+  px(1,3,sk), px(2,3,"#1d4ed8"), px(3,3,sk), px(4,3,"#1d4ed8"), px(5,3,sk),
+  px(1,4,sk), px(2,4,sk), px(3,4,sk), px(4,4,sk),
+  px(1,5,"#cbd5e1"), px(2,5,"#cbd5e1"), px(3,5,"#cbd5e1"), px(4,5,"#cbd5e1"), px(5,5,"#cbd5e1"),
+  px(0,6,"#94a3b8"), px(1,6,"#cbd5e1"), px(2,6,"#cbd5e1"), px(3,6,"#cbd5e1"), px(4,6,"#cbd5e1"), px(5,6,"#94a3b8"),
+  px(1,7,"#64748b"), px(2,7,"#64748b"), px(4,7,"#64748b"), px(5,7,"#64748b"),
+];
+
+// Locke — brown hair, white bandana, blue jacket
+const LOCKE: Pixel[] = [
+  px(1,0,"#92400e"), px(2,0,"#92400e"), px(3,0,"#92400e"),
+  px(0,1,"#f8fafc"), px(1,1,"#f8fafc"), px(2,1,"#f8fafc"), px(3,1,"#f8fafc"), px(4,1,"#f8fafc"),
+  px(1,2,sk), px(2,2,sk), px(3,2,sk), px(4,2,sk),
+  px(1,3,sk), px(2,3,ey), px(3,3,sk), px(4,3,ey), px(5,3,sk),
+  px(1,4,sk), px(2,4,sk), px(3,4,sk), px(4,4,sk),
+  px(1,5,"#1d4ed8"), px(2,5,"#1d4ed8"), px(3,5,"#1d4ed8"), px(4,5,"#1d4ed8"), px(5,5,"#1d4ed8"),
+  px(0,6,"#1d4ed8"), px(1,6,"#1d4ed8"), px(2,6,"#1d4ed8"), px(3,6,"#1d4ed8"), px(4,6,"#1d4ed8"), px(5,6,"#1d4ed8"),
+  px(1,7,"#1e3a8a"), px(2,7,"#1e3a8a"), px(4,7,"#1e3a8a"), px(5,7,"#1e3a8a"),
+];
+
+// Edgar — gold crown, green armor
+const EDGAR: Pixel[] = [
+  px(1,0,"#fbbf24"), px(3,0,"#fbbf24"), px(5,0,"#fbbf24"),
+  px(0,1,"#f59e0b"), px(1,1,"#f59e0b"), px(2,1,"#f59e0b"), px(3,1,"#f59e0b"), px(4,1,"#f59e0b"),
+  px(1,2,sk), px(2,2,sk), px(3,2,sk), px(4,2,sk),
+  px(1,3,sk), px(2,3,ey), px(3,3,sk), px(4,3,ey), px(5,3,sk),
+  px(1,4,sk), px(2,4,sk), px(3,4,sk), px(4,4,sk),
+  px(1,5,"#166534"), px(2,5,"#166534"), px(3,5,"#166534"), px(4,5,"#166534"), px(5,5,"#166534"),
+  px(0,6,"#166534"), px(1,6,"#166534"), px(2,6,"#166534"), px(3,6,"#166534"), px(4,6,"#166534"), px(5,6,"#166534"),
+  px(1,7,"#14532d"), px(2,7,"#14532d"), px(4,7,"#14532d"), px(5,7,"#14532d"),
+];
+
+const PARTY        = [TERRA, CELES, LOCKE, EDGAR];
+const PARTY_NAMES  = ["TERRA", "CELES", "LOCKE", "EDGAR"];
+const PARTY_COLORS = ["#22c55e", "#93c5fd", "#fbbf24", "#4ade80"];
+const SPRITE_W     = 6 * S;
+const SPRITE_H     = 8 * S;
+const MEMBER_GAP   = S * 2;
+const TOTAL_PARTY_H = PARTY.length * SPRITE_H + (PARTY.length - 1) * MEMBER_GAP;
+
 export default function HeroBattleScene() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -93,7 +168,18 @@ export default function HeroBattleScene() {
       ctx.fillStyle = "rgba(160,140,220,0.15)";
       ctx.fillRect(0, groundY, width, S);
 
-      // TODO next tasks
+      // Layout constants used by multiple draw sections
+      const partyX    = width - SPRITE_W - S * 6;
+      const partyTopY = groundY - TOTAL_PARTY_H;
+
+      // Party — vertical column, right side, idle bob
+      for (let i = 0; i < PARTY.length; i++) {
+        const bobY   = Math.round(Math.sin(t * 0.055 + i * 0.7) * S);
+        const memberY = partyTopY + i * (SPRITE_H + MEMBER_GAP) + bobY;
+        drawSprite(ctx, PARTY[i], partyX, memberY);
+      }
+
+      // TODO enemies + Bahamut + ATB
       raf = requestAnimationFrame(loop);
     };
 

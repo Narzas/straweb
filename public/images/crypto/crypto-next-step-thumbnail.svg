@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="390" viewBox="0 0 390 390">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4f46e5"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="390" height="390" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="340" cy="50" r="120" fill="white" fill-opacity="0.05"/>
+  <circle cx="50" cy="340" r="100" fill="white" fill-opacity="0.05"/>
+
+  <!-- Three concept cards -->
+  <!-- Card 1: Stablecoin -->
+  <rect x="30" y="170" width="100" height="90" rx="12" fill="white" fill-opacity="0.12" stroke="white" stroke-opacity="0.2" stroke-width="1"/>
+  <text x="80" y="210" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="800" fill="#4ade80" text-anchor="middle">$</text>
+  <text x="80" y="232" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="700" fill="white" text-anchor="middle">스테이블코인</text>
+  <text x="80" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="white" fill-opacity="0.6" text-anchor="middle">USDT / USDC</text>
+
+  <!-- Arrow 1→2 -->
+  <text x="145" y="218" font-family="Arial" font-size="18" fill="white" fill-opacity="0.5" text-anchor="middle">→</text>
+
+  <!-- Card 2: Gas -->
+  <rect x="160" y="170" width="100" height="90" rx="12" fill="white" fill-opacity="0.12" stroke="white" stroke-opacity="0.2" stroke-width="1"/>
+  <text x="210" y="210" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="800" fill="#fbbf24" text-anchor="middle">⛽</text>
+  <text x="210" y="232" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="700" fill="white" text-anchor="middle">가스비</text>
+  <text x="210" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="white" fill-opacity="0.6" text-anchor="middle">Gas Fee</text>
+
+  <!-- Arrow 2→3 -->
+  <text x="275" y="218" font-family="Arial" font-size="18" fill="white" fill-opacity="0.5" text-anchor="middle">→</text>
+
+  <!-- Card 3: DEX -->
+  <rect x="290" y="170" width="100" height="90" rx="12" fill="white" fill-opacity="0.12" stroke="white" stroke-opacity="0.2" stroke-width="1"/>
+  <text x="340" y="210" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="800" fill="#60a5fa" text-anchor="middle">⇄</text>
+  <text x="340" y="232" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="700" fill="white" text-anchor="middle">DEX</text>
+  <text x="340" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="white" fill-opacity="0.6" text-anchor="middle">Uniswap</text>
+
+  <!-- Title -->
+  <text x="30" y="80" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="800" fill="white">코인 다음 단계</text>
+  <text x="30" y="120" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="white" fill-opacity="0.85">반드시 마주치는 것들</text>
+
+  <!-- Subtitle -->
+  <text x="30" y="150" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="white" fill-opacity="0.6">스테이블코인 · 가스비 · DEX</text>
+
+  <!-- Bottom badge -->
+  <rect x="30" y="290" width="52" height="24" rx="12" fill="white" fill-opacity="0.2"/>
+  <text x="56" y="307" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">크립토</text>
+</svg>

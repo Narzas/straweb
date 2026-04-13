@@ -72,7 +72,22 @@
       "Bash(npm list:*)",
       "Bash(npx tsc:*)",
       "Bash(npx playwright:*)",
-      "Bash(git:*)"
+      "Bash(git commit:*)",
+      "Bash(sort -t: -k2)",
+      "Bash(claude:*)",
+      "Bash(npm update:*)",
+      "WebFetch(domain:daemindblog.co.kr)",
+      "WebFetch(domain:gall.dcinside.com)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(NODE_OPTIONS=--max-old-space-size=4096 npm run dev)",
+      "Bash(sort -t: -k2 -r)",
+      "Bash(npx supabase:*)",
+      "Bash(git reset:*)",
+      "Bash(python -c ':*)",
+      "WebFetch(domain:x.com)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

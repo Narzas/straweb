@@ -28,7 +28,14 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
       <img
         src={src}
         alt=""
-        className="max-w-[92vw] max-h-[88vh] rounded-lg shadow-2xl object-contain"
+        className="rounded-lg shadow-2xl object-contain"
+        style={{
+          maxWidth: "92vw",
+          maxHeight: "88vh",
+          width: "auto",
+          height: "auto",
+          imageRendering: "high-quality",
+        }}
         onClick={(e) => e.stopPropagation()}
       />
       <button

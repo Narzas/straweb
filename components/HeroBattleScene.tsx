@@ -29,6 +29,11 @@ interface FloatingNum {
 }
 interface MagicCircle { cx: number; cy: number; frame: number; }
 interface MegaFlare   { frame: number; }
+interface SpellAnim {
+  memberIdx: number;
+  spellType: "fire" | "blizzard" | "thunder";
+  frame: number; // 0–60
+}
 
 type Pixel = [number, number, string];
 function px(x: number, y: number, c: string): Pixel { return [x, y, c]; }
@@ -328,19 +333,25 @@ export default function HeroBattleScene() {
     let attackAnim:    AttackAnim | null = null;
     let slashFx:       SlashFx   | null = null;
     const floatingNums: FloatingNum[]    = [];
-    let enemyFlashTtl  = 0;  // frames remaining for enemy white flash
-    let screenFlashAlpha = 0; // 0–1 screen-wide flash
+    let enemyFlashTtl  = 0;
+    let screenFlashAlpha = 0;
+    let screenFlashColor = "white";
     let magicCircle:    MagicCircle | null = null;
     let megaFlare:      MegaFlare   | null = null;
-    let enemyStaggerTtl = 0; // frames of stagger after Mega Flare
+    let enemyStaggerTtl = 0;
+    let spellAnim:      SpellAnim   | null = null;
 
-    const STEP_FRAMES = 150; // ~2.5 s at 60 fps — gap between events
-    let seqStep = 0;
+    // ATB 시스템 — 개인별 카운터, 게이지가 꽉 찰 때만 행동
+    const ATB_PERIODS = [780, 660, 540, 900]; // Terra 13s / Celes 11s / Locke 9s / Edgar 15s
+    const atbCounters = [0, 0, 0, 0];
+    let summonCooldown = 0; // 소환 재사용 대기
+    let megaFlareCountdown = 0; // 소환 후 MegaFlare 예약
 
     let t = 0;
     let raf: number;
 
     const SLASH_COLORS = ["#c084fc", "#e2e8f0", "#fbbf24", "#4ade80"];
+    const SPELL_NAMES  = { fire: "FIRE", blizzard: "BLIZZARA", thunder: "THUNDER" };
 
     function spawnNum(x: number, y: number, amount: number, heal = false) {
       floatingNums.push({
@@ -351,12 +362,33 @@ export default function HeroBattleScene() {
       });
     }
 
-    function triggerAttack(memberIdx: number) {
+    function triggerAttack(memberIdx: number): boolean {
+      if (attackAnim || spellAnim) return false;
       attackAnim = { memberIdx, frame: 0 };
+      return true;
+    }
+
+    function triggerSpell(memberIdx: number, spellType: "fire" | "blizzard" | "thunder"): boolean {
+      if (attackAnim || spellAnim) return false;
+      spellAnim = { memberIdx, spellType, frame: 0 };
+      // 주문명 플로팅 텍스트
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const gY = ch - ATB_H - 4;
+      const sy = gY - TOTAL_PARTY_H + memberIdx * (SPRITE_H + MEMBER_GAP);
+      floatingNums.push({
+        x: cw - SPRITE_W - S * 14,
+        y: sy,
+        text: SPELL_NAMES[spellType],
+        color: spellType === "fire" ? "#fb923c"
+             : spellType === "blizzard" ? "#67e8f9"
+             : "#fde047",
+        frame: 0, maxFrame: 70,
+      });
+      return true;
     }
 
     function triggerSummonCall() {
-      // Magic circle appears near Terra (top member of party column)
       const cw = canvas.width;
       const ch = canvas.height;
       const gY = ch - ATB_H - 4;
@@ -364,7 +396,6 @@ export default function HeroBattleScene() {
       const cy = gY - TOTAL_PARTY_H + Math.floor(SPRITE_H / 2);
       magicCircle = { cx, cy, frame: 0 };
       bahamutGlow = 0.6;
-      // "BAHAMUT!" float above the scene
       floatingNums.push({
         x: Math.floor(cw / 2) - S * 12,
         y: 24,
@@ -373,7 +404,8 @@ export default function HeroBattleScene() {
         frame: 0,
         maxFrame: 108,
       });
-      setTimeout(() => { bahamutGlow = 0; }, 1600);
+      megaFlareCountdown = 180; // 3초 후 MegaFlare
+      setTimeout(() => { bahamutGlow = Math.max(bahamutGlow - 0.1, 0); }, 1600);
     }
 
     function triggerMegaFlare() {
@@ -381,24 +413,52 @@ export default function HeroBattleScene() {
       bahamutGlow = 1.0;
     }
 
+    // ATB 꽉 찼을 때 캐릭터별 행동 결정 — 성공 여부 반환
+    function triggerCharacterAction(idx: number): boolean {
+      if (attackAnim || spellAnim) return false; // 다른 애니 진행 중이면 대기
+      const roll = Math.random();
+      if (idx === 0) {
+        // Terra: Fire 40% / 소환 25% (쿨다운 없을 때) / 물리 35%
+        if (summonCooldown === 0 && roll < 0.25) {
+          triggerSummonCall();
+          summonCooldown = 1400;
+          return true;
+        } else if (roll < 0.65) {
+          return triggerSpell(0, "fire");
+        } else {
+          return triggerAttack(0);
+        }
+      } else if (idx === 1) {
+        // Celes: Blizzara 60% / 물리 40%
+        if (roll < 0.6) return triggerSpell(1, "blizzard");
+        else return triggerAttack(1);
+      } else if (idx === 2) {
+        // Locke: 물리 100%
+        return triggerAttack(2);
+      } else {
+        // Edgar: Thunder 50% / 물리 50%
+        if (roll < 0.5) return triggerSpell(3, "thunder");
+        else return triggerAttack(3);
+      }
+    }
+
     const loop = () => {
       t++;
 
-      // Combat sequence — one event every STEP_FRAMES frames
-      const STEPS: Array<() => void> = [
-        () => triggerAttack(2),        // Locke attacks
-        () => triggerAttack(1),        // Celes attacks
-        () => triggerAttack(3),        // Edgar attacks
-        () => triggerAttack(2),        // Locke attacks again
-        () => triggerSummonCall(),     // Terra summons Bahamut
-        () => triggerMegaFlare(),      // MEGA FLARE
-        () => triggerAttack(0),        // Terra attacks
-        () => triggerAttack(1),        // Celes attacks
-      ];
-
-      if (t % STEP_FRAMES === 1) {
-        STEPS[seqStep % STEPS.length]();
-        seqStep++;
+      // ATB 카운터 증가 — 꽉 찬 캐릭터는 행동 성공 시에만 리셋 (행동 중이면 대기)
+      for (let i = 0; i < 4; i++) {
+        if (atbCounters[i] < ATB_PERIODS[i]) {
+          atbCounters[i]++;
+        } else {
+          // ATB 풀 — 행동 시도, 성공하면 리셋
+          const acted = triggerCharacterAction(i);
+          if (acted) atbCounters[i] = 0;
+        }
+      }
+      if (summonCooldown > 0) summonCooldown--;
+      if (megaFlareCountdown > 0) {
+        megaFlareCountdown--;
+        if (megaFlareCountdown === 0) triggerMegaFlare();
       }
 
       const { width, height } = canvas;
@@ -532,11 +592,120 @@ export default function HeroBattleScene() {
 
       // Screen flash (decays each frame)
       if (screenFlashAlpha > 0) {
-        ctx.fillStyle = "white";
+        ctx.fillStyle = screenFlashColor;
         ctx.globalAlpha = screenFlashAlpha;
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
         screenFlashAlpha = Math.max(0, screenFlashAlpha - 0.022);
+      }
+
+      // ── 마법 이펙트 ──────────────────────────────────
+      if (spellAnim) {
+        const sp      = spellAnim;
+        const prog    = sp.frame / 60;
+        const memberY = partyTopY + sp.memberIdx * (SPRITE_H + MEMBER_GAP) + SPRITE_H / 2;
+        const beamRight = partyX - S * 2;
+        const beamLeft  = BOSS_X + BOSS_W / 2;
+        const beamLen   = beamRight - beamLeft;
+
+        if (sp.spellType === "fire") {
+          // 오렌지/빨간 수평 빔, 오른쪽→왼쪽
+          const reach = Math.min(1, prog / 0.4);
+          const fade  = prog > 0.7 ? 1 - (prog - 0.7) / 0.3 : 1;
+          const drawn = Math.floor(beamRight - beamLen * reach);
+          ctx.globalAlpha = fade * 0.9;
+          ctx.fillStyle = "#ff6600";
+          ctx.fillRect(drawn, memberY - S * 2, beamRight - drawn, S * 4);
+          ctx.fillStyle = "#ff4400";
+          ctx.fillRect(drawn, memberY - S, beamRight - drawn, S * 2);
+          ctx.fillStyle = "#fff0a0";
+          ctx.fillRect(drawn, memberY, beamRight - drawn, S);
+          ctx.globalAlpha = 1;
+          // 충격 파티클 (reach=1 이후)
+          if (reach >= 1) {
+            for (let p = 0; p < 5; p++) {
+              const px2 = beamLeft + Math.round(Math.sin(t * 0.7 + p) * S * 4);
+              const py2 = memberY  + Math.round(Math.cos(t * 0.5 + p) * S * 4);
+              ctx.globalAlpha = fade * 0.7;
+              ctx.fillStyle = "#ff8800";
+              ctx.fillRect(px2, py2, S * 2, S * 2);
+            }
+            ctx.globalAlpha = 1;
+          }
+          // 충격 프레임
+          if (sp.frame === Math.floor(60 * 0.4)) {
+            screenFlashAlpha = 0.25;
+            screenFlashColor = "#ff6600";
+            enemyFlashTtl = 16;
+            spawnNum(BOSS_X + S * 2, groundY - BOSS_H, Math.floor(Math.random() * 800 + 400));
+          }
+
+        } else if (sp.spellType === "blizzard") {
+          // 파란/시안 빔
+          const reach = Math.min(1, prog / 0.4);
+          const fade  = prog > 0.7 ? 1 - (prog - 0.7) / 0.3 : 1;
+          const drawn = Math.floor(beamRight - beamLen * reach);
+          ctx.globalAlpha = fade * 0.85;
+          ctx.fillStyle = "#38bdf8";
+          ctx.fillRect(drawn, memberY - S * 2, beamRight - drawn, S * 4);
+          ctx.fillStyle = "#0ea5e9";
+          ctx.fillRect(drawn, memberY - S, beamRight - drawn, S * 2);
+          ctx.fillStyle = "#e0f7ff";
+          ctx.fillRect(drawn, memberY, beamRight - drawn, S);
+          ctx.globalAlpha = 1;
+          // 얼음 파편
+          if (reach >= 1) {
+            for (let p = 0; p < 4; p++) {
+              const angle = t * 0.4 + p * (Math.PI / 2);
+              const px2 = beamLeft + Math.round(Math.cos(angle) * S * 5);
+              const py2 = memberY  + Math.round(Math.sin(angle) * S * 5);
+              ctx.globalAlpha = fade * 0.8;
+              ctx.fillStyle = "#bfdbfe";
+              ctx.fillRect(px2, py2, S, S * 3);
+            }
+            ctx.globalAlpha = 1;
+          }
+          if (sp.frame === Math.floor(60 * 0.4)) {
+            screenFlashAlpha = 0.22;
+            screenFlashColor = "#67e8f9";
+            enemyFlashTtl = 14;
+            spawnNum(BOSS_X + S * 2, groundY - BOSS_H, Math.floor(Math.random() * 700 + 300));
+          }
+
+        } else if (sp.spellType === "thunder") {
+          // 수직 번개 볼트 (하늘 → 보스)
+          const boltX   = BOSS_X + Math.floor(BOSS_W / 2);
+          const boltTop = 0;
+          const boltBot = groundY - Math.floor(BOSS_H * 0.5);
+          const boltH   = boltBot - boltTop;
+          const reach   = Math.min(1, prog / 0.3);
+          const fade    = prog > 0.6 ? 1 - (prog - 0.6) / 0.4 : 1;
+          const drawBot = Math.floor(boltTop + boltH * reach);
+          // 번개 지그재그
+          const segs = 8;
+          ctx.globalAlpha = fade;
+          for (let seg = 0; seg < segs; seg++) {
+            const y1 = Math.floor(boltTop + (boltH * reach * seg) / segs);
+            const y2 = Math.floor(boltTop + (boltH * reach * (seg + 1)) / segs);
+            if (y2 > drawBot) break;
+            const jitter = Math.round(Math.sin(t * 2 + seg * 3) * S * 3);
+            ctx.fillStyle = "#fffde7";
+            ctx.fillRect(boltX + jitter - S, y1, S * 3, y2 - y1);
+            ctx.fillStyle = "#fde047";
+            ctx.fillRect(boltX + jitter, y1, S, y2 - y1);
+          }
+          ctx.globalAlpha = 1;
+          if (sp.frame === Math.floor(60 * 0.3)) {
+            screenFlashAlpha = 0.3;
+            screenFlashColor = "#fef08a";
+            enemyFlashTtl = 20;
+            enemyStaggerTtl = 25;
+            spawnNum(BOSS_X + S * 2, groundY - BOSS_H, Math.floor(Math.random() * 1000 + 500));
+          }
+        }
+
+        sp.frame++;
+        if (sp.frame >= 60) spellAnim = null;
       }
 
       // Floating damage/heal numbers
@@ -634,7 +803,6 @@ export default function HeroBattleScene() {
       const barW     = Math.floor(slotW * 0.72);
       const barH     = 4;
       const HP_FILLS = [0.88, 0.76, 0.93, 0.61];
-      const ATB_PERIODS = [192, 163, 138, 228]; // frames per ATB cycle
 
       for (let i = 0; i < 4; i++) {
         const sx    = S * 2 + i * slotW;
@@ -652,11 +820,13 @@ export default function HeroBattleScene() {
         ctx.fillStyle = PARTY_COLORS[i];
         ctx.fillRect(sx, hpY, Math.floor(barW * HP_FILLS[i]), barH);
 
-        // ATB bar
+        // ATB bar — 실제 카운터 기반, 꽉 차면 흰색으로 강조
+        const atbFill = atbCounters[i] / ATB_PERIODS[i];
+        const isFull  = atbCounters[i] >= ATB_PERIODS[i];
         ctx.fillStyle = "#0f0f1a";
         ctx.fillRect(sx, atbY, barW, barH);
-        ctx.fillStyle = "#ffd700";
-        ctx.fillRect(sx, atbY, Math.floor(barW * ((t % ATB_PERIODS[i]) / ATB_PERIODS[i])), barH);
+        ctx.fillStyle = isFull ? "#ffffff" : "#ffd700";
+        ctx.fillRect(sx, atbY, Math.floor(barW * atbFill), barH);
 
         // Slot divider
         if (i < 3) {

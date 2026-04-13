@@ -334,6 +334,9 @@ export default function HeroBattleScene() {
     let megaFlare:      MegaFlare   | null = null;
     let enemyStaggerTtl = 0; // frames of stagger after Mega Flare
 
+    const STEP_FRAMES = 150; // ~2.5 s at 60 fps — gap between events
+    let seqStep = 0;
+
     let t = 0;
     let raf: number;
 
@@ -380,6 +383,24 @@ export default function HeroBattleScene() {
 
     const loop = () => {
       t++;
+
+      // Combat sequence — one event every STEP_FRAMES frames
+      const STEPS: Array<() => void> = [
+        () => triggerAttack(2),        // Locke attacks
+        () => triggerAttack(1),        // Celes attacks
+        () => triggerAttack(3),        // Edgar attacks
+        () => triggerAttack(2),        // Locke attacks again
+        () => triggerSummonCall(),     // Terra summons Bahamut
+        () => triggerMegaFlare(),      // MEGA FLARE
+        () => triggerAttack(0),        // Terra attacks
+        () => triggerAttack(1),        // Celes attacks
+      ];
+
+      if (t % STEP_FRAMES === 1) {
+        STEPS[seqStep % STEPS.length]();
+        seqStep++;
+      }
+
       const { width, height } = canvas;
       const groundY  = height - ATB_H - 4;
       const bxCenter = Math.floor(width / 2);

@@ -678,8 +678,8 @@ export default function HeroBattleScene() {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none absolute inset-0 h-full w-full"
-      style={{ opacity: 0.82, imageRendering: "pixelated" }}
+      className="pointer-events-none block w-full"
+      style={{ height: "200px", opacity: 0.82, imageRendering: "pixelated" }}
     />
   );
 }

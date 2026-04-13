@@ -52,23 +52,26 @@ export default async function HomePage() {
       <div className="space-y-6">
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#1a1f2e] text-white ring-1 ring-white/[0.06]">
-        <ClientOnly><HeroBattleScene /></ClientOnly>
+      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#1a1f2e] text-white ring-1 ring-white/[0.06]">
 
-        {/* StraWeb + HeroTyping — 좌상단 고정 */}
-        <div className="absolute top-3 left-5 z-[1] space-y-1">
-          <h1 className="text-base font-bold tracking-tight text-white/90">
-            StraWeb
-          </h1>
-          <HeroTyping />
+        {/* 배틀씬 캔버스 영역 */}
+        <div className="relative">
+          <ClientOnly><HeroBattleScene /></ClientOnly>
+
+          {/* StraWeb + HeroTyping — 좌상단 고정 */}
+          <div className="absolute top-3 left-5 z-[1] space-y-1">
+            <h1 className="text-base font-bold tracking-tight text-white/90">
+              StraWeb
+            </h1>
+            <HeroTyping />
+          </div>
         </div>
-      </section>
 
-      {/* 설명 — ATB 패널 바로 아래 */}
-      <p className="px-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-        개발하면서 겪은 것들, 관심 가는 것들을 편하게 기록하는 공간입니다.
-        게임, 투자, 일상 등 다양한 주제를 다룹니다.
-      </p>
+        {/* 설명 — ATB 패널 바로 아래 */}
+        <p className="px-5 py-2.5 text-xs leading-relaxed text-slate-400/80">
+          개발하면서 겪은 것들, 관심 가는 것들을 편하게 기록하는 공간입니다. 게임, 투자, 일상 등 다양한 주제를 다룹니다.
+        </p>
+      </section>
 
 
       {/* ── 카테고리 바로가기 ── */}

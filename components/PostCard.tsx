@@ -44,6 +44,7 @@ export default function PostCard({
             priority={priority}
             loading={priority ? "eager" : "lazy"}
             decoding={priority ? "sync" : "async"}
+            unoptimized={post.cover.endsWith(".svg")}
           />
         ) : (
           <div

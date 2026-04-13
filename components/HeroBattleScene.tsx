@@ -246,6 +246,68 @@ export default function HeroBattleScene() {
       ctx.fillRect(wx + s * 5, wy + s * 9, s * 3, s);
     }
 
+    function drawBahamut(cx: number, cy: number, glow: number) {
+      const s = S;
+      // wings
+      ctx.globalAlpha = 0.72;
+      ctx.fillStyle = "#4c1d95";
+      for (let row = 0; row < 8; row++) {
+        const w = (8 - row) * s * 3;
+        ctx.fillRect(cx - s * 8 - w, cy + row * s, w, s);
+        ctx.fillRect(cx + s * 8,     cy + row * s, w, s);
+      }
+      ctx.globalAlpha = 1;
+      // body
+      ctx.fillStyle = "#6d28d9";
+      ctx.fillRect(cx - s * 6, cy + s * 3, s * 12, s * 14);
+      // belly
+      ctx.fillStyle = "#7c3aed";
+      ctx.globalAlpha = 0.35;
+      ctx.fillRect(cx - s * 3, cy + s * 6, s * 6, s * 9);
+      ctx.globalAlpha = 1;
+      // scale rows
+      ctx.fillStyle = "#4c1d95";
+      ctx.fillRect(cx - s * 5, cy + s * 5, s * 10, s);
+      ctx.fillRect(cx - s * 5, cy + s * 8, s * 10, s);
+      ctx.fillRect(cx - s * 5, cy + s * 11,s * 10, s);
+      // neck
+      ctx.fillStyle = "#6d28d9";
+      ctx.fillRect(cx - s * 3, cy, s * 6, s * 5);
+      // head
+      ctx.fillStyle = "#5b21b6";
+      ctx.fillRect(cx - s * 5, cy - s * 6, s * 10, s * 7);
+      // snout
+      ctx.fillStyle = "#6d28d9";
+      ctx.fillRect(cx - s * 3, cy - s * 9, s * 6, s * 4);
+      // eyes
+      ctx.fillStyle = glow > 0.3 ? "#ff8800" : "#ea580c";
+      ctx.fillRect(cx - s * 4, cy - s * 4, s * 2, s * 2);
+      ctx.fillRect(cx + s * 2, cy - s * 4, s * 2, s * 2);
+      ctx.fillStyle = "#7f1d1d";
+      ctx.fillRect(cx - s * 3, cy - s * 3, s, s);
+      ctx.fillRect(cx + s * 2, cy - s * 3, s, s);
+      // horns
+      ctx.fillStyle = "#c4b5fd";
+      ctx.fillRect(cx - s * 5, cy - s * 10, s * 2, s * 4);
+      ctx.fillRect(cx - s * 6, cy - s * 13, s * 2, s * 3);
+      ctx.fillRect(cx + s * 3, cy - s * 10, s * 2, s * 4);
+      ctx.fillRect(cx + s * 4, cy - s * 13, s * 2, s * 3);
+      // tail
+      ctx.fillStyle = "#7c3aed";
+      ctx.fillRect(cx + s * 5, cy + s * 16, s * 5, s * 2);
+      ctx.fillRect(cx + s * 8, cy + s * 18, s * 4, s * 2);
+      ctx.fillRect(cx + s * 10,cy + s * 19, s * 3, s * 2);
+      // glow overlay
+      if (glow > 0) {
+        ctx.fillStyle = "#c084fc";
+        ctx.globalAlpha = glow * 0.22;
+        ctx.fillRect(cx - s * 8, cy - s * 9, s * 16, s * 28);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    let bahamutGlow = 0; // 0–1, elevated during summon/megaflare
+
     let t = 0;
     let raf: number;
 
@@ -278,6 +340,22 @@ export default function HeroBattleScene() {
       ctx.fillStyle = "rgba(160,140,220,0.15)";
       ctx.fillRect(0, groundY, width, S);
 
+      // Bahamut (center top, floating)
+      const bxCenter    = Math.floor(width / 2);
+      const bahamutFloat = Math.round(Math.sin(t * 0.035) * S * 3);
+      const bahamutCY   = 20 + bahamutFloat;
+      drawBahamut(bxCenter, bahamutCY, bahamutGlow);
+
+      // "BAHAMUT" label
+      const namePulse = 0.5 + 0.5 * Math.abs(Math.sin(t * 0.04));
+      ctx.globalAlpha = namePulse;
+      ctx.fillStyle = "#ffd700";
+      ctx.font = `bold ${S * 4}px monospace`;
+      ctx.textAlign = "center";
+      ctx.fillText("BAHAMUT", bxCenter, bahamutCY - S * 16);
+      ctx.globalAlpha = 1;
+      ctx.textAlign = "left";
+
       // Enemy layout constants (also used by animation tasks)
       const BOSS_W  = 14 * S;
       const BOSS_H  = 28 * S; // includes horns/head above body
@@ -307,7 +385,48 @@ export default function HeroBattleScene() {
         drawSprite(ctx, PARTY[i], partyX, memberY);
       }
 
-      // TODO Bahamut + ATB
+      // ATB panel
+      const panelY  = height - ATB_H;
+      ctx.fillStyle = "rgba(2,2,22,0.94)";
+      ctx.fillRect(0, panelY, width, ATB_H);
+      ctx.fillStyle = "rgba(120,100,220,0.28)";
+      ctx.fillRect(0, panelY, width, 1);
+
+      const slotW    = Math.floor((width - S * 4) / 4);
+      const barW     = Math.floor(slotW * 0.72);
+      const barH     = 4;
+      const HP_FILLS = [0.88, 0.76, 0.93, 0.61];
+      const ATB_PERIODS = [192, 163, 138, 228]; // frames per ATB cycle
+
+      for (let i = 0; i < 4; i++) {
+        const sx    = S * 2 + i * slotW;
+        const nameY = panelY + 13;
+        const hpY   = panelY + 22;
+        const atbY  = panelY + 32;
+
+        ctx.fillStyle = PARTY_COLORS[i];
+        ctx.font      = `bold ${S * 2}px monospace`;
+        ctx.fillText(PARTY_NAMES[i], sx, nameY);
+
+        // HP bar
+        ctx.fillStyle = "#0f0f1a";
+        ctx.fillRect(sx, hpY, barW, barH);
+        ctx.fillStyle = PARTY_COLORS[i];
+        ctx.fillRect(sx, hpY, Math.floor(barW * HP_FILLS[i]), barH);
+
+        // ATB bar
+        ctx.fillStyle = "#0f0f1a";
+        ctx.fillRect(sx, atbY, barW, barH);
+        ctx.fillStyle = "#ffd700";
+        ctx.fillRect(sx, atbY, Math.floor(barW * ((t % ATB_PERIODS[i]) / ATB_PERIODS[i])), barH);
+
+        // Slot divider
+        if (i < 3) {
+          ctx.fillStyle = "rgba(255,255,255,0.06)";
+          ctx.fillRect(sx + slotW - 1, panelY + 8, 1, ATB_H - 16);
+        }
+      }
+
       raf = requestAnimationFrame(loop);
     };
 

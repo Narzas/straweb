@@ -12,8 +12,39 @@ function timeAgo(iso: string) {
   return `${Math.floor(diff / 86400)}일 전`;
 }
 
+function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        className="max-w-[92vw] max-h-[88vh] rounded-lg shadow-2xl object-contain"
+        onClick={(e) => e.stopPropagation()}
+      />
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white/80 hover:text-white text-2xl leading-none"
+        aria-label="닫기"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 function MessageCard({ msg, isNew }: { msg: TelegramMessage; isNew: boolean }) {
   const [visible, setVisible] = useState(!isNew);
+  const [lightbox, setLightbox] = useState(false);
 
   useEffect(() => {
     if (isNew) {
@@ -23,37 +54,43 @@ function MessageCard({ msg, isNew }: { msg: TelegramMessage; isNew: boolean }) {
   }, [isNew]);
 
   return (
-    <div
-      className="overflow-hidden transition-all duration-500 ease-out"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(-10px)",
-      }}
-    >
-      <div className="rounded-lg border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 overflow-hidden select-none">
-        {msg.photo && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={msg.photo}
-            alt=""
-            className="w-full object-cover max-h-48"
-            loading="lazy"
-          />
-        )}
-        {msg.text && (
-          <div className="px-3 py-2 max-h-[16.5rem] overflow-y-auto">
-            <p className="text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
-              {msg.text}
+    <>
+      {lightbox && msg.photo && (
+        <ImageLightbox src={msg.photo} onClose={() => setLightbox(false)} />
+      )}
+      <div
+        className="overflow-hidden transition-all duration-500 ease-out"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(-10px)",
+        }}
+      >
+        <div className="rounded-lg border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 overflow-hidden select-none">
+          {msg.photo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={msg.photo}
+              alt=""
+              className="w-full object-cover max-h-48 cursor-zoom-in"
+              loading="lazy"
+              onClick={() => setLightbox(true)}
+            />
+          )}
+          {msg.text && (
+            <div className="px-3 py-2 max-h-[16.5rem] overflow-y-auto">
+              <p className="text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
+                {msg.text}
+              </p>
+            </div>
+          )}
+          {msg.time && (
+            <p className="px-3 pb-2 text-[10px] text-gray-400 dark:text-gray-500">
+              {timeAgo(msg.time)}
             </p>
-          </div>
-        )}
-        {msg.time && (
-          <p className="px-3 pb-2 text-[10px] text-gray-400 dark:text-gray-500">
-            {timeAgo(msg.time)}
-          </p>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -66,11 +103,11 @@ export default function TelegramFeed() {
   async function load(first = false) {
     try {
       const res = await fetch("/api/telegram");
-      if (!res.ok) return; // 실패 시 기존 데이터 유지
+      if (!res.ok) return;
       const data = await res.json();
       const msgs: TelegramMessage[] = data.messages ?? [];
 
-      if (!msgs.length) return; // 빈 응답이면 기존 데이터 유지
+      if (!msgs.length) return;
 
       if (!first) {
         const incoming = new Set(msgs.map((m) => m.id));
@@ -91,7 +128,6 @@ export default function TelegramFeed() {
     return () => clearInterval(t);
   }, []);
 
-  // 애니메이션 후 newIds 초기화
   useEffect(() => {
     if (newIds.size === 0) return;
     const t = setTimeout(() => setNewIds(new Set()), 600);

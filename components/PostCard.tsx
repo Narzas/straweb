@@ -23,9 +23,11 @@ function pickGradient(slug: string) {
 export default function PostCard({
   post,
   priority = false,
+  viewCount,
 }: {
   post: PostMeta;
   priority?: boolean;
+  viewCount?: number;
 }) {
   const gradient = pickGradient(post.slug);
 
@@ -100,7 +102,7 @@ export default function PostCard({
 
         <div className="mt-auto flex items-center justify-between pt-1">
           <time className="text-xs text-gray-400 dark:text-gray-500">{post.date}</time>
-          <ViewCount slug={post.slug} />
+          <ViewCount slug={post.slug} initialCount={viewCount} />
         </div>
       </div>
     </div>

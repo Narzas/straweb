@@ -237,9 +237,19 @@ export default function SeasonalEffect({ season }: { season: Season }) {
 
     stateRef.current.raf = requestAnimationFrame(tick);
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(stateRef.current.raf);
+      } else {
+        stateRef.current.raf = requestAnimationFrame(tick);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
     return () => {
       cancelAnimationFrame(stateRef.current.raf);
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [season, initParticles]);
 

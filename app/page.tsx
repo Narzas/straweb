@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllPosts, getAllCategories } from "@/lib/posts";
+import { getViewCounts } from "@/lib/views";
 import PostCard from "@/components/PostCard";
 import AdSlot from "@/components/AdSlot";
 import Sidebar from "@/components/Sidebar";
@@ -36,6 +37,7 @@ export default async function HomePage() {
   const recentPosts = getAllPosts().slice(0, 6);
   const categories = getAllCategories();
   const season = getSeason(new Date().getMonth() + 1);
+  const viewCounts = await getViewCounts(recentPosts.map((p) => p.slug));
 
   return (
     <>
@@ -111,7 +113,7 @@ export default async function HomePage() {
         <ul className="grid gap-3">
           {recentPosts.map((post, i) => (
             <li key={post.slug}>
-              <PostCard post={post} priority={i < 2} />
+              <PostCard post={post} priority={i < 2} viewCount={viewCounts[post.slug]} />
             </li>
           ))}
         </ul>

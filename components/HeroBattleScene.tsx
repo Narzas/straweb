@@ -668,10 +668,35 @@ export default function HeroBattleScene() {
       raf = requestAnimationFrame(loop);
     };
 
+    let visible = true;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) {
+          raf = requestAnimationFrame(loop);
+        } else {
+          cancelAnimationFrame(raf);
+        }
+      },
+      { threshold: 0 }
+    );
+    io.observe(canvas);
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+      } else if (visible) {
+        raf = requestAnimationFrame(loop);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
     raf = requestAnimationFrame(loop);
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      io.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 

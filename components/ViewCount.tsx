@@ -2,15 +2,22 @@
 
 import { useEffect, useState } from "react";
 
-export default function ViewCount({ slug }: { slug: string }) {
-  const [count, setCount] = useState<number | null>(null);
+export default function ViewCount({
+  slug,
+  initialCount,
+}: {
+  slug: string;
+  initialCount?: number;
+}) {
+  const [count, setCount] = useState<number | null>(initialCount ?? null);
 
   useEffect(() => {
+    if (initialCount !== undefined) return; // 서버에서 미리 받은 경우 fetch 생략
     fetch(`/api/views/${slug}`)
       .then((r) => r.json())
       .then((d) => setCount(d.count))
       .catch(() => {});
-  }, [slug]);
+  }, [slug, initialCount]);
 
   if (count === null) return null;
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
@@ -19,10 +20,16 @@ export async function GET(
 }
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  // Rate limit: IP당 슬러그별 10분에 3회
+  const ip = getIp(req);
   const { slug } = await params;
+  if (!rateLimit(`views:${ip}:${slug}`, 3, 10 * 60_000)) {
+    return NextResponse.json({ count: 0 }, { status: 429 });
+  }
+
   const supabase = createServiceClient();
 
   const { data, error } = await supabase.rpc("increment_post_views", {

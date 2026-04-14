@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createServiceClient } from "@/lib/supabase";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 import type { PublicComment } from "@/lib/comments";
 
 // GET /api/comments?slug=...
@@ -32,11 +33,23 @@ export async function GET(req: NextRequest) {
 
 // POST /api/comments
 export async function POST(req: NextRequest) {
+  // Rate limit: IP당 1분에 5개
+  const ip = getIp(req);
+  if (!rateLimit(`comments:${ip}`, 5, 60_000)) {
+    return NextResponse.json({ error: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." }, { status: 429 });
+  }
+
   const body = await req.json();
   const { post_slug, author, content, is_secret, password } = body;
 
   if (!post_slug || !author?.trim() || !content?.trim()) {
     return NextResponse.json({ error: "필수 항목을 입력해 주세요." }, { status: 400 });
+  }
+  if (author.trim().length > 30) {
+    return NextResponse.json({ error: "이름은 30자 이하로 입력해 주세요." }, { status: 400 });
+  }
+  if (content.trim().length > 1000) {
+    return NextResponse.json({ error: "댓글은 1000자 이하로 입력해 주세요." }, { status: 400 });
   }
   if (is_secret && !password?.trim()) {
     return NextResponse.json({ error: "비밀글은 비밀번호가 필요합니다." }, { status: 400 });
@@ -58,7 +71,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "댓글 저장에 실패했습니다." }, { status: 500 });
   }
 
   return NextResponse.json(data, { status: 201 });

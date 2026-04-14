@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 const BLOCKED = [
   // 욕설
@@ -55,6 +56,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit: IP당 10분에 5개
+  const ip = getIp(req);
+  if (!rateLimit(`guestbook:${ip}`, 5, 10 * 60_000)) {
+    return NextResponse.json({ error: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." }, { status: 429 });
+  }
+
   const body = await req.json();
   const author = body.author?.trim();
   const message = body.message?.trim();
@@ -72,16 +79,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "부적절한 표현이 포함되어 있습니다." }, { status: 400 });
   }
 
-  const ip = getClientIp(req);
+  const clientIp = getClientIp(req);
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("guestbook")
-    .insert({ author, message, ip })
+    .insert({ author, message, ip: clientIp })
     .select("id, author, message, created_at, ip")
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "방명록 저장에 실패했습니다." }, { status: 500 });
   }
 
   return NextResponse.json({ ...data, ip: maskIp(data.ip) }, { status: 201 });

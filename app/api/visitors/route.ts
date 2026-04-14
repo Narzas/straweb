@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase";
 import { NextResponse } from "next/server";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function GET() {
   const supabase = createServiceClient();
@@ -19,7 +20,14 @@ export async function GET() {
   );
 }
 
-export async function POST() {
+export async function POST(req: Request) {
+  // Rate limit: IP당 1시간에 1회 (방문자 카운터 어뷰징 방지)
+  const ip = getIp(req);
+  if (!rateLimit(`visitors:${ip}`, 1, 60 * 60_000)) {
+    // 차단이지만 에러처럼 보이면 안됨 — 조용히 무시
+    return NextResponse.json({ count: 0, total: 0, today: 0 });
+  }
+
   const supabase = createServiceClient();
   const today = new Date().toISOString().split("T")[0];
 

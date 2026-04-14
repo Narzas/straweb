@@ -21,10 +21,20 @@ export async function GET() {
 
 export async function POST() {
   const supabase = createServiceClient();
+  const today = new Date().toISOString().split("T")[0];
 
-  // upsert — id=1 행이 없으면 생성, 있으면 +1
   const { data, error } = await supabase.rpc("increment_visitors");
 
-  if (error) return NextResponse.json({ count: 0 }, { status: 500 });
-  return NextResponse.json({ count: data ?? 0 });
+  if (error) return NextResponse.json({ count: 0, total: 0, today: 0 }, { status: 500 });
+
+  const [statsRes, dailyRes] = await Promise.all([
+    supabase.from("site_stats").select("visitor_count").eq("id", 1).single(),
+    supabase.from("daily_visitors").select("count").eq("date", today).single(),
+  ]);
+
+  return NextResponse.json({
+    count: data ?? 0,
+    total: statsRes.data?.visitor_count ?? 0,
+    today: dailyRes.data?.count ?? 0,
+  });
 }

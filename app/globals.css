@@ -186,6 +186,15 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   padding-left: calc(1.5rem - 2px);
 }
 
+/* Images */
+.post-body img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.75rem auto;
+  border-radius: 0.5rem;
+}
+
 /* HR */
 .post-body hr {
   border: none;

@@ -1,6 +1,6 @@
 ---
 title: 코인 좀 모이면 반드시 고민하게 되는 것 — 지갑, 어디에 보관할까
-date: 2026-04-14T21:00:00
+date: 2026-04-13T23:00:00+09:00
 cover: /images/crypto/wallet-comparison-thumbnail.svg
 description: MetaMask, OKX, Rabby — 소프트웨어 지갑 비교부터 렛저 하드웨어 지갑을 써야 하는 이유까지. 코인이 쌓이기 시작했을 때 진지하게 고민하게 되는 보관 방법을 정리했습니다.
 category: 크립토

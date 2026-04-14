@@ -1,6 +1,6 @@
 ---
 title: Spring Boot 성능이 느릴 때 바로 의심해야 할 5가지 — 실무 디버깅 가이드
-date: 2026-04-09
+date: 2026-04-09T09:22:00+09:00
 cover: /images/dev/spring-boot-performance.svg
 description: Spring Boot API가 갑자기 느려졌을 때 어디부터 봐야 하는지, 실무 기준으로 가장 효과적인 점검 포인트를 정리했습니다.
 category: 개발

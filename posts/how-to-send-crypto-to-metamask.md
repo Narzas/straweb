@@ -1,6 +1,6 @@
 ---
 title: 코인 사서 내 지갑으로 보내기 — 네트워크 실수 없이 완벽 정리
-date: 2026-04-11T12:00:00
+date: 2026-04-11T12:00:00+09:00
 cover: /images/crypto/send-crypto-thumbnail.svg
 description: 거래소에서 구매한 ETH, USDT, POL을 MetaMask로 출금하는 법. 네트워크 불일치로 코인을 잃는 실수를 막는 방법까지 초보자 눈높이에 맞춰 설명합니다.
 category: 크립토

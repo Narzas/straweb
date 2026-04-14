@@ -1,6 +1,6 @@
 ---
 title: 신입 백엔드 때 진짜로 혼났던 것들 — JPA, 트랜잭션, 예외처리
-date: 2026-04-13T20:00:00
+date: 2026-04-13T20:00:00+09:00
 cover: /images/dev/java-tips.svg
 description: 교과서엔 없는데 현장에선 기본인 것들. JPA N+1, @Transactional 남발, 예외처리 패턴 등 실제로 코드 리뷰에서 지적받았던 내용들을 정리했습니다.
 category: 개발

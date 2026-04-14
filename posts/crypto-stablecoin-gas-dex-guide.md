@@ -1,6 +1,6 @@
 ---
 title: 코인 좀 하다 보면 반드시 마주치는 것들 — 스테이블코인, 가스비, DEX
-date: 2026-04-13T23:00:00
+date: 2026-04-13T23:00:00+09:00
 cover: /images/crypto/crypto-next-step-thumbnail.svg
 description: 지갑도 만들고 전송도 해봤는데 그 다음은? 스테이블코인이 뭔지, 가스비는 왜 내야 하는지, 유니스왑 같은 DEX는 어떻게 쓰는지 — 코인 입문 두 번째 관문을 정리했습니다.
 category: 크립토

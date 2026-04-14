@@ -1,6 +1,6 @@
 ---
 title: 코인 처음 할 때 이것만 알았어도 — 진짜 초보가 하는 실수들
-date: 2026-04-13T21:00:00
+date: 2026-04-13T21:00:00+09:00
 cover: /images/crypto/send-crypto-thumbnail.svg
 description: 네트워크 잘못 선택해서 코인 날리기, 잡코인에 묻히기, FOMO에 물리기. 코인 처음 시작할 때 거의 대부분 한 번씩은 겪는 실수들을 정리했습니다.
 category: 크립토

@@ -1,6 +1,6 @@
 ---
 title: MetaMask 지갑 처음 만들기 완전 가이드 (2026)
-date: 2026-04-11T10:00:00
+date: 2026-04-11T10:00:00+09:00
 cover: /images/crypto/metamask-thumbnail.svg
 description: 크립토 입문자를 위한 메타마스크 설치부터 시드 구문 백업, 네트워크 추가까지 단계별 완전 가이드
 category: 크립토

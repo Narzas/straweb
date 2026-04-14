@@ -1,6 +1,6 @@
 ---
 title: 삼성 QLED 85인치 KQ85QF8A 리뷰 — 거실이 바뀌는 경험
-date: 2026-04-09
+date: 2026-04-09T21:14:00+09:00
 description: 85인치 대형 TV를 처음 들여놨습니다. 삼성 QLED QF8A 시리즈, 설치부터 화질·사운드·스마트 기능까지 직접 써보고 정리했습니다.
 category: 리뷰
 tags: [삼성TV, QLED, 85인치, KQ85QF8A, TV후기]

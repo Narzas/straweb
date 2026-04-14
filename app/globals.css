@@ -276,3 +276,60 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 .dark .post-body hr {
   border-top-color: #334155;
 }
+
+/* ── Post body callouts ───────────────────────────────────── */
+.post-body .callout-author {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #3b82f6;
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.9rem 1.25rem;
+  color: #1e40af;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.dark .post-body .callout-author {
+  background: #1e3a5f22;
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+
+.post-body .badge-unconfirmed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+.dark .post-body .badge-unconfirmed {
+  background: #451a0322;
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+.post-body .badge-completed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+.dark .post-body .badge-completed {
+  background: #14532d22;
+  border-color: #4ade80;
+  color: #4ade80;
+}

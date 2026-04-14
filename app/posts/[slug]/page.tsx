@@ -10,6 +10,7 @@ import CommentSection from "@/components/CommentSection";
 import Sidebar from "@/components/Sidebar";
 import ViewTracker from "@/components/ViewTracker";
 import ViewCount from "@/components/ViewCount";
+import PostBody from "@/components/PostBody";
 
 const COUPANG_ADS: Record<string, { href: string; imageId: string }> = {
   "anbernic-rg40xxv-review": {
@@ -144,10 +145,7 @@ export default async function PostPage({ params }: Props) {
           </header>
 
           {/* 본문 */}
-          <div
-            className="post-body"
-            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
-          />
+          <PostBody contentHtml={post.contentHtml} />
 
           {/* ── 하단 광고 (본문 끝 이후) ──────────────── */}
           {showAds && <AdSlot size="horizontal" className="mt-10" />}

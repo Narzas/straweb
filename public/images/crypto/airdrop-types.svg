@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="320" viewBox="0 0 700 320">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e1b4b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="700" height="320" fill="url(#bg2)" rx="16"/>
+
+  <!-- Title -->
+  <text x="350" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="white" font-weight="bold">에어드랍 종류 한눈에 보기</text>
+
+  <!-- Card 1: Retroactive -->
+  <rect x="20" y="58" width="155" height="240" rx="12" fill="#1e2a4a" stroke="#6366f1" stroke-width="1.5"/>
+  <rect x="20" y="58" width="155" height="44" rx="12" fill="#6366f1"/>
+  <rect x="20" y="90" width="155" height="12" fill="#6366f1"/>
+  <text x="97" y="86" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">소급형</text>
+  <text x="97" y="99" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#c7d2fe">Retroactive</text>
+  <!-- Icon -->
+  <text x="97" y="145" text-anchor="middle" font-size="32">⏮</text>
+  <text x="97" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#a5b4fc">이미 써본 사람에게</text>
+  <text x="97" y="192" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#a5b4fc">나중에 지급</text>
+  <line x1="40" y1="205" x2="155" y2="205" stroke="#374151" stroke-width="1"/>
+  <text x="97" y="222" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">예) Uniswap, dYdX</text>
+  <text x="97" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Arbitrum</text>
+  <rect x="55" y="258" width="84" height="24" rx="6" fill="#312e81"/>
+  <text x="97" y="274" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#818cf8">난이도: 쉬움</text>
+
+  <!-- Card 2: Points -->
+  <rect x="192" y="58" width="155" height="240" rx="12" fill="#1e2a4a" stroke="#f59e0b" stroke-width="1.5"/>
+  <rect x="192" y="58" width="155" height="44" rx="12" fill="#f59e0b"/>
+  <rect x="192" y="90" width="155" height="12" fill="#f59e0b"/>
+  <text x="269" y="86" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">포인트형</text>
+  <text x="269" y="99" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fef3c7">Points System</text>
+  <!-- Icon -->
+  <text x="269" y="145" text-anchor="middle" font-size="32">🏆</text>
+  <text x="269" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#fcd34d">포인트 쌓으면</text>
+  <text x="269" y="192" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#fcd34d">나중에 토큰으로 전환</text>
+  <line x1="212" y1="205" x2="327" y2="205" stroke="#374151" stroke-width="1"/>
+  <text x="269" y="222" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">예) Hyperliquid,</text>
+  <text x="269" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Backpack, MetaMask</text>
+  <rect x="227" y="258" width="84" height="24" rx="6" fill="#451a03"/>
+  <text x="269" y="274" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#f59e0b">난이도: 중간</text>
+
+  <!-- Card 3: Task -->
+  <rect x="364" y="58" width="155" height="240" rx="12" fill="#1e2a4a" stroke="#10b981" stroke-width="1.5"/>
+  <rect x="364" y="58" width="155" height="44" rx="12" fill="#10b981"/>
+  <rect x="364" y="90" width="155" height="12" fill="#10b981"/>
+  <text x="441" y="86" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">태스크형</text>
+  <text x="441" y="99" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#d1fae5">Task-Based</text>
+  <!-- Icon -->
+  <text x="441" y="145" text-anchor="middle" font-size="32">✅</text>
+  <text x="441" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6ee7b7">SNS 팔로우, 리트윗</text>
+  <text x="441" y="192" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6ee7b7">설문 등 미션 수행</text>
+  <line x1="384" y1="205" x2="499" y2="205" stroke="#374151" stroke-width="1"/>
+  <text x="441" y="222" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">예) 소규모 신규</text>
+  <text x="441" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">프로젝트 위주</text>
+  <rect x="399" y="258" width="84" height="24" rx="6" fill="#064e3b"/>
+  <text x="441" y="274" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#10b981">난이도: 쉬움</text>
+
+  <!-- Card 4: Liquidity -->
+  <rect x="536" y="58" width="145" height="240" rx="12" fill="#1e2a4a" stroke="#ec4899" stroke-width="1.5"/>
+  <rect x="536" y="58" width="145" height="44" rx="12" fill="#ec4899"/>
+  <rect x="536" y="90" width="145" height="12" fill="#ec4899"/>
+  <text x="608" y="86" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">유동성형</text>
+  <text x="608" y="99" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#fce7f3">Liquidity Mining</text>
+  <!-- Icon -->
+  <text x="608" y="145" text-anchor="middle" font-size="32">💧</text>
+  <text x="608" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#f9a8d4">DEX에 유동성 공급</text>
+  <text x="608" y="192" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#f9a8d4">수수료+토큰 보상</text>
+  <line x1="556" y1="205" x2="661" y2="205" stroke="#374151" stroke-width="1"/>
+  <text x="608" y="222" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">예) Meteora,</text>
+  <text x="608" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Uniswap v4</text>
+  <rect x="566" y="258" width="84" height="24" rx="6" fill="#500724"/>
+  <text x="608" y="274" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ec4899">난이도: 어려움</text>
+
+  <!-- Bottom note -->
+  <text x="350" y="308" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#475569">* 2026년 기준 주요 에어드랍 유형</text>
+</svg>

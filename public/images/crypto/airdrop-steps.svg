@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="280" viewBox="0 0 700 280">
+  <defs>
+    <linearGradient id="bgSteps" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="s1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#818cf8"/>
+    </linearGradient>
+    <linearGradient id="s2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#fbbf24"/>
+    </linearGradient>
+    <linearGradient id="s3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981"/>
+      <stop offset="100%" style="stop-color:#34d399"/>
+    </linearGradient>
+    <linearGradient id="s4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899"/>
+      <stop offset="100%" style="stop-color:#f472b6"/>
+    </linearGradient>
+    <linearGradient id="s5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="100%" style="stop-color:#f59e0b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="700" height="280" fill="url(#bgSteps)" rx="16"/>
+
+  <!-- Title -->
+  <text x="350" y="34" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="white" font-weight="bold">에어드랍 참여 5단계</text>
+
+  <!-- Connector lines -->
+  <line x1="118" y1="118" x2="178" y2="118" stroke="#334155" stroke-width="2" stroke-dasharray="4,3"/>
+  <line x1="246" y1="118" x2="306" y2="118" stroke="#334155" stroke-width="2" stroke-dasharray="4,3"/>
+  <line x1="374" y1="118" x2="434" y2="118" stroke="#334155" stroke-width="2" stroke-dasharray="4,3"/>
+  <line x1="502" y1="118" x2="562" y2="118" stroke="#334155" stroke-width="2" stroke-dasharray="4,3"/>
+  <!-- Arrow heads -->
+  <polygon points="178,114 178,122 186,118" fill="#334155"/>
+  <polygon points="306,114 306,122 314,118" fill="#334155"/>
+  <polygon points="434,114 434,122 442,118" fill="#334155"/>
+  <polygon points="562,114 562,122 570,118" fill="#334155"/>
+
+  <!-- Step 1 -->
+  <circle cx="70" cy="118" r="44" fill="#1e2a4a" stroke="url(#s1)" stroke-width="2"/>
+  <circle cx="70" cy="98" r="14" fill="url(#s1)"/>
+  <text x="70" y="103" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">1</text>
+  <text x="70" y="128" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white" font-weight="bold">지갑 만들기</text>
+  <text x="70" y="143" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#818cf8">MetaMask</text>
+  <text x="70" y="157" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#818cf8">Phantom</text>
+  <text x="70" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#94a3b8">셀프커스터디 필수</text>
+
+  <!-- Step 2 -->
+  <circle cx="198" cy="118" r="44" fill="#1e2a4a" stroke="url(#s2)" stroke-width="2"/>
+  <circle cx="198" cy="98" r="14" fill="url(#s2)"/>
+  <text x="198" y="103" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">2</text>
+  <text x="198" y="128" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white" font-weight="bold">프로젝트 찾기</text>
+  <text x="198" y="143" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#fbbf24">airdrops.io</text>
+  <text x="198" y="157" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#fbbf24">dropstab.com</text>
+  <text x="198" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#94a3b8">공식 채널만 확인</text>
+
+  <!-- Step 3 -->
+  <circle cx="326" cy="118" r="44" fill="#1e2a4a" stroke="url(#s3)" stroke-width="2"/>
+  <circle cx="326" cy="98" r="14" fill="url(#s3)"/>
+  <text x="326" y="103" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">3</text>
+  <text x="326" y="128" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white" font-weight="bold">프로토콜 사용</text>
+  <text x="326" y="143" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#34d399">스왑 / 브릿지</text>
+  <text x="326" y="157" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#34d399">스테이킹</text>
+  <text x="326" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#94a3b8">소액도 OK</text>
+
+  <!-- Step 4 -->
+  <circle cx="454" cy="118" r="44" fill="#1e2a4a" stroke="url(#s4)" stroke-width="2"/>
+  <circle cx="454" cy="98" r="14" fill="url(#s4)"/>
+  <text x="454" y="103" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">4</text>
+  <text x="454" y="128" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white" font-weight="bold">꾸준히 반복</text>
+  <text x="454" y="143" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f472b6">주 1~2회 이상</text>
+  <text x="454" y="157" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f472b6">자연스럽게</text>
+  <text x="454" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#94a3b8">봇처럼 하면 탈락</text>
+
+  <!-- Step 5 -->
+  <circle cx="622" cy="118" r="44" fill="#1e2a4a" stroke="url(#s5)" stroke-width="2"/>
+  <circle cx="622" cy="98" r="14" fill="url(#s5)"/>
+  <text x="622" y="103" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="white" font-weight="bold">5</text>
+  <text x="622" y="128" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white" font-weight="bold">클레임</text>
+  <text x="622" y="143" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#fbbf24">공식 사이트만</text>
+  <text x="622" y="157" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#fbbf24">지갑 연결</text>
+  <text x="622" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#94a3b8">피싱 주의</text>
+
+  <!-- Warning bar -->
+  <rect x="100" y="218" width="500" height="42" rx="8" fill="#1e0f0f" stroke="#ef4444" stroke-width="1"/>
+  <text x="350" y="235" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ef4444" font-weight="bold">주의: 공식 사이트 확인 필수. 피싱 사이트는 공식과 똑같이 생겼다</text>
+  <text x="350" y="252" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ef4444">코인을 먼저 보내라고 하면 100% 사기</text>
+</svg>

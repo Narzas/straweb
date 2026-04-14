@@ -26,15 +26,21 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // 정적 에셋 장기 캐싱
-        source: "/:path(.*\\.(?:js|css|woff2?|ttf|otf|ico|png|jpg|jpeg|webp|avif|svg))",
+        // 정적 에셋 장기 캐싱 (_next/ 제외 — Vercel이 직접 처리)
+        source: "/images/:path*",
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
       {
-        // HTML 페이지 — no-store 방지, 짧은 캐시
-        source: "/(.*)",
+        source: "/fonts/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        // 보안 헤더 — _next/ 경로 제외
+        source: "/((?!_next/).*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },

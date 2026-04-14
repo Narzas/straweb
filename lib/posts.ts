@@ -68,7 +68,8 @@ function extractToc(markdown: string): TocItem[] {
     if (!match) continue;
 
     const level = match[1].length as 2 | 3;
-    const text = match[2].trim().replace(/[`*_]/g, "");
+    // strip HTML tags first, then inline markup
+    const text = match[2].trim().replace(/<[^>]+>/g, "").replace(/[`*_]/g, "").trim();
     // replicate github-slugger id generation (used by rehype-slug)
     // \p{L}\p{N} keeps unicode letters/numbers including Korean
     const id = text

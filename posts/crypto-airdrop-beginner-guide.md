@@ -243,7 +243,7 @@ NFT 거래 이력이 긴 계정, Pudgy Penguins 같은 주요 컬렉션 보유�
 
 전체 공급량의 40%(4억 EDGE)를 트레이더, 유동성 공급자, 얼리 어답터에게 배분했다. 거래량, LP 포지션, 파워 트레이더 여부 등 6개 티어로 나눠서 지급했다.
 
-### Based — $BASED TGE 완료 (2026년 3월 30일) <span class="badge-completed">✅ 완료</span>
+### Based
 
 Hyperliquid L1 위에서 운영되는 Web3 슈퍼앱이다. 퍼페추얼·스팟 거래, 밈 콘텐츠 예측 마켓(Internet Opinion Markets), 실물 Visa 카드(포트폴리오 잔고로 결제, 최대 8% 캐시백), 런치풀, AI 트레이딩 에이전트 등 여러 기능을 하나의 앱에 묶었다. 출시 8개월 만에 누적 거래량 400억 달러, 가입자 10만 명을 넘겼고 2026년 2월 Pantera Capital 주도로 1,150만 달러 시리즈 A 투자를 유치했다.
 

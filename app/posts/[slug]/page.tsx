@@ -8,7 +8,6 @@ import TableOfContents from "@/components/TableOfContents";
 import AdSlot from "@/components/AdSlot";
 import CommentSection from "@/components/CommentSection";
 import Sidebar from "@/components/Sidebar";
-import ViewTracker from "@/components/ViewTracker";
 import ViewCount from "@/components/ViewCount";
 import PostBody from "@/components/PostBody";
 
@@ -139,9 +138,8 @@ export default async function PostPage({ params }: Props) {
             <p className="text-lg leading-relaxed text-gray-500">{post.description}</p>
             <div className="flex items-center gap-3">
               <time className="text-sm text-gray-400">{post.date}</time>
-              <ViewCount slug={post.slug} />
+              <ViewCount slug={post.slug} track={true} />
             </div>
-          <ViewTracker slug={post.slug} />
           </header>
 
           {/* 본문 */}

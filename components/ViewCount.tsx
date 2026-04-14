@@ -5,19 +5,48 @@ import { useEffect, useState } from "react";
 export default function ViewCount({
   slug,
   initialCount,
+  track = false,
 }: {
   slug: string;
   initialCount?: number;
+  /** true일 때 조회수 증가 + 실시간 표시 (상세 페이지용) */
+  track?: boolean;
 }) {
   const [count, setCount] = useState<number | null>(initialCount ?? null);
 
   useEffect(() => {
-    if (initialCount !== undefined) return; // 서버에서 미리 받은 경우 fetch 생략
+    if (!track) {
+      // 홈/목록 페이지: initialCount 그대로 표시, fetch 없음
+      if (initialCount !== undefined) return;
+      // initialCount도 없으면 GET fetch
+      fetch(`/api/views/${slug}`)
+        .then((r) => r.json())
+        .then((d) => setCount(d.count ?? 0))
+        .catch(() => {});
+      return;
+    }
+
+    // ── 상세 페이지 (track=true) ──────────────────────────
+    // 1. 현재 조회수 먼저 표시
     fetch(`/api/views/${slug}`)
       .then((r) => r.json())
-      .then((d) => setCount(d.count))
+      .then((d) => setCount(d.count ?? 0))
       .catch(() => {});
-  }, [slug, initialCount]);
+
+    // 2. 로컬호스트 제외, 세션 중복 방지 후 증가
+    if (typeof window === "undefined") return;
+    if (window.location.hostname === "localhost") return;
+    const key = `viewed:${slug}`;
+    if (sessionStorage.getItem(key)) return;
+
+    fetch(`/api/views/${slug}`, { method: "POST" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.count) setCount(d.count); // POST 응답으로 갱신된 카운트 표시
+        sessionStorage.setItem(key, "1");
+      })
+      .catch(() => {});
+  }, [slug, initialCount, track]);
 
   if (count === null) return null;
 

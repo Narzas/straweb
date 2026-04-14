@@ -11,6 +11,8 @@ import HeroBattleScene from "@/components/HeroBattleScene";
 import SeasonalEffect from "@/components/SeasonalEffect";
 import ClientOnly from "@/components/ClientOnly";
 
+export const revalidate = 60; // 60초마다 서버 재렌더 → 조회수 최신화
+
 export const metadata: Metadata = {
   title: "StraWeb",
   description: "개발, 리뷰, 투자 등 관심 있는 것들을 편하게 기록하는 블로그입니다.",

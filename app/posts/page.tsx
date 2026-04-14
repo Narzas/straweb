@@ -7,6 +7,8 @@ import PostSortTabs from "@/components/PostSortTabs";
 import Sidebar from "@/components/Sidebar";
 import RightSidebar from "@/components/RightSidebar";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Posts",
   description: "All blog posts on StraWeb.",

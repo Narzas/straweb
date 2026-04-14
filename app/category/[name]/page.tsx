@@ -5,6 +5,8 @@ import { getAllCategories, getPostsByCategory } from "@/lib/posts";
 import PostCard from "@/components/PostCard";
 import Sidebar from "@/components/Sidebar";
 
+export const revalidate = 60;
+
 type Props = {
   params: Promise<{ name: string }>;
 };

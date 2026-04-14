@@ -67,7 +67,7 @@ export async function GET() {
 
   try {
     const res = await fetch(`https://t.me/s/${CHANNEL}`, {
-      cache: "no-store",
+      next: { revalidate: 55 }, // Next.js 데이터 캐시 — 서버리스 콜드 스타트에서도 유지됨
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

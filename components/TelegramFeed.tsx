@@ -132,10 +132,10 @@ export default function TelegramFeed() {
 
   useEffect(() => {
     load(true);
-    // 데이터 없으면 15초, 있으면 60초마다 폴링
-    const t = setInterval(() => load(false), messages.length ? 60_000 : 15_000);
+    // 60초마다 폴링 (서버 캐시 TTL 55초에 맞춤)
+    const t = setInterval(() => load(false), 60_000);
     return () => clearInterval(t);
-  }, [messages.length]);
+  }, []);
 
   useEffect(() => {
     if (newIds.size === 0) return;
@@ -153,7 +153,11 @@ export default function TelegramFeed() {
     );
   }
 
-  if (!messages.length) return null;
+  if (!messages.length) {
+    return (
+      <div className="animate-pulse rounded-lg bg-gray-100 dark:bg-slate-700 h-20" />
+    );
+  }
 
   return (
     <div className="space-y-2">

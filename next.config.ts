@@ -5,6 +5,8 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
+const isDev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
@@ -27,7 +29,8 @@ const nextConfig: NextConfig = {
     const csp = [
       "default-src 'self'",
       // GTM 인라인 부트스트랩 + 테마 초기화 스크립트 때문에 unsafe-inline 필요
-      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://adservice.google.com https://tpc.googlesyndication.com https://partner.googleadservices.com",
+      // 개발 환경에서는 React 디버깅용 unsafe-eval 추가 허용
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://pagead2.googlesyndication.com https://adservice.google.com https://tpc.googlesyndication.com https://partner.googleadservices.com`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
       // 이미지: Supabase, Coupang 제휴, 외부 OG 이미지 허용

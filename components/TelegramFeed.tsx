@@ -86,7 +86,7 @@ function MessageCard({ msg, isNew }: { msg: TelegramMessage; isNew: boolean }) {
           )}
           {msg.text && (
             <div className="px-3 py-2 max-h-[16.5rem] overflow-y-auto">
-              <p className="text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
+              <p className="text-[13px] leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
                 {msg.text}
               </p>
             </div>

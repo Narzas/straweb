@@ -156,7 +156,7 @@ export default function RightSidebar() {
         <div className="flex items-center gap-1.5 px-4 py-3 border-b border-gray-100 dark:border-slate-700">
           <span className="text-sm">📡</span>
           <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-            크립토 실시간
+            주인장 관심 뉴스
           </span>
         </div>
         <div className="p-3">

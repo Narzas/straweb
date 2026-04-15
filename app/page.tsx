@@ -53,7 +53,7 @@ export default async function HomePage() {
       </aside>
 
       {/* ── 메인 콘텐츠 ── */}
-      <div className="space-y-6">
+      {process.env.NODE_ENV !== "development" && <div className="space-y-6">
 
       {/* ── Hero ── */}
       <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#1a1f2e] text-white ring-1 ring-white/[0.06]">
@@ -69,7 +69,7 @@ export default async function HomePage() {
         </div>
 
         {/* 설명 — ATB 패널 바로 아래 */}
-        <p className="px-5 py-2.5 text-xs leading-relaxed text-slate-400/80">
+        <p className="px-5 py-2.5 text-sm leading-relaxed text-slate-400/80">
           개발하면서 겪은 것들, 관심 가는 것들을 편하게 기록하는 공간입니다. 게임, 투자, 일상 등 다양한 주제를 다룹니다.
         </p>
       </section>
@@ -127,7 +127,7 @@ export default async function HomePage() {
         <RightSidebar />
       </div>
 
-      </div>{/* end 메인 콘텐츠 */}
+      </div>}{/* end 메인 콘텐츠 */}
 
       {/* ── 오른쪽 사이드바 (lg 이상에서만 표시) ── */}
       <aside className="hidden lg:block">

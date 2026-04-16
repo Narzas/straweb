@@ -1,5 +1,9 @@
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { PostMeta } from "@/lib/posts";
 import ViewCount from "@/components/ViewCount";
 
@@ -20,6 +24,9 @@ function pickGradient(slug: string) {
   return GRADIENTS[hash % GRADIENTS.length];
 }
 
+const POPUP_W = 420;
+const POPUP_H = 315;
+
 export default function PostCard({
   post,
   priority = false,
@@ -30,12 +37,43 @@ export default function PostCard({
   viewCount?: number;
 }) {
   const gradient = pickGradient(post.slug);
+  const thumbRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [popup, setPopup] = useState<{ x: number; y: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  const openPopup = useCallback(() => {
+    if (!thumbRef.current) return;
+    const rect = thumbRef.current.getBoundingClientRect();
+    let x = rect.left + rect.width / 2 - POPUP_W / 2;
+    let y = rect.top - POPUP_H - 10;
+    if (y < 8) y = rect.bottom + 10;
+    x = Math.max(8, Math.min(x, window.innerWidth - POPUP_W - 8));
+    setPopup({ x, y });
+  }, []);
+
+  const handleEnter = useCallback(() => {
+    if (!post.cover) return;
+    timerRef.current = setTimeout(openPopup, 250);
+  }, [post.cover, openPopup]);
+
+  const handleLeave = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setPopup(null);
+  }, []);
 
   return (
     <div className="group relative flex flex-row overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
 
       {/* Thumbnail */}
-      <div className="relative w-36 shrink-0 self-stretch overflow-hidden bg-gray-100 dark:bg-slate-700 sm:w-44 min-h-[120px]">
+      <div
+        ref={thumbRef}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
+        className="relative z-[1] w-36 shrink-0 self-stretch overflow-hidden bg-gray-100 dark:bg-slate-700 sm:w-44 min-h-[120px]"
+      >
         {post.cover ? (
           <Image
             src={post.cover}
@@ -105,6 +143,25 @@ export default function PostCard({
           <ViewCount slug={post.slug} initialCount={viewCount} />
         </div>
       </div>
+
+      {/* Hover preview portal */}
+      {mounted && popup && post.cover && createPortal(
+        <div
+          className="pointer-events-none fixed z-[9999] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-800"
+          style={{ left: popup.x, top: popup.y, width: POPUP_W, height: POPUP_H }}
+        >
+          <Image
+            src={post.cover}
+            alt={post.title}
+            fill
+            sizes={`${POPUP_W}px`}
+            priority
+            className={post.cover.endsWith(".svg") ? "object-cover object-center" : "object-contain p-2"}
+            unoptimized={post.cover.endsWith(".svg")}
+          />
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

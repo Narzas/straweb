@@ -25,7 +25,7 @@ cover: /images/dev/springboot-fullstack-2.svg
 |------|------|
 | Project | **Gradle - Groovy** |
 | Language | Java |
-| Spring Boot | **3.x.x** (최신 정식 버전) |
+| Spring Boot | **3.x.x** (학습용 권장, 실무 최신은 4.x) |
 | Packaging | Jar |
 | Java | **17** |
 

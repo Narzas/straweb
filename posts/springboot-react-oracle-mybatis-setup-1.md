@@ -28,7 +28,7 @@ cover: /images/dev/springboot-fullstack-1.svg
 | 도구 | 역할 | 버전 |
 |------|------|------|
 | JDK 17 | Spring Boot 실행 환경 | 17 LTS |
-| Node.js | React 실행 환경 | 20 LTS |
+| Node.js | React 실행 환경 | 22 LTS |
 | Oracle XE | 데이터베이스 | 21c |
 | IntelliJ IDEA | 백엔드 IDE | Community 무료 |
 | VS Code | 프론트엔드 IDE | 최신 |
@@ -42,7 +42,7 @@ cover: /images/dev/springboot-fullstack-1.svg
 
 ### 왜 17인가요?
 
-JDK 8, 11, 17, 21 중에서 고르라면 **17을 추천**합니다. Spring Boot 3.x 이상이 JDK 17을 최소 요구사항으로 하고 있고, 현재 LTS(장기 지원) 버전 중 가장 널리 쓰입니다.
+JDK 8, 11, 17, 21 중에서 고르라면 **17을 추천**합니다. Spring Boot 3.x 이상이 JDK 17을 최소 요구사항으로 하고 있습니다. 실무에서는 Java 21 LTS가 가상 스레드(Virtual Threads) 등 성능 개선을 포함해 더 권장되지만, 처음 배우는 환경이라면 17로 시작해도 무방합니다.
 
 ### 설치 방법
 
@@ -77,13 +77,13 @@ openjdk version "17.0.x" 2024-xx-xx
 ### 설치 방법
 
 1. [nodejs.org](https://nodejs.org) 접속
-2. **LTS 버전** (현재 20.x) 다운로드 및 설치
+2. **LTS 버전** (현재 22.x) 다운로드 및 설치
 3. 기본 옵션 그대로 Next → Next → Install
 
 확인:
 
 ```bash
-node -v   # v20.x.x
+node -v   # v22.x.x
 npm -v    # 10.x.x
 ```
 
@@ -215,7 +215,7 @@ React 개발엔 VS Code를 씁니다.
 
 ```
 ☐ java -version  → openjdk 17.x.x 확인
-☐ node -v        → v20.x.x 확인
+☐ node -v        → v22.x.x 확인
 ☐ npm -v         → 10.x.x 확인
 ☐ Oracle XE 설치 & devuser 계정 생성
 ☐ DBeaver에서 Oracle 연결 성공

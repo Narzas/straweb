@@ -156,7 +156,7 @@ export default function PostCard({
             fill
             sizes={`${POPUP_W}px`}
             priority
-            className={post.cover.endsWith(".svg") ? "object-cover object-center" : "object-contain p-2"}
+            className="object-contain p-3"
             unoptimized={post.cover.endsWith(".svg")}
           />
         </div>,

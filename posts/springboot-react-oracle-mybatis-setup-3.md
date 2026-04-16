@@ -60,7 +60,7 @@ VALUES (SEQ_MEMBER.NEXTVAL, '김철수', 'kim@example.com', '010-9876-5432');
 COMMIT;
 ```
 
-> Oracle은 MySQL의 `AUTO_INCREMENT`가 없습니다. 대신 **시퀀스(SEQUENCE)**를 따로 만들어서 씁니다. `SEQ_MEMBER.NEXTVAL`을 호출할 때마다 1씩 증가합니다.
+> Oracle은 MySQL의 `AUTO_INCREMENT`가 없습니다. 대신 **시퀀스**(SEQUENCE)를 따로 만들어서 씁니다. `SEQ_MEMBER.NEXTVAL`을 호출할 때마다 1씩 증가합니다.
 
 ---
 

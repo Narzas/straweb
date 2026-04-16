@@ -104,7 +104,7 @@ Polygon 네트워크를 MetaMask에 추가했고 POL을 Polygon 네트워크로 
 
 ![MetaMask 수신 확인](/images/crypto/send-step4-confirm.svg)
 
-MetaMask를 열었을 때 잔액이 아직 바뀌지 않았다면 당황하지 말고 기다리면 된다. 거래소에서 **TX ID(트랜잭션 해시)**를 제공하는데, 이걸 [etherscan.io](https://etherscan.io) 에 검색하면 현재 처리 상태를 확인할 수 있다.
+MetaMask를 열었을 때 잔액이 아직 바뀌지 않았다면 당황하지 말고 기다리면 된다. 거래소에서 **TX ID**(트랜잭션 해시)를 제공하는데, 이걸 [etherscan.io](https://etherscan.io) 에 검색하면 현재 처리 상태를 확인할 수 있다.
 
 - **Pending** → 아직 처리 중
 - **Success** → 완료, MetaMask에 곧 반영됨

@@ -57,6 +57,8 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
   const entries: TimelineEntry[] = data?.props?.pageProps?.timeline?.entries ?? [];
   const results: TwitterPost[] = [];
 
+  const candidates: TwitterPost[] = [];
+
   for (const entry of entries) {
     if (entry.type !== "tweet") continue;
     const t = entry.content?.tweet;
@@ -75,9 +77,12 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
     const time = t.created_at ? new Date(t.created_at).toISOString() : "";
     const url = `https://x.com/${username}/status/${t.id_str}`;
 
-    results.push({ id: t.id_str, text, photo, time, url });
-    break; // 최신 1개만
+    candidates.push({ id: t.id_str, text, photo, time, url });
   }
+
+  // 핀 고정 트윗 무시 — snowflake ID 내림차순으로 실제 최신 글 1개 선택
+  candidates.sort((a, b) => (BigInt(b.id) > BigInt(a.id) ? 1 : -1));
+  if (candidates[0]) results.push(candidates[0]);
 
   return results;
 }

@@ -70,7 +70,7 @@ export default async function HomePage() {
         </div>
 
         {/* 설명 — ATB 패널 바로 아래 */}
-        <p className="px-5 py-2.5 text-sm leading-relaxed text-slate-400/80">
+        <p className="px-5 py-2.5 text-base leading-relaxed text-slate-500 dark:text-slate-400">
           개발하면서 겪은 것들, 관심 가는 것들을 편하게 기록하는 공간입니다. 게임, 투자, 일상 등 다양한 주제를 다룹니다.
         </p>
       </section>

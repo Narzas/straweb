@@ -55,9 +55,9 @@ export default async function HomePage() {
       {/* ── 메인 콘텐츠 ── */}
       <div className="space-y-6">
 
-      {/* ── Hero (로컬 개발환경에서는 숨김) ── */}
+      {/* ── Hero (로컬 개발환경·모바일에서는 숨김) ── */}
       {process.env.NODE_ENV !== "development" && (
-      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#1a1f2e] text-white ring-1 ring-white/[0.06]">
+      <section className="hidden md:block overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#1a1f2e] text-white ring-1 ring-white/[0.06]">
 
         {/* 배틀씬 캔버스 영역 */}
         <div className="relative">

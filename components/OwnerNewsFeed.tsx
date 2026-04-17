@@ -50,6 +50,26 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   );
 }
 
+function FeedPlaceholder() {
+  return (
+    <div className="rounded-lg border-l-2 border-indigo-300 dark:border-indigo-700 bg-indigo-50/60 dark:bg-indigo-950/20 px-3 py-3 space-y-2 overflow-hidden">
+      {/* shimmer 라인들 */}
+      <div className="relative h-3 rounded-full bg-indigo-100 dark:bg-indigo-900/40 overflow-hidden">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-indigo-200/60 dark:via-indigo-700/40 to-transparent" />
+      </div>
+      <div className="relative h-3 rounded-full bg-indigo-100 dark:bg-indigo-900/40 overflow-hidden w-5/6">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_0.2s_infinite] bg-gradient-to-r from-transparent via-indigo-200/60 dark:via-indigo-700/40 to-transparent" />
+      </div>
+      <div className="relative h-3 rounded-full bg-indigo-100 dark:bg-indigo-900/40 overflow-hidden w-3/4">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_0.4s_infinite] bg-gradient-to-r from-transparent via-indigo-200/60 dark:via-indigo-700/40 to-transparent" />
+      </div>
+      <p className="text-[10px] text-indigo-300 dark:text-indigo-700 pt-1 animate-pulse">
+        업데이트 대기 중…
+      </p>
+    </div>
+  );
+}
+
 function PostCard({ post }: { post: TwitterPost }) {
   const [lightbox, setLightbox] = useState(false);
 
@@ -154,12 +174,10 @@ export default function OwnerNewsFeed() {
         >
           {ACCOUNTS.map((_, i) => (
             <div key={i} className="w-full flex-shrink-0">
-              {feeds[i].loading ? (
-                <div className="animate-pulse rounded-lg bg-gray-100 dark:bg-slate-700 h-20" />
-              ) : feeds[i].post ? (
+              {feeds[i].post ? (
                 <PostCard post={feeds[i].post!} />
               ) : (
-                <div className="animate-pulse rounded-lg bg-gray-100 dark:bg-slate-700 h-20" />
+                <FeedPlaceholder />
               )}
             </div>
           ))}

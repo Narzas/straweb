@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import GuestbookPreview from "./GuestbookPreview";
-import TelegramFeed from "./TelegramFeed";
+// import TelegramFeed from "./TelegramFeed";
+// import WuBlockchainFeed from "./WuBlockchainFeed";
+import OwnerNewsFeed from "./OwnerNewsFeed";
 
 type IndexData = { price: number | null; change: number | null };
 type MarketData = {
@@ -151,16 +153,16 @@ export default function RightSidebar() {
         )}
       </div>
 
-      {/* 텔레그램 피드 */}
-      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-1.5 px-4 py-3 border-b border-gray-100 dark:border-slate-700">
-          <span className="text-sm">📡</span>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+      {/* 주인장 관심 뉴스 */}
+      <div className="rounded-xl overflow-hidden shadow-sm border border-indigo-100 dark:border-indigo-900/40">
+        <div className="bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2.5 flex items-center gap-2">
+          <span className="text-base leading-none">🔥</span>
+          <span className="text-[11px] font-bold tracking-widest text-white/90 uppercase">
             주인장 관심 뉴스
           </span>
         </div>
-        <div className="p-3">
-          <TelegramFeed />
+        <div className="bg-white dark:bg-slate-800 p-3">
+          <OwnerNewsFeed />
         </div>
       </div>
 

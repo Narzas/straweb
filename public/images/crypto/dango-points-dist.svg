@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="260" viewBox="0 0 680 260">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d0a1a"/>
+      <stop offset="100%" style="stop-color:#1a0d2e"/>
+    </linearGradient>
+    <linearGradient id="perpsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff6b9d"/>
+      <stop offset="100%" style="stop-color:#c44dff"/>
+    </linearGradient>
+    <linearGradient id="vaultGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4a9eff"/>
+      <stop offset="100%" style="stop-color:#00d4ff"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="680" height="260" fill="url(#bgGrad)" rx="12"/>
+
+  <!-- Title -->
+  <text x="340" y="36" font-family="'Courier New', monospace" font-size="15" font-weight="bold"
+        fill="#ffffff" text-anchor="middle" opacity="0.9">주당 100만 포인트 배분 구조</text>
+
+  <!-- Bar background -->
+  <rect x="60" y="70" width="560" height="52" rx="8" fill="#ffffff" opacity="0.06"/>
+
+  <!-- Perps bar 75% = 420px -->
+  <rect x="60" y="70" width="420" height="52" rx="8" fill="url(#perpsGrad)" opacity="0.9" filter="url(#glow)"/>
+
+  <!-- Vault bar 25% = 140px -->
+  <rect x="480" y="70" width="140" height="52" rx="0 8 8 0" fill="url(#vaultGrad)" opacity="0.85"/>
+  <!-- fix radius -->
+  <rect x="480" y="70" width="8" height="52" fill="url(#vaultGrad)" opacity="0.85"/>
+
+  <!-- Perps label inside bar -->
+  <text x="270" y="90" font-family="'Courier New', monospace" font-size="14" font-weight="bold"
+        fill="white" text-anchor="middle">Perps 트레이더</text>
+  <text x="270" y="110" font-family="'Courier New', monospace" font-size="18" font-weight="bold"
+        fill="white" text-anchor="middle">750,000 pts / 주</text>
+
+  <!-- Perps % label -->
+  <text x="270" y="152" font-family="'Courier New', monospace" font-size="28" font-weight="bold"
+        fill="#ff6b9d" text-anchor="middle" filter="url(#glow)">75%</text>
+
+  <!-- Vault label inside bar -->
+  <text x="550" y="90" font-family="'Courier New', monospace" font-size="12" font-weight="bold"
+        fill="white" text-anchor="middle">볼트 예치</text>
+  <text x="550" y="108" font-family="'Courier New', monospace" font-size="13" font-weight="bold"
+        fill="white" text-anchor="middle">250,000</text>
+
+  <!-- Vault % label -->
+  <text x="550" y="152" font-family="'Courier New', monospace" font-size="28" font-weight="bold"
+        fill="#00d4ff" text-anchor="middle" filter="url(#glow)">25%</text>
+
+  <!-- Divider line at 75% -->
+  <line x1="480" y1="62" x2="480" y2="170" stroke="#ffffff" stroke-width="1" stroke-dasharray="4,3" opacity="0.3"/>
+
+  <!-- Bottom note -->
+  <text x="340" y="210" font-family="'Courier New', monospace" font-size="12"
+        fill="#ffffff" text-anchor="middle" opacity="0.55">* 상대 비중 배분 — 참여자가 많을수록 같은 거래량으로 받는 포인트가 줄어든다</text>
+
+  <!-- Legend dots -->
+  <circle cx="160" cy="235" r="6" fill="url(#perpsGrad)"/>
+  <text x="173" y="240" font-family="'Courier New', monospace" font-size="12" fill="#ff6b9d">Perps 거래</text>
+  <circle cx="340" cy="235" r="6" fill="url(#vaultGrad)"/>
+  <text x="353" y="240" font-family="'Courier New', monospace" font-size="12" fill="#00d4ff">볼트 예치</text>
+</svg>

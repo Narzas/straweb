@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
+import GithubSlugger from "github-slugger";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -62,6 +63,7 @@ function extractFirstHeading(markdown: string): string | undefined {
 function extractToc(markdown: string): TocItem[] {
   const lines = markdown.split("\n");
   const items: TocItem[] = [];
+  const slugger = new GithubSlugger();
 
   for (const line of lines) {
     const match = line.match(/^(#{2,3})\s+(.+)/);
@@ -70,13 +72,8 @@ function extractToc(markdown: string): TocItem[] {
     const level = match[1].length as 2 | 3;
     // strip HTML tags first, then inline markup
     const text = match[2].trim().replace(/<[^>]+>/g, "").replace(/[`*_]/g, "").trim();
-    // replicate github-slugger id generation (used by rehype-slug)
-    // \p{L}\p{N} keeps unicode letters/numbers including Korean
-    const id = text
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}\s-]/gu, "")
-      .trim()
-      .replace(/\s+/g, "-");
+    // use github-slugger directly — same library rehype-slug uses internally
+    const id = slugger.slug(text);
 
     if (!id) continue;
     items.push({ id, text, level });

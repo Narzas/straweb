@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d0a1a"/>
+      <stop offset="55%" style="stop-color:#150d22"/>
+      <stop offset="100%" style="stop-color:#1a0d2e"/>
+    </linearGradient>
+    <linearGradient id="dangoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b9d"/>
+      <stop offset="100%" style="stop-color:#c44dff"/>
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff6b9d;stop-opacity:0"/>
+      <stop offset="25%" style="stop-color:#ff6b9d;stop-opacity:0.7"/>
+      <stop offset="75%" style="stop-color:#c44dff;stop-opacity:0.7"/>
+      <stop offset="100%" style="stop-color:#c44dff;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ffaa"/>
+      <stop offset="100%" style="stop-color:#00cc88"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="textglow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <g opacity="0.05" stroke="#ff6b9d" stroke-width="0.8">
+    <line x1="0" y1="90" x2="800" y2="90"/>
+    <line x1="0" y1="180" x2="800" y2="180"/>
+    <line x1="0" y1="270" x2="800" y2="270"/>
+    <line x1="0" y1="360" x2="800" y2="360"/>
+    <line x1="100" y1="0" x2="100" y2="450"/>
+    <line x1="200" y1="0" x2="200" y2="450"/>
+    <line x1="300" y1="0" x2="300" y2="450"/>
+    <line x1="400" y1="0" x2="400" y2="450"/>
+    <line x1="500" y1="0" x2="500" y2="450"/>
+    <line x1="600" y1="0" x2="600" y2="450"/>
+    <line x1="700" y1="0" x2="700" y2="450"/>
+  </g>
+
+  <!-- Soft glow behind dango -->
+  <circle cx="620" cy="225" r="160" fill="#ff6b9d" opacity="0.04" filter="url(#softglow)"/>
+
+  <!-- ── Right side: Dango illustration ── -->
+  <!-- Stick (vertical rod) -->
+  <rect x="613" y="55" width="14" height="300" rx="7" fill="#6b4f3a" opacity="0.9"/>
+
+  <!-- Top ball - green (matcha) -->
+  <circle cx="620" cy="100" r="52" fill="#4caf7d" filter="url(#glow)"/>
+  <circle cx="620" cy="100" r="52" fill="none" stroke="#6ee8a4" stroke-width="2.5" opacity="0.6"/>
+  <ellipse cx="601" cy="84" rx="14" ry="9" fill="#6ee8a4" opacity="0.35" transform="rotate(-20 601 84)"/>
+
+  <!-- Middle ball - pink gradient -->
+  <circle cx="620" cy="220" r="52" fill="url(#dangoGrad)" filter="url(#glow)"/>
+  <circle cx="620" cy="220" r="52" fill="none" stroke="#ff9ec8" stroke-width="2.5" opacity="0.6"/>
+  <ellipse cx="601" cy="204" rx="14" ry="9" fill="#ffb8da" opacity="0.35" transform="rotate(-20 601 204)"/>
+  <!-- DNG label -->
+  <text x="620" y="227" font-family="'Courier New', monospace" font-size="18" font-weight="bold"
+        fill="white" text-anchor="middle" opacity="0.95">DNG</text>
+
+  <!-- Bottom ball - white/cream -->
+  <circle cx="620" cy="340" r="52" fill="#f0e8ff" filter="url(#glow)"/>
+  <circle cx="620" cy="340" r="52" fill="none" stroke="#d4b8ff" stroke-width="2.5" opacity="0.5"/>
+  <ellipse cx="601" cy="324" rx="14" ry="9" fill="#e8d8ff" opacity="0.35" transform="rotate(-20 601 324)"/>
+
+  <!-- ── Left side: Text content ── -->
+  <!-- Badge row -->
+  <rect x="50" y="55" width="70" height="28" rx="5" fill="#ff6b9d" opacity="0.15" stroke="#ff6b9d" stroke-width="1" opacity="0.5"/>
+  <text x="85" y="74" font-family="'Courier New', monospace" font-size="13" font-weight="bold"
+        fill="#ff6b9d" text-anchor="middle">CLOB</text>
+
+  <rect x="132" y="55" width="76" height="28" rx="5" fill="#c44dff" opacity="0.15" stroke="#c44dff" stroke-width="1" opacity="0.5"/>
+  <text x="170" y="74" font-family="'Courier New', monospace" font-size="13" font-weight="bold"
+        fill="#c44dff" text-anchor="middle">Layer 1</text>
+
+  <rect x="220" y="55" width="88" height="28" rx="5" fill="#00d4ff" opacity="0.1" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
+  <text x="264" y="74" font-family="'Courier New', monospace" font-size="13" font-weight="bold"
+        fill="#00d4ff" text-anchor="middle">Airdrop</text>
+
+  <!-- Main title -->
+  <text x="50" y="155" font-family="'Courier New', monospace" font-size="58" font-weight="bold"
+        fill="#ff6b9d" text-anchor="start" filter="url(#textglow)">DANGO</text>
+
+  <!-- Subtitle -->
+  <text x="52" y="195" font-family="'Courier New', monospace" font-size="20"
+        fill="#c44dff" text-anchor="start" opacity="0.9">Exchange — DNG 에어드랍 전략 가이드</text>
+
+  <!-- Accent divider -->
+  <rect x="50" y="220" width="460" height="2" fill="url(#accentLine)" rx="1"/>
+
+  <!-- Info rows -->
+  <text x="50" y="260" font-family="'Courier New', monospace" font-size="15"
+        fill="#aaaaaa" text-anchor="start">◆  온체인 CLOB · 자체 Layer 1 · 지갑 없는 계정</text>
+
+  <text x="50" y="292" font-family="'Courier New', monospace" font-size="15"
+        fill="#aaaaaa" text-anchor="start">◆  Perps 거래 75%  +  볼트 예치 25%  →  포인트</text>
+
+  <text x="50" y="324" font-family="'Courier New', monospace" font-size="15"
+        fill="#aaaaaa" text-anchor="start">◆  DNG 총 공급 30,000  ·  TGE Summer 2026 예정</text>
+
+  <!-- Bottom accent line -->
+  <rect x="50" y="368" width="680" height="1.5" fill="url(#accentLine)" rx="1"/>
+
+  <!-- Bottom label -->
+  <text x="50" y="395" font-family="'Courier New', monospace" font-size="13"
+        fill="#666" text-anchor="start">dango.exchange</text>
+  <text x="750" y="395" font-family="'Courier New', monospace" font-size="13"
+        fill="#666" text-anchor="end">2026.04.17</text>
+
+  <!-- Decorative dots -->
+  <circle cx="50" cy="430" r="3" fill="#ff6b9d" opacity="0.4"/>
+  <circle cx="64" cy="430" r="2" fill="#c44dff" opacity="0.3"/>
+  <circle cx="750" cy="430" r="3" fill="#c44dff" opacity="0.4"/>
+  <circle cx="736" cy="430" r="2" fill="#ff6b9d" opacity="0.3"/>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="320" viewBox="0 0 680 320">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d0a1a"/>
+      <stop offset="100%" style="stop-color:#1a0d2e"/>
+    </linearGradient>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="680" height="320" fill="url(#bg2)" rx="12"/>
+
+  <!-- Title -->
+  <text x="340" y="34" font-family="'Courier New', monospace" font-size="15" font-weight="bold"
+        fill="#ffffff" text-anchor="middle" opacity="0.9">DNG 토큰 배분 (총 공급량 30,000개)</text>
+
+  <!-- Bar chart rows -->
+  <!-- ICO 30% -->
+  <rect x="180" y="58" width="240" height="32" rx="4" fill="#ff6b9d" opacity="0.85" filter="url(#glow2)"/>
+  <text x="172" y="79" font-family="'Courier New', monospace" font-size="12" fill="#aaaaaa" text-anchor="end">ICO</text>
+  <text x="428" y="79" font-family="'Courier New', monospace" font-size="13" font-weight="bold" fill="#ff6b9d">30%</text>
+  <text x="490" y="79" font-family="'Courier New', monospace" font-size="11" fill="#666" opacity="0.8">9,000개</text>
+
+  <!-- Lockdrop 15% -->
+  <rect x="180" y="102" width="120" height="32" rx="4" fill="#c44dff" opacity="0.85" filter="url(#glow2)"/>
+  <text x="172" y="123" font-family="'Courier New', monospace" font-size="12" fill="#aaaaaa" text-anchor="end">락드랍</text>
+  <text x="308" y="123" font-family="'Courier New', monospace" font-size="13" font-weight="bold" fill="#c44dff">15%</text>
+  <text x="370" y="123" font-family="'Courier New', monospace" font-size="11" fill="#666" opacity="0.8">4,500개</text>
+
+  <!-- Liquidity incentives 15% -->
+  <rect x="180" y="146" width="120" height="32" rx="4" fill="#00d4ff" opacity="0.8" filter="url(#glow2)"/>
+  <text x="172" y="167" font-family="'Courier New', monospace" font-size="12" fill="#aaaaaa" text-anchor="end">유동성 인센티브</text>
+  <text x="308" y="167" font-family="'Courier New', monospace" font-size="13" font-weight="bold" fill="#00d4ff">15%</text>
+  <text x="370" y="167" font-family="'Courier New', monospace" font-size="11" fill="#666" opacity="0.8">4,500개</text>
+
+  <!-- Team 15% -->
+  <rect x="180" y="190" width="120" height="32" rx="4" fill="#4aff91" opacity="0.75" filter="url(#glow2)"/>
+  <text x="172" y="211" font-family="'Courier New', monospace" font-size="12" fill="#aaaaaa" text-anchor="end">팀</text>
+  <text x="308" y="211" font-family="'Courier New', monospace" font-size="13" font-weight="bold" fill="#4aff91">15%</text>
+  <text x="370" y="211" font-family="'Courier New', monospace" font-size="11" fill="#666" opacity="0.8">4,500개</text>
+
+  <!-- Investors 15% -->
+  <rect x="180" y="234" width="120" height="32" rx="4" fill="#ffb84a" opacity="0.8" filter="url(#glow2)"/>
+  <text x="172" y="255" font-family="'Courier New', monospace" font-size="12" fill="#aaaaaa" text-anchor="end">투자자</text>
+  <text x="308" y="255" font-family="'Courier New', monospace" font-size="13" font-weight="bold" fill="#ffb84a">15%</text>
+  <text x="370" y="255" font-family="'Courier New', monospace" font-size="11" fill="#666" opacity="0.8">4,500개</text>
+
+  <!-- Other 10% -->
+  <rect x="180" y="278" width="80" height="28" rx="4" fill="#888888" opacity="0.6"/>
+  <text x="172" y="297" font-family="'Courier New', monospace" font-size="12" fill="#aaaaaa" text-anchor="end">기타</text>
+  <text x="268" y="297" font-family="'Courier New', monospace" font-size="13" font-weight="bold" fill="#aaaaaa">10%</text>
+  <text x="330" y="297" font-family="'Courier New', monospace" font-size="11" fill="#666" opacity="0.8">3,000개</text>
+
+  <!-- Community bracket -->
+  <line x1="550" y1="102" x2="560" y2="102" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+  <line x1="560" y1="102" x2="560" y2="162" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+  <line x1="550" y1="162" x2="560" y2="162" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+  <text x="568" y="137" font-family="'Courier New', monospace" font-size="10" fill="#888">커뮤니티</text>
+  <text x="568" y="150" font-family="'Courier New', monospace" font-size="10" fill="#888">30%+</text>
+</svg>

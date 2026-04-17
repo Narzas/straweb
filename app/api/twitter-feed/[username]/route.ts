@@ -42,6 +42,7 @@ interface TwitterTweet {
   created_at: string;
   conversation_id_str?: string;
   in_reply_to_screen_name?: string | null;
+  note_tweet?: { note_tweet_results?: { result?: { text?: string } } };
   extended_entities?: { media?: TwitterMedia[] };
   entities?: { urls?: TwitterUrl[]; media?: TwitterMedia[] };
 }
@@ -66,7 +67,8 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
     const t = entry.content?.tweet;
     if (!t) continue;
 
-    const raw = t.full_text ?? t.text ?? "";
+    // note_tweet에 전체 텍스트가 있으면 우선 사용 (긴 트윗)
+    const raw = t.note_tweet?.note_tweet_results?.result?.text ?? t.full_text ?? t.text ?? "";
     if (raw.startsWith("RT @")) continue;
     if (t.in_reply_to_screen_name && t.in_reply_to_screen_name !== username) continue;
     if (t.conversation_id_str && t.conversation_id_str !== t.id_str) continue;

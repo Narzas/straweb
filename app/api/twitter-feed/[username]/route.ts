@@ -71,10 +71,6 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
     if (t.in_reply_to_screen_name && t.in_reply_to_screen_name !== username) continue;
     if (t.conversation_id_str && t.conversation_id_str !== t.id_str) continue;
 
-    // 핀 고정 트윗 감지: sort_index가 id_str보다 2배 이상 크면 인위적으로 올려진 것
-    const sortIndex = entry.sort_index ?? t.id_str;
-    if (BigInt(sortIndex) > BigInt(t.id_str) * BigInt(2)) continue;
-
     const urls: TwitterUrl[] = t.entities?.urls ?? [];
     const text = expandUrls(raw, urls).replace(/\s+/g, " ").trim();
     if (!text || /^source:\s*https?:\/\//i.test(text)) continue;
@@ -87,8 +83,8 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
     candidates.push({ id: t.id_str, text, photo, time, url });
   }
 
-  // 핀 고정 트윗 무시 — snowflake ID 내림차순으로 실제 최신 글 1개 선택
-  candidates.sort((a, b) => (BigInt(b.id) > BigInt(a.id) ? 1 : -1));
+  // created_at 내림차순 — 가장 최근에 작성된 글 선택 (핀 고정 무관)
+  candidates.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   if (candidates[0]) results.push(candidates[0]);
 
   return results;

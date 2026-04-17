@@ -106,18 +106,47 @@ function PostCard({ post }: { post: TwitterPost }) {
   );
 }
 
+const LS_KEY = "owner-news-feed-v1";
+
+function loadFromStorage(): (TwitterPost | null)[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return ACCOUNTS.map(() => null);
+    return JSON.parse(raw) as (TwitterPost | null)[];
+  } catch {
+    return ACCOUNTS.map(() => null);
+  }
+}
+
+function saveToStorage(posts: (TwitterPost | null)[]) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(posts));
+  } catch {}
+}
+
 type FeedState = {
   post: TwitterPost | null;
-  loading: boolean;
 };
 
 export default function OwnerNewsFeed() {
   const [feeds, setFeeds] = useState<FeedState[]>(
-    ACCOUNTS.map(() => ({ post: null, loading: true }))
+    ACCOUNTS.map(() => ({ post: null }))
   );
   const [currentIdx, setCurrentIdx] = useState(0);
   const prevIdsRef = useRef<(string | null)[]>(ACCOUNTS.map(() => null));
-  const initializedRef = useRef(false);
+  const currentPostsRef = useRef<(TwitterPost | null)[]>(ACCOUNTS.map(() => null));
+
+  // localStorage에서 이전 글 즉시 복원
+  useEffect(() => {
+    const stored = loadFromStorage();
+    if (stored.some((p) => p !== null)) {
+      setFeeds(stored.map((post) => ({ post })));
+      currentPostsRef.current = stored;
+      const times = stored.map((p) => (p?.time ? new Date(p.time).getTime() : 0));
+      setCurrentIdx(times[1] > times[0] ? 1 : 0);
+      prevIdsRef.current = stored.map((p) => p?.id ?? null);
+    }
+  }, []);
 
   async function loadAll(isFirst = false) {
     const results = await Promise.allSettled(
@@ -129,29 +158,30 @@ export default function OwnerNewsFeed() {
       )
     );
 
-    const posts = results.map((r) => (r.status === "fulfilled" ? r.value : null));
+    const fetched = results.map((r) => (r.status === "fulfilled" ? r.value : null));
 
-    setFeeds(posts.map((post) => ({ post, loading: false })));
+    // 새로 가져온 글이 없으면 기존 글 유지
+    const merged = currentPostsRef.current.map((cur, i) => fetched[i] ?? cur);
+    currentPostsRef.current = merged;
+    setFeeds(merged.map((post) => ({ post })));
+    saveToStorage(merged);
 
     if (isFirst) {
-      // 초기: 더 최신 글 있는 계정 먼저
-      const times = posts.map((p) => (p?.time ? new Date(p.time).getTime() : 0));
-      const newerIdx = times[1] > times[0] ? 1 : 0;
-      setCurrentIdx(newerIdx);
-      prevIdsRef.current = posts.map((p) => p?.id ?? null);
-      initializedRef.current = true;
+      const times = merged.map((p) => (p?.time ? new Date(p.time).getTime() : 0));
+      setCurrentIdx(times[1] > times[0] ? 1 : 0);
+      prevIdsRef.current = merged.map((p) => p?.id ?? null);
       return;
     }
 
     // 갱신 감지: 새 글 올라온 계정으로 자동 전환
     let updatedIdx = -1;
-    for (let i = 0; i < posts.length; i++) {
-      if (posts[i]?.id && posts[i]!.id !== prevIdsRef.current[i]) {
+    for (let i = 0; i < fetched.length; i++) {
+      if (fetched[i]?.id && fetched[i]!.id !== prevIdsRef.current[i]) {
         updatedIdx = i;
         break;
       }
     }
-    prevIdsRef.current = posts.map((p) => p?.id ?? null);
+    prevIdsRef.current = merged.map((p) => p?.id ?? null);
     if (updatedIdx !== -1) setCurrentIdx(updatedIdx);
   }
 
@@ -161,7 +191,6 @@ export default function OwnerNewsFeed() {
     return () => clearInterval(t);
   }, []);
 
-  const loading = feeds.some((f) => f.loading);
   const currentPost = feeds[currentIdx]?.post;
 
   return (

@@ -76,22 +76,11 @@ function PostCard({ post }: { post: TwitterPost }) {
             </p>
           </div>
         )}
-        <div className="px-3 py-2 flex items-center justify-between">
-          {post.time && (
-            <span className="text-[10px] text-indigo-400 dark:text-indigo-400">
-              {timeAgo(post.time)}
-            </span>
-          )}
-          <a
-            href={post.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            원문 →
-          </a>
-        </div>
+        {post.time && (
+          <p className="px-3 pb-2 text-[10px] text-indigo-400 dark:text-indigo-400">
+            {timeAgo(post.time)}
+          </p>
+        )}
       </div>
     </>
   );

@@ -40,6 +40,7 @@ interface TwitterTweet {
   full_text?: string;
   text?: string;
   created_at: string;
+  conversation_id_str?: string;
   in_reply_to_screen_name?: string | null;
   extended_entities?: { media?: TwitterMedia[] };
   entities?: { urls?: TwitterUrl[]; media?: TwitterMedia[] };
@@ -66,7 +67,9 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
 
     const raw = t.full_text ?? t.text ?? "";
     if (raw.startsWith("RT @")) continue;
+    // 타 계정 답글 제외, 자기 스레드 중간 트윗도 제외 (thread opener만)
     if (t.in_reply_to_screen_name && t.in_reply_to_screen_name !== username) continue;
+    if (t.conversation_id_str && t.conversation_id_str !== t.id_str) continue;
 
     const urls: TwitterUrl[] = t.entities?.urls ?? [];
     const text = expandUrls(raw, urls).replace(/\s+/g, " ").trim();

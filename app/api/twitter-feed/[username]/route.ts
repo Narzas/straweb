@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-const CACHE_TTL = 180_000;    // 3분마다 트위터 실제 호출
-const RETRY_BACKOFF = 300_000; // 429 등 실패 시 5분 대기
+export const runtime = "edge";
 
 export type TwitterPost = {
   id: string;
@@ -10,19 +9,6 @@ export type TwitterPost = {
   time: string;
   url: string;
 };
-
-interface CacheEntry {
-  posts: TwitterPost[];
-  fetchedAt: number;
-  attemptedAt: number;
-}
-
-// 계정별 독립 캐시
-const cache = new Map<string, CacheEntry>();
-
-function getCache(username: string): CacheEntry {
-  return cache.get(username) ?? { posts: [], fetchedAt: 0, attemptedAt: 0 };
-}
 
 function expandUrls(text: string, urls: { url: string; expanded_url: string }[]): string {
   let out = text;
@@ -40,7 +26,6 @@ interface TwitterTweet {
   full_text?: string;
   text?: string;
   created_at: string;
-  conversation_id_str?: string;
   in_reply_to_screen_name?: string | null;
   note_tweet?: { note_tweet_results?: { result?: { text?: string } } };
   extended_entities?: { media?: TwitterMedia[] };
@@ -48,7 +33,6 @@ interface TwitterTweet {
 }
 interface TimelineEntry {
   type: string;
-  sort_index?: string;
   content?: { tweet?: TwitterTweet };
 }
 
@@ -58,8 +42,6 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
 
   const data = JSON.parse(m[1]);
   const entries: TimelineEntry[] = data?.props?.pageProps?.timeline?.entries ?? [];
-  const results: TwitterPost[] = [];
-
   const candidates: TwitterPost[] = [];
 
   for (const entry of entries) {
@@ -67,11 +49,9 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
     const t = entry.content?.tweet;
     if (!t) continue;
 
-    // note_tweet에 전체 텍스트가 있으면 우선 사용 (긴 트윗)
     const raw = t.note_tweet?.note_tweet_results?.result?.text ?? t.full_text ?? t.text ?? "";
     if (raw.startsWith("RT @")) continue;
     if (t.in_reply_to_screen_name && t.in_reply_to_screen_name !== username) continue;
-    if (t.conversation_id_str && t.conversation_id_str !== t.id_str) continue;
 
     const urls: TwitterUrl[] = t.entities?.urls ?? [];
     const text = expandUrls(raw, urls).replace(/\s+/g, " ").trim();
@@ -80,16 +60,12 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
     const media: TwitterMedia[] = t.extended_entities?.media ?? t.entities?.media ?? [];
     const photo = media.find((m) => m.type === "photo")?.media_url_https ?? null;
     const time = t.created_at ? new Date(t.created_at).toISOString() : "";
-    const url = `https://x.com/${username}/status/${t.id_str}`;
 
-    candidates.push({ id: t.id_str, text, photo, time, url });
+    candidates.push({ id: t.id_str, text, photo, time, url: `https://x.com/${username}/status/${t.id_str}` });
   }
 
-  // created_at 내림차순 — 가장 최근에 작성된 글 선택 (핀 고정 무관)
   candidates.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-  if (candidates[0]) results.push(candidates[0]);
-
-  return results;
+  return candidates[0] ? [candidates[0]] : [];
 }
 
 async function translateToKorean(text: string): Promise<string> {
@@ -110,18 +86,6 @@ export async function GET(
   { params }: { params: Promise<{ username: string }> }
 ) {
   const { username } = await params;
-  const now = Date.now();
-  const entry = getCache(username);
-
-  if (entry.posts.length && now - entry.fetchedAt < CACHE_TTL) {
-    return NextResponse.json({ posts: entry.posts });
-  }
-
-  if (now - entry.attemptedAt < RETRY_BACKOFF) {
-    return NextResponse.json({ posts: entry.posts }, { headers: { "Cache-Control": "no-store" } });
-  }
-
-  cache.set(username, { ...entry, attemptedAt: now });
 
   try {
     const syndicationUrl = `https://syndication.twitter.com/srv/timeline-profile/screen-name/${username}`;
@@ -131,7 +95,7 @@ export async function GET(
         Accept: "text/html,application/xhtml+xml",
         "Accept-Language": "en-US,en;q=0.9",
       },
-      signal: AbortSignal.timeout(8_000),
+      next: { revalidate: 180 },
     });
 
     if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
@@ -145,14 +109,11 @@ export async function GET(
           text: post.text ? await translateToKorean(post.text) : post.text,
         }))
       );
-      cache.set(username, { posts: translated, fetchedAt: now, attemptedAt: now });
+      return NextResponse.json({ posts: translated });
     }
   } catch (e) {
     console.error(`[twitter-feed/${username}]`, e);
   }
 
-  return NextResponse.json(
-    { posts: getCache(username).posts },
-    { headers: { "Cache-Control": "no-store" } }
-  );
+  return NextResponse.json({ posts: [] });
 }

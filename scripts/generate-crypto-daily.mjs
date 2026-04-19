@@ -820,6 +820,10 @@ async function sendTelegramBriefing(date, payload, editorial) {
 
   const [y, m, d] = date.split("-");
   const dateLabel = `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
+  const nowKST = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const hh = String(nowKST.getUTCHours()).padStart(2, "0");
+  const mm = String(nowKST.getUTCMinutes()).padStart(2, "0");
+  const timeLabel = `${hh}:${mm} KST`;
 
   const mkBar = (v, max) => { const f = Math.round((v / max) * 10); return "▓".repeat(Math.min(10, f)) + "░".repeat(Math.max(0, 10 - f)); };
   const fngVal = fearGreed?.value ?? null;
@@ -921,7 +925,7 @@ async function sendTelegramBriefing(date, payload, editorial) {
   const predLines = allPreds.length ? allPreds.map(fmtPred).join("\n") : null;
 
   const sections = [
-    `${emoji} <b>크립토 브리핑</b>  <i>${dateLabel}</i>`,
+    `${emoji} <b>크립토 브리핑</b>  <i>${dateLabel} ${timeLabel}</i>`,
     `<b>${editorial.sentiment}</b>\n${editorial.summary.replace(/\.\s+/g, ".\n")}`,
     `\n📊 <b>시장 지표</b>`,
     `😨 공포·탐욕  ${fngBar}`,
@@ -939,6 +943,7 @@ async function sendTelegramBriefing(date, payload, editorial) {
     editorial.dex_comment ? `\n🌐 <b>온체인 자금흐름</b>\n<i>${stripDash(editorial.dex_comment)}</i>` : null,
     predLines ? `\n🎯 <b>예측시장</b>\n${predLines}` : null,
     `\n<a href="https://stragos.xyz/crypto">➡️ 전체 브리핑 보기</a>`,
+    `🔄 <i>매일 06·12·18·00시 업데이트 (KST)</i>`,
   ].filter((l) => l !== null).join("\n");
 
   // 4096자 제한

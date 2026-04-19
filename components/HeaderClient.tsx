@@ -75,6 +75,13 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         >
           방명록
         </Link>
+        <Link
+          href="/crypto"
+          className="flex items-center gap-1.5 px-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-800 dark:hover:text-indigo-300"
+        >
+          크립토브리핑
+          <span className="inline-flex items-center rounded-full bg-indigo-500 px-1.5 py-0.5 text-[9px] font-bold text-white leading-none">NEW</span>
+        </Link>
 
         {/* 카테고리 드롭다운 (클릭 방식) */}
         <div className="relative" ref={dropdownRef}>
@@ -253,6 +260,14 @@ export default function HeaderClient({ categories }: { categories: Category[] })
             className="rounded-lg px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
           >
             방명록
+          </Link>
+          <Link
+            href="/crypto"
+            onClick={closeAll}
+            className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+          >
+            크립토브리핑
+            <span className="inline-flex items-center rounded-full bg-indigo-500 px-1.5 py-0.5 text-[9px] font-bold text-white leading-none">NEW</span>
           </Link>
 
           {/* 카테고리 섹션 */}

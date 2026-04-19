@@ -1,0 +1,71 @@
+type GainerLoserItem = {
+  symbol: string;
+  name: string;
+  current_price: number;
+  price_change_percentage_24h: number;
+  image?: string | null;
+};
+
+type GainersLosersData = {
+  gainers: GainerLoserItem[];
+  losers: GainerLoserItem[];
+};
+
+function fmtPrice(n: number) {
+  if (n >= 1) return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return "$" + n.toFixed(4);
+}
+
+function Row({ item, isGainer }: { item: GainerLoserItem; isGainer: boolean }) {
+  const pct = item.price_change_percentage_24h;
+  return (
+    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
+      <div className="flex items-center gap-2 min-w-0">
+        {item.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.image} alt={item.symbol} className="w-5 h-5 rounded-full shrink-0" />
+        )}
+        <div className="min-w-0">
+          <span className="text-sm font-bold text-gray-800 dark:text-gray-100">{item.symbol}</span>
+          <span className="ml-1.5 text-[11px] text-gray-400 truncate hidden sm:inline">{item.name}</span>
+        </div>
+      </div>
+      <div className="text-right shrink-0 ml-2">
+        <div className={`text-sm font-bold tabular-nums ${isGainer ? "text-emerald-500" : "text-red-500"}`}>
+          {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
+        </div>
+        <div className="text-[11px] text-gray-400 tabular-nums">{fmtPrice(item.current_price)}</div>
+      </div>
+    </div>
+  );
+}
+
+export default function GainersLosersSection({ data }: { data: GainersLosersData }) {
+  if (!data?.gainers?.length && !data?.losers?.length) return null;
+
+  return (
+    <section>
+      <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
+        📊 수익률 TOP/BOTTOM <span className="text-[11px] font-normal text-gray-400">(시총 250위 내 24h)</span>
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {data.gainers?.length > 0 && (
+          <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-800 overflow-hidden">
+            <div className="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">
+              <span className="text-[12px] font-bold text-emerald-500">🚀 급등 TOP 5</span>
+            </div>
+            {data.gainers.map((item) => <Row key={item.symbol} item={item} isGainer={true} />)}
+          </div>
+        )}
+        {data.losers?.length > 0 && (
+          <div className="rounded-2xl border border-red-200 dark:border-red-900/50 bg-white dark:bg-slate-800 overflow-hidden">
+            <div className="px-3 py-2 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-900/50">
+              <span className="text-[12px] font-bold text-red-500">💥 급락 TOP 5</span>
+            </div>
+            {data.losers.map((item) => <Row key={item.symbol} item={item} isGainer={false} />)}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

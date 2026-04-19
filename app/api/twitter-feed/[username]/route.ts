@@ -51,7 +51,7 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
 
     const raw = t.note_tweet?.note_tweet_results?.result?.text ?? t.full_text ?? t.text ?? "";
     if (raw.startsWith("RT @")) continue;
-    if (t.in_reply_to_screen_name && t.in_reply_to_screen_name !== username) continue;
+    if (t.in_reply_to_screen_name) continue;
 
     const urls: TwitterUrl[] = t.entities?.urls ?? [];
     const text = expandUrls(raw, urls).replace(/\s+/g, " ").trim();
@@ -70,12 +70,18 @@ function parseSyndication(html: string, username: string): TwitterPost[] {
 
 async function translateToKorean(text: string): Promise<string> {
   if (!text.trim()) return text;
+  const apiKey = process.env.DEEPL_API_KEY;
+  if (!apiKey) return text;
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(text)}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(4_000) });
+    const res = await fetch("https://api-free.deepl.com/v2/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `DeepL-Auth-Key ${apiKey}` },
+      body: JSON.stringify({ text: [text], source_lang: "EN", target_lang: "KO" }),
+      signal: AbortSignal.timeout(5_000),
+    });
     if (!res.ok) return text;
     const data = await res.json();
-    return (data[0] as [string, string][]).map((seg) => seg[0]).join("") || text;
+    return data.translations?.[0]?.text || text;
   } catch {
     return text;
   }

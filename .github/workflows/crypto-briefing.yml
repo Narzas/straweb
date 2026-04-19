@@ -2,11 +2,11 @@ name: Crypto Briefing
 
 on:
   schedule:
-    # KST 기준: 03:00, 09:00, 15:00, 21:00 (UTC-9 = UTC+9 → UTC로 -9)
-    - cron: '0 18 * * *'   # KST 03:00
-    - cron: '0 0 * * *'    # KST 09:00
-    - cron: '0 6 * * *'    # KST 15:00
-    - cron: '0 12 * * *'   # KST 21:00
+    # KST 기준: 06:00, 12:00, 18:00, 00:00 (UTC+9 → UTC로 -9)
+    - cron: '0 21 * * *'   # KST 06:00
+    - cron: '0 3 * * *'    # KST 12:00
+    - cron: '0 9 * * *'    # KST 18:00
+    - cron: '0 15 * * *'   # KST 00:00
   workflow_dispatch:       # 수동 실행 버튼
 
 jobs:
@@ -35,3 +35,4 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
           NANSEN_API_KEY: ${{ secrets.NANSEN_API_KEY }}
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}

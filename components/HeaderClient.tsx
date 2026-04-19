@@ -77,10 +77,13 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         </Link>
         <Link
           href="/crypto"
-          className="flex items-center gap-1.5 px-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-800 dark:hover:text-indigo-300"
+          className="relative px-2 pt-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-800 dark:hover:text-indigo-300"
         >
           크립토브리핑
-          <span className="inline-flex items-center rounded-full bg-indigo-500 px-1.5 py-0.5 text-[9px] font-bold text-white leading-none">NEW</span>
+          <span className="absolute top-0 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <span className="absolute inset-0 rounded-full bg-pink-400 opacity-75 animate-ping" />
+            <span className="relative flex rounded-full bg-gradient-to-r from-violet-500 to-pink-500 px-1.5 py-px text-[8px] font-bold text-white leading-none">NEW</span>
+          </span>
         </Link>
 
         {/* 카테고리 드롭다운 (클릭 방식) */}
@@ -264,10 +267,13 @@ export default function HeaderClient({ categories }: { categories: Category[] })
           <Link
             href="/crypto"
             onClick={closeAll}
-            className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+            className="relative inline-flex rounded-lg px-3 pt-5 pb-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
           >
             크립토브리핑
-            <span className="inline-flex items-center rounded-full bg-indigo-500 px-1.5 py-0.5 text-[9px] font-bold text-white leading-none">NEW</span>
+            <span className="absolute top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+              <span className="absolute inset-0 rounded-full bg-pink-400 opacity-75 animate-ping" />
+              <span className="relative flex rounded-full bg-gradient-to-r from-violet-500 to-pink-500 px-1.5 py-px text-[8px] font-bold text-white leading-none">NEW</span>
+            </span>
           </Link>
 
           {/* 카테고리 섹션 */}

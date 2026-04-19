@@ -5,8 +5,8 @@ import { createPortal } from "react-dom";
 import type { TwitterPost } from "@/app/api/twitter-feed/[username]/route";
 
 const ACCOUNTS = [
-  { username: "WuBlockchain", label: "Wu Blockchain" },
-  { username: "top7ico", label: "TOP 7 ICO" },
+  { username: "WuBlockchain", label: "Wu Blockchain", apiPath: "/api/twitter-feed/WuBlockchain" },
+  { username: "top7ico", label: "TOP 7 ICO", apiPath: "/api/top7ico-feed" },
 ] as const;
 
 function timeAgo(iso: string) {
@@ -151,7 +151,7 @@ export default function OwnerNewsFeed() {
   async function loadAll(isFirst = false) {
     const results = await Promise.allSettled(
       ACCOUNTS.map((a) =>
-        fetch(`/api/twitter-feed/${a.username}`)
+        fetch(a.apiPath)
           .then((r) => r.json())
           .then((d) => (d.posts?.[0] as TwitterPost) ?? null)
           .catch(() => null)

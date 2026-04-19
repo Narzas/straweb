@@ -106,7 +106,7 @@ function PostCard({ post }: { post: TwitterPost }) {
   );
 }
 
-const LS_KEY = "owner-news-feed-v1";
+const LS_KEY = "owner-news-feed-v2";
 
 function loadFromStorage(): (TwitterPost | null)[] {
   try {

@@ -663,12 +663,34 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
       fngComment = `공포·탐욕 지수 ${v} (${label}) — 시장이 극도로 과열돼 있습니다. 단기 조정 가능성에 유의하세요.`;
   }
 
+  // 스마트머니 넷플로우 코멘트
+  let netflowComment = null;
+  if (netflows?.length > 0) {
+    const sorted = [...netflows].sort((a, b) => Math.abs(b.net_flow_24h_usd) - Math.abs(a.net_flow_24h_usd));
+    const topIn = sorted.filter((n) => n.net_flow_24h_usd > 0)[0];
+    const topOut = sorted.filter((n) => n.net_flow_24h_usd < 0)[0];
+    const fmtAmt = (v) => {
+      const abs = Math.abs(v);
+      return abs >= 1e6 ? `$${(abs / 1e6).toFixed(1)}M` : `$${(abs / 1e3).toFixed(0)}K`;
+    };
+    const totalIn = netflows.reduce((s, n) => s + (n.net_flow_24h_usd > 0 ? n.net_flow_24h_usd : 0), 0);
+    const totalOut = netflows.reduce((s, n) => s + (n.net_flow_24h_usd < 0 ? Math.abs(n.net_flow_24h_usd) : 0), 0);
+    if (topIn && topOut) {
+      const dominant = totalIn > totalOut ? "순유입" : "순유출";
+      netflowComment = `순유입: ${topIn.token_symbol} / 순유출: ${topOut.token_symbol}\n전반적 ${dominant} 기조.`;
+    } else if (topIn) {
+      netflowComment = `전 종목 스마트머니 순유입 우세, ${topIn.token_symbol} 선두\n단기 매수세 강화 흐름 지속 중.`;
+    } else if (topOut) {
+      netflowComment = `전 종목 스마트머니 순유출 우세, ${topOut.token_symbol} 선두\n단기 매도 압력 확대 가능성 주시 필요.`;
+    }
+  }
+
   // 하이라이트 3개 선별
   const highlights = [marketComment, coinComment, dexComment].filter(Boolean).slice(0, 3);
 
   const summary = `${sentimentDetail}${btcDom != null ? ` BTC 도미넌스는 ${btcDom.toFixed(1)}%를 기록 중입니다.` : ""}`;
 
-  return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, prediction_markets: predictionMarkets ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, btc_etf_flows: btcEtfFlows ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null };
+  return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, netflow_comment: netflowComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, prediction_markets: predictionMarkets ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, btc_etf_flows: btcEtfFlows ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null };
 }
 
 // ── RSI 차트 ──────────────────────────────────────────────────────────────────
@@ -825,14 +847,26 @@ async function sendTelegramBriefing(date, payload, editorial) {
   const mm = String(nowKST.getUTCMinutes()).padStart(2, "0");
   const timeLabel = `${hh}:${mm} KST`;
 
-  const mkBar = (v, max) => { const f = Math.round((v / max) * 10); return "▓".repeat(Math.min(10, f)) + "░".repeat(Math.max(0, 10 - f)); };
   const fngVal = fearGreed?.value ?? null;
   const fngLabel = fearGreed?.classification_ko ?? "–";
-  const fngBar = fngVal != null ? `<code>${mkBar(fngVal, 100)}</code> <b>${fngVal}</b> ${fngLabel}` : "–";
   const altSVal = editorial.altcoin_season;
-  const altSBar = altSVal != null ? `<code>${mkBar(altSVal, 100)}</code> <b>${altSVal}</b> ${altSVal >= 75 ? "알트시즌" : altSVal >= 50 ? "알트우세" : altSVal >= 25 ? "BTC우세" : "BTC독주"}` : "–";
+  const altSDesc = altSVal >= 75 ? "알트시즌" : altSVal >= 50 ? "알트우세" : altSVal >= 25 ? "BTC우세" : "BTC독주";
   const lsVal = editorial.long_short_ratio;
-  const lsBar = lsVal != null ? `<code>${mkBar(lsVal, 100)}</code> <b>${lsVal}%</b> ${lsVal >= 55 ? "롱과열" : lsVal <= 45 ? "숏과열" : "균형"}` : "–";
+  const lsDesc = lsVal != null ? (lsVal >= 55 ? "롱과열" : lsVal <= 45 ? "숏과열" : "균형") : "–";
+
+  // 좌우정렬용 display-width 패딩 (CJK=2, emoji=2, ASCII=1)
+  const dw = (s) => [...s].reduce((w, c) => {
+    const cp = c.codePointAt(0);
+    return w + ((cp > 0x2E80 && cp < 0xA000) || (cp >= 0x1F000) ? 2 : 1);
+  }, 0);
+  const dPad = (s, n) => s + " ".repeat(Math.max(0, n - dw(s)));
+
+  const indLines = [
+    fngVal != null ? `공포탐욕  ${String(fngVal).padStart(3)}  ${fngLabel}` : null,
+    altSVal != null ? `알트시즌  ${String(altSVal).padStart(3)}  ${altSDesc}` : null,
+    lsVal != null ? `롱숏비율  ${String(lsVal).padStart(3)}%  ${lsDesc}` : null,
+  ].filter(Boolean).join("\n");
+  const indBlock = indLines ? `<code>${indLines}</code>` : null;
 
   const fmtPrice = (n) =>
     "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -840,10 +874,9 @@ async function sendTelegramBriefing(date, payload, editorial) {
   // 주요 코인
   const coinLines = coins.slice(0, 6).map((c) => {
     const chg = c.price_change_percentage_24h;
-    const blocks = Math.min(8, Math.round(Math.abs(chg)));
-    const bar = (chg >= 0 ? "▲" : "▼") + "▓".repeat(blocks) + "░".repeat(8 - blocks);
+    const dot = chg >= 0 ? "🟢" : "🔴";
     const sym = c.symbol.toUpperCase().padEnd(5);
-    return `<code>${sym} ${bar} ${(chg >= 0 ? "+" : "") + chg.toFixed(1) + "%"}</code>  ${fmtPrice(c.current_price)}`;
+    return `${dot} <code>${sym}  ${(chg >= 0 ? "+" : "") + chg.toFixed(1) + "%"}  ${fmtPrice(c.current_price)}</code>`;
   }).join("\n");
 
   // 트렌딩 — CoinGecko 24h 검색량 기준 상위 코인
@@ -856,9 +889,9 @@ async function sendTelegramBriefing(date, payload, editorial) {
     .slice(0, 5)
     .map((s) => {
       const v = s.market_cap_change_24h;
-      const blocks = Math.min(8, Math.round(Math.abs(v)));
-      const bar = (v >= 0 ? "▲" : "▼") + " " + "▓".repeat(blocks) + "░".repeat(8 - blocks);
-      return `<code>${bar}  ${(v >= 0 ? "+" : "") + v.toFixed(1) + "%"}  ${s.name}</code>`;
+      const dot = v >= 0 ? "🟢" : "🔴";
+      const pct = (v >= 0 ? "+" : "") + v.toFixed(1) + "%";
+      return `${dot} <code>${dPad(s.name, 20)}${pct.padStart(7)}</code>`;
     }).join("\n");
 
   // 급등/급락 TOP 5
@@ -897,16 +930,18 @@ async function sendTelegramBriefing(date, payload, editorial) {
     : null;
 
   // 스마트머니 상위 5개
-  const netflowLines = (editorial.netflows ?? [])
-    .sort((a, b) => Math.abs(b.net_flow_24h_usd) - Math.abs(a.net_flow_24h_usd))
-    .slice(0, 5)
-    .map((n) => {
-      const v = n.net_flow_24h_usd;
-      const abs = Math.abs(v);
-      const amt = abs >= 1e6 ? `$${(abs/1e6).toFixed(1)}M` : `$${(abs/1e3).toFixed(0)}K`;
-      const arrow = v >= 0 ? "🟢▲" : "🔴▼";
-      return `  ${arrow} <b>${n.token_symbol}</b>  ${amt}  <i>${n.chain}</i>`;
-    }).join("\n");
+  const fmtNetflow = (n) => {
+    const abs = Math.abs(n.net_flow_24h_usd);
+    const amt = abs >= 1e6 ? `$${(abs/1e6).toFixed(1)}M` : `$${(abs/1e3).toFixed(0)}K`;
+    return `  <b>${n.token_symbol}</b>  ${amt}  <i>${n.chain}</i>`;
+  };
+  const nfAll = editorial.netflows ?? [];
+  const nfIn = nfAll.filter((n) => n.net_flow_24h_usd > 0).sort((a, b) => b.net_flow_24h_usd - a.net_flow_24h_usd).slice(0, 3);
+  const nfOut = nfAll.filter((n) => n.net_flow_24h_usd < 0).sort((a, b) => a.net_flow_24h_usd - b.net_flow_24h_usd).slice(0, 3);
+  const netflowLines = [
+    nfIn.length ? `🟢 <b>매집</b>\n${nfIn.map(fmtNetflow).join("\n")}` : null,
+    nfOut.length ? `🔴 <b>이탈</b>\n${nfOut.map(fmtNetflow).join("\n")}` : null,
+  ].filter(Boolean).join("\n");
 
   // 예측시장 — Polymarket·Nansen 상위 5개
   const stripDash = (s) => s ? s.replace(/^[^—]*—\s*/, "") : s;
@@ -917,7 +952,7 @@ async function sendTelegramBriefing(date, payload, editorial) {
       const noPct = 100 - yesPct;
       const filled = Math.min(5, Math.round(yesPct / 20));
       const bar = "🟩".repeat(filled) + "🟥".repeat(5 - filled);
-      return `  • ${q}\n  <b>${yesPct}%</b> ${bar} <b>${noPct}%</b>`;
+      return `  • ${q}\n  <code>${String(yesPct).padStart(3)}% ${bar} ${String(noPct).padStart(3)}%</code>`;
     }
     return `  • ${q}`;
   };
@@ -925,12 +960,9 @@ async function sendTelegramBriefing(date, payload, editorial) {
   const predLines = allPreds.length ? allPreds.map(fmtPred).join("\n") : null;
 
   const sections = [
-    `${emoji} <b>크립토 브리핑</b>  <i>${dateLabel} ${timeLabel}</i>`,
+    `${emoji} <b>스트라고스 마켓 브리핑</b>\n<i>${dateLabel} ${timeLabel}</i>`,
     `<b>${editorial.sentiment}</b>\n${editorial.summary.replace(/\.\s+/g, ".\n")}`,
-    `\n📊 <b>시장 지표</b>`,
-    `😨 공포·탐욕  ${fngBar}`,
-    `🌡️ 알트시즌    ${altSBar}`,
-    `⚖️ 롱비율      ${lsBar}`,
+    indBlock ? `\n📊 <b>시장 지표</b>\n${indBlock}` : `\n📊 <b>시장 지표</b>`,
     editorial.fng_comment ? `<i>${stripDash(editorial.fng_comment)}</i>` : null,
     coinLines ? `\n💰 <b>주요 코인</b>\n${coinLines}` : null,
     editorial.coin_comment ? `<i>${stripDash(editorial.coin_comment)}</i>` : null,
@@ -940,9 +972,10 @@ async function sendTelegramBriefing(date, payload, editorial) {
     sectorLines ? `\n🏷️ <b>섹터별 성과</b>\n${sectorLines}` : null,
     rsiBar ? `\n📈 <b>RSI 히트맵</b> <i>(4h)</i>\n${rsiBar}` : null,
     netflowLines ? `\n🧠 <b>스마트머니 넷플로우</b>\n${netflowLines}` : null,
+    editorial.netflow_comment ? `<i>${editorial.netflow_comment}</i>` : null,
     editorial.dex_comment ? `\n🌐 <b>온체인 자금흐름</b>\n<i>${stripDash(editorial.dex_comment)}</i>` : null,
     predLines ? `\n🎯 <b>예측시장</b>\n${predLines}` : null,
-    `\n<a href="https://stragos.xyz/crypto">➡️ 전체 브리핑 보기</a>`,
+    `\n<a href="https://stragos.xyz/crypto">➡️ 전체 브리핑 보기</a>\n📌 <i>웹 페이지 데이터는 최대 1시간 캐시됩니다</i>`,
     `🔄 <i>매일 06·12·18·00시 업데이트 (KST)</i>`,
   ].filter((l) => l !== null).join("\n");
 

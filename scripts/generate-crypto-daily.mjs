@@ -974,7 +974,7 @@ async function main() {
   }
 
   const { error } = await sb.from("crypto_daily").upsert(
-    { date, ...dbPayload, editorial, updated_at: new Date().toISOString() },
+    { date, ...dbPayload, editorial },
     { onConflict: "date" }
   );
 

@@ -28,6 +28,7 @@ interface TwitterTweet {
   created_at: string;
   in_reply_to_screen_name?: string | null;
   note_tweet?: { note_tweet_results?: { result?: { text?: string } } };
+  extended_tweet?: { full_text?: string; entities?: { urls?: TwitterUrl[]; media?: TwitterMedia[] }; extended_entities?: { media?: TwitterMedia[] } };
   extended_entities?: { media?: TwitterMedia[] };
   entities?: { urls?: TwitterUrl[]; media?: TwitterMedia[] };
 }
@@ -36,32 +37,84 @@ interface TimelineEntry {
   content?: { tweet?: TwitterTweet };
 }
 
-function parseSyndication(html: string, username: string): TwitterPost[] {
+type CandidatePost = TwitterPost & { articleUrl: string | null };
+
+async function fetchArticle(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { Accept: "text/plain", "X-Return-Format": "text" },
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!res.ok) return null;
+    const raw = await res.text();
+    const clean = raw
+      .replace(/^(Title:|URL Source:|Published Time:|Markdown Content:|Warning:)[^\n]*\n?/gim, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    return clean.slice(0, 4000) || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchTweetFullText(username: string, id: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://api.fxtwitter.com/${username}/status/${id}`, {
+      headers: { "User-Agent": "bot" },
+      signal: AbortSignal.timeout(6_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { tweet?: { text?: string } };
+    const text = data.tweet?.text;
+    if (!text) return null;
+    return text
+      .replace(/https?:\/\/(t\.co|pic\.x\.com|pic\.twitter\.com)\/\S*/g, "")
+      .replace(/https?:\/\/(x\.com|twitter\.com)\/?(\s|$)/g, "$2")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/ {2,}/g, " ")
+      .trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function parseSyndication(html: string, username: string): CandidatePost[] {
   const m = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
   if (!m) return [];
 
   const data = JSON.parse(m[1]);
   const entries: TimelineEntry[] = data?.props?.pageProps?.timeline?.entries ?? [];
-  const candidates: TwitterPost[] = [];
+  const candidates: CandidatePost[] = [];
+  let pendingSourceUrl: string | null = null;
 
   for (const entry of entries) {
     if (entry.type !== "tweet") continue;
     const t = entry.content?.tweet;
     if (!t) continue;
 
-    const raw = t.note_tweet?.note_tweet_results?.result?.text ?? t.full_text ?? t.text ?? "";
+    const raw = t.note_tweet?.note_tweet_results?.result?.text ?? t.extended_tweet?.full_text ?? t.full_text ?? t.text ?? "";
     if (raw.startsWith("RT @")) continue;
+
+    const urls: TwitterUrl[] = t.extended_tweet?.entities?.urls ?? t.entities?.urls ?? [];
+    const extUrl = urls.find(u => !/twitter\.com|x\.com/i.test(u.expanded_url ?? ""))?.expanded_url ?? null;
+    const text = expandUrls(raw, urls).replace(/ {2,}/g, " ").trim();
+
+    // Source: 트윗 — URL 저장 후 스킵 (replies 포함)
+    if (/source:/i.test(text) && extUrl) {
+      pendingSourceUrl = extUrl;
+      continue;
+    }
     if (t.in_reply_to_screen_name) continue;
+    if (t.conversation_id_str && t.conversation_id_str !== t.id_str) continue;
+    if (!text || /subscribe to our (substack|newsletter)/i.test(text)) continue;
 
-    const urls: TwitterUrl[] = t.entities?.urls ?? [];
-    const text = expandUrls(raw, urls).replace(/\s+/g, " ").trim();
-    if (!text || /^source:\s*https?:\/\//i.test(text)) continue;
-
-    const media: TwitterMedia[] = t.extended_entities?.media ?? t.entities?.media ?? [];
+    const media: TwitterMedia[] = t.extended_tweet?.extended_entities?.media ?? t.extended_tweet?.entities?.media ?? t.extended_entities?.media ?? t.entities?.media ?? [];
     const photo = media.find((m) => m.type === "photo")?.media_url_https ?? null;
     const time = t.created_at ? new Date(t.created_at).toISOString() : "";
 
-    candidates.push({ id: t.id_str, text, photo, time, url: `https://x.com/${username}/status/${t.id_str}` });
+    const articleUrl = extUrl ?? pendingSourceUrl;
+    pendingSourceUrl = null;
+    candidates.push({ id: t.id_str, text, photo, time, url: `https://x.com/${username}/status/${t.id_str}`, articleUrl });
   }
 
   candidates.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
@@ -76,7 +129,7 @@ async function translateToKorean(text: string): Promise<string> {
     const res = await fetch("https://api-free.deepl.com/v2/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `DeepL-Auth-Key ${apiKey}` },
-      body: JSON.stringify({ text: [text], source_lang: "EN", target_lang: "KO" }),
+      body: JSON.stringify({ text: [text], target_lang: "KO" }),
       signal: AbortSignal.timeout(5_000),
     });
     if (!res.ok) return text;
@@ -109,13 +162,17 @@ export async function GET(
     const latest = parseSyndication(html, username);
 
     if (latest.length) {
-      const translated = await Promise.all(
-        latest.map(async (post) => ({
-          ...post,
-          text: post.text ? await translateToKorean(post.text) : post.text,
-        }))
-      );
-      return NextResponse.json({ posts: translated });
+      const [first, ...rest] = latest;
+      if (first.articleUrl) {
+        const article = await fetchArticle(first.articleUrl);
+        if (article) first.text = article;
+      } else {
+        const full = await fetchTweetFullText(username, first.id);
+        if (full && full.length > first.text.length) first.text = full;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const posts = [first, ...rest].map(({ articleUrl: _a, ...p }) => p);
+      return NextResponse.json({ posts });
     }
   } catch (e) {
     console.error(`[twitter-feed/${username}]`, e);

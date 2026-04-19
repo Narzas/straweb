@@ -70,8 +70,31 @@ function FeedPlaceholder() {
   );
 }
 
+async function gtranslate(text: string): Promise<string> {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ko&dt=t&q=${encodeURIComponent(text)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("translate failed");
+  const data = await res.json();
+  return (data[0] as [string, string][]).map((s) => s[0]).join("");
+}
+
 function PostCard({ post }: { post: TwitterPost }) {
   const [lightbox, setLightbox] = useState(false);
+  const [translated, setTranslated] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+
+  async function handleTranslate() {
+    if (!post.text) return;
+    setTranslating(true);
+    try {
+      const result = await gtranslate(post.text);
+      setTranslated(result);
+    } catch {
+      // silent fail
+    } finally {
+      setTranslating(false);
+    }
+  }
 
   return (
     <>
@@ -92,15 +115,36 @@ function PostCard({ post }: { post: TwitterPost }) {
         {post.text && (
           <div className="px-3 pt-2.5 max-h-[16.5rem] overflow-y-auto">
             <p className="text-[13px] leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words font-medium">
-              {post.text}
+              {translated ?? post.text}
             </p>
           </div>
         )}
-        {post.time && (
-          <p className="px-3 pb-2 text-[10px] text-indigo-400 dark:text-indigo-400">
-            {timeAgo(post.time)}
-          </p>
-        )}
+        <div className="px-3 pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {post.time && (
+              <p className="text-[10px] text-indigo-400">
+                {timeAgo(post.time)}
+              </p>
+            )}
+          </div>
+          {post.text && !translated && (
+            <button
+              onClick={handleTranslate}
+              disabled={translating}
+              className="text-[10px] text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 disabled:opacity-50 transition-colors"
+            >
+              {translating ? "번역 중…" : "번역"}
+            </button>
+          )}
+          {translated && (
+            <button
+              onClick={() => setTranslated(null)}
+              className="text-[10px] text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+            >
+              원문으로
+            </button>
+          )}
+        </div>
       </div>
     </>
   );

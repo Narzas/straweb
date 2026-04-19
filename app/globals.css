@@ -408,3 +408,20 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 .dark .post-body abbr::before {
   border-top-color: #0f172a;
 }
+
+@keyframes flowLine {
+  from { stroke-dashoffset: 20; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes arrowIn {
+  0%   { opacity: 0; transform: translateX(-8px); }
+  30%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(8px); }
+}
+@keyframes arrowOut {
+  0%   { opacity: 0; transform: translateX(8px); }
+  30%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-8px); }
+}

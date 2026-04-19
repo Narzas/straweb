@@ -8,7 +8,9 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "next start",
     "lint": "eslint",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "crypto:daily": "node scripts/generate-crypto-daily.mjs",
+    "crypto:daily:force": "node scripts/generate-crypto-daily.mjs --force"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.102.1",

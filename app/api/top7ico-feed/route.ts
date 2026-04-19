@@ -100,7 +100,7 @@ async function translateToKorean(text: string): Promise<string> {
     const res = await fetch("https://api-free.deepl.com/v2/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `DeepL-Auth-Key ${apiKey}` },
-      body: JSON.stringify({ text: [text], source_lang: "EN", target_lang: "KO" }),
+      body: JSON.stringify({ text: [text], target_lang: "KO" }),
       signal: AbortSignal.timeout(5_000),
     });
     if (!res.ok) return text;

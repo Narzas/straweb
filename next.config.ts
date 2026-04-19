@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
       // 이미지: Supabase, Coupang 제휴, 외부 OG 이미지 허용
       "img-src 'self' data: blob: https:",
       // API 연결 허용 대상
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.coingecko.com https://query1.finance.yahoo.com https://open.er-api.com https://www.googletagmanager.com https://analytics.google.com https://stats.g.doubleclick.net https://www.google-analytics.com https://*.adtrafficquality.google https://adservice.google.com https://pagead2.googlesyndication.com https://tpc.googlesyndication.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.coingecko.com https://query1.finance.yahoo.com https://open.er-api.com https://www.googletagmanager.com https://analytics.google.com https://stats.g.doubleclick.net https://www.google-analytics.com https://*.adtrafficquality.google https://adservice.google.com https://pagead2.googlesyndication.com https://tpc.googlesyndication.com https://translate.googleapis.com",
       // GTM noscript iframe
       "frame-src https://www.googletagmanager.com",
       // Flash / 플러그인 완전 차단

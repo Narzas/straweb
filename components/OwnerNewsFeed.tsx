@@ -204,8 +204,10 @@ export default function OwnerNewsFeed() {
 
     const fetched = results.map((r) => (r.status === "fulfilled" ? r.value : null));
 
-    // 새로 가져온 글이 없으면 기존 글 유지
-    const merged = currentPostsRef.current.map((cur, i) => fetched[i] ?? cur);
+    // 텍스트 없는 결과는 무시하고 기존 글 유지
+    const merged = currentPostsRef.current.map((cur, i) =>
+      fetched[i]?.text ? fetched[i] : cur
+    );
     currentPostsRef.current = merged;
     setFeeds(merged.map((post) => ({ post })));
     saveToStorage(merged);

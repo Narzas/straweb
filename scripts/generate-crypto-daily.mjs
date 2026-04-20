@@ -1075,7 +1075,9 @@ async function main() {
   const date = kst.toISOString().slice(0, 10); // YYYY-MM-DD
 
   const isDryRun = process.argv.includes("--dry-run");
-  const noTelegram = process.argv.includes("--no-telegram");
+  const kstHour = new Date(Date.now() + 9 * 3600_000).getUTCHours();
+  const isTelegramHour = [0, 6, 12, 18].includes(kstHour);
+  const noTelegram = process.argv.includes("--no-telegram") || !isTelegramHour;
 
   const payload = await fetchAll();
   const editorial = generateEditorial(payload);

@@ -81,9 +81,15 @@ async function gtranslate(text: string): Promise<string> {
 }
 
 function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boolean }) {
-  const [lightbox, setLightbox] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [photoIdx, setPhotoIdx] = useState(0);
   const [translated, setTranslated] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
+
+  const photos = post.photos ?? [];
+  const hasMultiple = photos.length > 1;
+
+  useEffect(() => { setPhotoIdx(0); }, [post.id]);
 
   async function handleTranslate() {
     if (!post.text) return;
@@ -100,19 +106,44 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
 
   return (
     <>
-      {lightbox && post.photo && (
-        <ImageLightbox src={post.photo} onClose={() => setLightbox(false)} />
+      {lightboxSrc && (
+        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
       )}
       <div className="rounded-lg border-l-2 border-indigo-400 dark:border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/20 overflow-hidden select-none">
-        {post.photo && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={post.photo}
-            alt=""
-            className="w-full object-cover max-h-48 cursor-zoom-in"
-            loading="lazy"
-            onClick={() => setLightbox(true)}
-          />
+        {photos.length > 0 && (
+          <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photos[photoIdx]}
+              alt=""
+              className="w-full object-cover max-h-48 cursor-zoom-in"
+              loading="lazy"
+              onClick={() => setLightboxSrc(photos[photoIdx])}
+            />
+            {hasMultiple && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setPhotoIdx((i) => Math.max(0, i - 1)); }}
+                  disabled={photoIdx === 0}
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center bg-black/50 text-white disabled:opacity-20 text-base leading-none"
+                  aria-label="이전 사진"
+                >
+                  ‹
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setPhotoIdx((i) => Math.min(photos.length - 1, i + 1)); }}
+                  disabled={photoIdx === photos.length - 1}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center bg-black/50 text-white disabled:opacity-20 text-base leading-none"
+                  aria-label="다음 사진"
+                >
+                  ›
+                </button>
+                <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[10px] text-white/90 bg-black/40 px-2 py-0.5 rounded-full">
+                  {photoIdx + 1} / {photos.length}
+                </div>
+              </>
+            )}
+          </div>
         )}
         {post.text && (
           <div className="px-3 pt-2.5 max-h-[16.5rem] overflow-y-auto">
@@ -152,7 +183,7 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
   );
 }
 
-const LS_KEY = "owner-news-feed-v5";
+const LS_KEY = "owner-news-feed-v6";
 
 function loadFromStorage(): (TelegramPost | null)[] {
   try {

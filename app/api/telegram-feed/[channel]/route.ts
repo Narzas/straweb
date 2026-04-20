@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export type TelegramPost = {
   id: string;
   text: string;
-  photo: string | null;
+  photos: string[];
   time: string;
   url: string;
 };
@@ -57,16 +57,17 @@ function parseTelegram(html: string, channel: string): TelegramPost | null {
     const time = timeMatch ? new Date(timeMatch[1]).toISOString() : new Date().toISOString();
 
     // 직접 첨부된 사진만 (링크 프리뷰 제외)
-    let photo: string | null = null;
-    const photoWrapMatch = candidate.block.match(
-      /class="[^"]*tgme_widget_message_photo_wrap[^"]*"[^>]*style="[^"]*background-image:url\('(https:\/\/cdn[^']+)'\)/
-    );
-    if (photoWrapMatch) photo = photoWrapMatch[1];
+    const photos: string[] = [];
+    const photoRe = /class="[^"]*tgme_widget_message_photo_wrap[^"]*"[^>]*style="[^"]*background-image:url\('(https:\/\/cdn[^']+)'\)/g;
+    let photoMatch: RegExpExecArray | null;
+    while ((photoMatch = photoRe.exec(candidate.block)) !== null) {
+      photos.push(photoMatch[1]);
+    }
 
     return {
       id: candidate.id,
       text,
-      photo,
+      photos,
       time,
       url: `https://t.me/${channel}/${candidate.id}`,
     };

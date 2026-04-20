@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   title: "크립토 브리핑",
   description: "매일 업데이트되는 크립토 시장 현황, 트렌딩 코인, DeFi 동향, 주요 뉴스",
   alternates: {
-    canonical: "https://stragos.xyz/crypto",
+    canonical: "https://www.stragos.xyz/crypto",
   },
 };
 

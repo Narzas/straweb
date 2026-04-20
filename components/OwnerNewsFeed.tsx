@@ -8,6 +8,7 @@ const ACCOUNTS = [
   { label: "Wu KR", apiPath: "/api/telegram-feed/wublockchainkr", noTranslate: true },
   { label: "TOP 7 ICO", apiPath: "/api/telegram-feed/top7ico", noTranslate: false },
   { label: "LookOnChain", apiPath: "/api/telegram-feed/lookonchainchannel", noTranslate: false },
+  { label: "WatcherGuru", apiPath: "/api/telegram-feed/WatcherGuru", noTranslate: false },
 ] as const;
 
 function timeAgo(iso: string) {
@@ -151,7 +152,7 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
   );
 }
 
-const LS_KEY = "owner-news-feed-v4";
+const LS_KEY = "owner-news-feed-v5";
 
 function loadFromStorage(): (TelegramPost | null)[] {
   try {

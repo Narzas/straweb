@@ -48,20 +48,18 @@ function parseTelegram(html: string, channel: string): TelegramPost | null {
     );
     if (!textMatch) continue;
 
-    const text = stripHtml(textMatch[1]).trim();
+    const text = stripHtml(textMatch[1]).replace(/\s*—\s*링크\s*$/m, "").trim();
     if (!text) continue;
 
     const timeMatch = candidate.block.match(/<time[^>]+datetime="([^"]+)"/);
     const time = timeMatch ? new Date(timeMatch[1]).toISOString() : new Date().toISOString();
 
+    // 직접 첨부된 사진만 (링크 프리뷰 제외)
     let photo: string | null = null;
-    const bgMatch = candidate.block.match(/background-image:url\('(https:\/\/cdn[^']+)'\)/);
-    if (bgMatch) {
-      photo = bgMatch[1];
-    } else {
-      const imgMatch = candidate.block.match(/<img[^>]+src="(https:\/\/cdn[^"]+)"/);
-      if (imgMatch) photo = imgMatch[1];
-    }
+    const photoWrapMatch = candidate.block.match(
+      /class="[^"]*tgme_widget_message_photo_wrap[^"]*"[^>]*style="[^"]*background-image:url\('(https:\/\/cdn[^']+)'\)/
+    );
+    if (photoWrapMatch) photo = photoWrapMatch[1];
 
     return {
       id: candidate.id,
@@ -81,7 +79,7 @@ export async function GET(
 ) {
   const { channel } = await params;
 
-  const ALLOWED = ["wublockchainkr", "lookonchainchannel", "top7ico"];
+  const ALLOWED = ["wublockchainkr", "lookonchainchannel", "top7ico", "WatcherGuru"];
   if (!ALLOWED.includes(channel)) {
     return NextResponse.json({ posts: [] }, { status: 400 });
   }

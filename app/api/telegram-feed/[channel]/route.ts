@@ -48,7 +48,10 @@ function parseTelegram(html: string, channel: string): TelegramPost | null {
     );
     if (!textMatch) continue;
 
-    const text = stripHtml(textMatch[1]).replace(/\s*—\s*링크\s*$/m, "").trim();
+    let text = stripHtml(textMatch[1]).replace(/\s*—\s*링크\s*$/m, "").trim();
+    if (channel === "top7ico") text = text.replace(/\s*Top 7 Ecosystem:.*$/m, "").trim();
+    if (channel === "lookonchainchannel") text = text.replace(/\s*https?:\/\/x\.com\/lookonchain\/\S+/g, "").trim();
+    if (channel === "WatcherGuru") text = text.replace(/\s*@WatcherGuru\s*$/m, "").trim();
     if (!text) continue;
 
     const timeMatch = candidate.block.match(/<time[^>]+datetime="([^"]+)"/);

@@ -59,7 +59,23 @@ async function translateBatch(texts) {
       const rawText = response.content[0].text;
       const stripped = rawText.replace(/^```[^\n]*\n?|\n?```$/g, "").trim();
       const arrMatch = stripped.match(/\[[\s\S]*\]/);
-      translated = JSON.parse(arrMatch ? arrMatch[0] : stripped);
+      try {
+        translated = JSON.parse(arrMatch ? arrMatch[0] : stripped);
+      } catch {
+        // Claude 응답 파싱 실패 시 Google Translate 폴백
+        console.warn("[translateBatch] Claude 응답 파싱 실패, Google Translate로 폴백");
+        translated = await Promise.all(
+          entries.map(async ({ t }) => {
+            try {
+              const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(t)}`;
+              const res = await fetch(url, { signal: AbortSignal.timeout(5_000) });
+              if (!res.ok) return t;
+              const data = await res.json();
+              return data[0].map((seg) => seg[0]).join("") || t;
+            } catch { return t; }
+          })
+        );
+      }
     } else {
       // Fallback: Google Translate 개별 호출
       translated = await Promise.all(

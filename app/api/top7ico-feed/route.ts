@@ -80,7 +80,9 @@ function parseTelegram(html: string): TelegramPost | null {
   let text = "";
   const textMatch = latest.block.match(/<div[^>]+class="[^"]*tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/);
   if (textMatch) {
-    text = stripHtml(textMatch[1]);
+    text = stripHtml(textMatch[1])
+      .replace(/Top 7 Ecosystem:.*$/m, "")
+      .trim();
   }
 
   return {

@@ -9,6 +9,7 @@ function fmtFlow(n: number) {
   const abs = Math.abs(n);
   if (abs >= 1e9) return `$${(abs / 1e9).toFixed(1)}B`;
   if (abs >= 1e6) return `$${(abs / 1e6).toFixed(0)}M`;
+  if (abs >= 1e3) return `$${(abs / 1e3).toFixed(0)}K`;
   return `$${abs.toFixed(0)}`;
 }
 
@@ -60,7 +61,7 @@ function FlowBarList({ chains, maxAbs, allNegative }: { chains: DexChain[]; maxA
         {sorted.map((c) => {
           const ratio = Math.max((Math.abs(c.flow_usd) / maxAbs) * 100, 4);
           const amt = Math.abs(c.flow_usd);
-          const fmt = amt >= 1e9 ? `$${(amt/1e9).toFixed(1)}B` : `$${(amt/1e6).toFixed(0)}M`;
+          const fmt = amt >= 1e9 ? `$${(amt/1e9).toFixed(1)}B` : amt >= 1e6 ? `$${(amt/1e6).toFixed(0)}M` : `$${(amt/1e3).toFixed(0)}K`;
           return (
             <div key={c.chain} className="flex items-center gap-2">
               <span className="text-[11px] font-bold text-gray-600 dark:text-gray-300 w-24 shrink-0 truncate">{c.chain}</span>
@@ -225,7 +226,7 @@ export default function MarketSentimentSection({
   const maxAbs = Math.max(...(dexChains ?? []).map((c) => Math.abs(c.flow_usd)), 1);
 
   return (
-    <section>
+    <section style={{ contentVisibility: "visible" }}>
       <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
         📊 시장 심리 &amp; 자금 흐름
       </h2>

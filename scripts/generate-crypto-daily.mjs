@@ -5,9 +5,11 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync } from "fs";
-import { resolve, dirname } from "path";
+import Anthropic from "@anthropic-ai/sdk";
+import { readFileSync, writeFileSync, unlinkSync } from "fs";
+import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { tmpdir } from "os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -27,16 +29,55 @@ const sb = createClient(
 
 // ── 유틸 ─────────────────────────────────────────────────────────────────────
 
-async function translateToKorean(text) {
-  if (!text?.trim()) return text;
+const anthropic = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null;
+
+async function translateBatch(texts) {
+  const entries = texts
+    .map((t, i) => ({ i, t }))
+    .filter((x) => x.t?.trim());
+  if (!entries.length) return texts;
+
+  // 번역할 텍스트를 임시 파일에 저장
+  const tmpFile = join(tmpdir(), `translate-${Date.now()}.json`);
+  writeFileSync(tmpFile, JSON.stringify(entries.map((x) => x.t), null, 2));
+
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(text)}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(5_000) });
-    if (!res.ok) return text;
-    const data = await res.json();
-    return data[0].map((seg) => seg[0]).join("") || text;
-  } catch {
-    return text;
+    let translated;
+
+    if (anthropic) {
+      // Claude API로 배치 번역
+      const response = await anthropic.messages.create({
+        model: "claude-haiku-4-5",
+        max_tokens: 4096,
+        messages: [{
+          role: "user",
+          content: `다음 JSON 배열의 영어 텍스트를 한국어로 번역해줘. 크립토/금융 전문용어는 그대로 유지해. 번역 결과만 동일한 순서의 JSON 배열로 반환해 (다른 텍스트 없이):\n${JSON.stringify(entries.map((x) => x.t))}`,
+        }],
+      });
+      const raw = response.content[0].text.replace(/^```[^\n]*\n?|\n?```$/g, "").trim();
+      translated = JSON.parse(raw);
+    } else {
+      // Fallback: Google Translate 개별 호출
+      translated = await Promise.all(
+        entries.map(async ({ t }) => {
+          try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(t)}`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(5_000) });
+            if (!res.ok) return t;
+            const data = await res.json();
+            return data[0].map((seg) => seg[0]).join("") || t;
+          } catch { return t; }
+        })
+      );
+    }
+
+    const result = [...texts];
+    entries.forEach(({ i }, idx) => { result[i] = translated[idx] ?? texts[i]; });
+    return result;
+  } finally {
+    try { unlinkSync(tmpFile); } catch {}
   }
 }
 
@@ -126,15 +167,28 @@ function calcGainersLosers(coins) {
 }
 
 async function fetchLongShortRatio() {
+  // Binance (geo-blocked on US servers like GitHub Actions)
   try {
     const res = await safeFetch(
       "https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=BTCUSDT&period=1d&limit=1"
     );
+    if (res) {
+      const data = await res.json();
+      const longPct = parseFloat(data[0]?.longAccount);
+      if (!isNaN(longPct)) return Math.round(longPct * 100);
+    }
+  } catch {}
+
+  // Fallback: Bybit (not geo-blocked)
+  try {
+    const res = await safeFetch(
+      "https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=BTCUSDT&period=1d&limit=1"
+    );
     if (!res) return null;
     const data = await res.json();
-    const longPct = parseFloat(data[0]?.longAccount);
-    if (isNaN(longPct)) return null;
-    return Math.round(longPct * 100);
+    const buyRatio = parseFloat(data?.result?.list?.[0]?.buyRatio);
+    if (isNaN(buyRatio)) return null;
+    return Math.round(buyRatio * 100);
   } catch {
     return null;
   }
@@ -446,13 +500,17 @@ async function fetchAll() {
     const xml = await ctRes.text();
     const raw = parseRssItems(xml).slice(0, 8);
     console.log("  뉴스 번역 중...");
-    news = await Promise.all(
-      raw.map(async (item) => ({
-        ...item,
-        title: await translateToKorean(item.title),
-        description: item.description ? await translateToKorean(item.description) : item.description,
-      }))
-    );
+    const titles = raw.map((item) => item.title);
+    const descs = raw.map((item) => item.description ?? "");
+    const [translatedTitles, translatedDescs] = await Promise.all([
+      translateBatch(titles),
+      translateBatch(descs),
+    ]);
+    news = raw.map((item, i) => ({
+      ...item,
+      title: translatedTitles[i] ?? item.title,
+      description: item.description ? (translatedDescs[i] || item.description) : item.description,
+    }));
   }
 
   // 공포·탐욕 지수
@@ -490,8 +548,13 @@ async function fetchAll() {
     if (!histResList[i]) continue;
     const hist = await histResList[i].json();
     if (!Array.isArray(hist) || hist.length < 2) continue;
-    const prev = hist[hist.length - 2].tvl;
-    const curr = hist[hist.length - 1].tvl;
+    // DefiLlama sometimes repeats yesterday's TVL for "today" before it's computed
+    const len = hist.length;
+    const currIdx = (hist[len - 1].tvl === hist[len - 2].tvl) ? len - 2 : len - 1;
+    const prevIdx = currIdx - 1;
+    if (prevIdx < 0) continue;
+    const curr = hist[currIdx].tvl;
+    const prev = hist[prevIdx].tvl;
     if (!prev) continue;
     const flow_usd = curr - prev;
     const change_1d = ((curr - prev) / prev) * 100;
@@ -517,9 +580,9 @@ async function fetchAll() {
 
   // 예측시장 질문 한국어 번역
   if (predictionMarkets?.length) {
-    for (const p of predictionMarkets) {
-      p.question = await translateToKorean(p.question);
-    }
+    const questions = predictionMarkets.map((p) => p.question);
+    const translated = await translateBatch(questions);
+    predictionMarkets.forEach((p, i) => { p.question = translated[i] ?? p.question; });
   }
 
   console.log(`  알트코인 시즌: ${altcoinSeason}, 롱/숏: ${longShortRatio}, 넷플로우: ${netflows?.length ?? 0}개, 예측시장: ${predictionMarkets?.length ?? 0}개, 하이퍼리퀴드: ${hyperliquidPerps?.length ?? 0}개, 섹터: ${coinCategories?.length ?? 0}개, ETF: ${btcEtfFlows ? "✓" : "✗"}, RSI 과매수: ${rsiHeatmap?.overbought?.length ?? 0}개, 과매도: ${rsiHeatmap?.oversold?.length ?? 0}개, 급등: ${gainersLosers?.gainers?.length ?? 0}개, 급락: ${gainersLosers?.losers?.length ?? 0}개`);

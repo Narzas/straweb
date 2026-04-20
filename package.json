@@ -13,6 +13,7 @@
     "crypto:daily:force": "node scripts/generate-crypto-daily.mjs --force"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@supabase/supabase-js": "^2.102.1",
     "@tailwindcss/typography": "^0.5.19",
     "bcryptjs": "^3.0.3",

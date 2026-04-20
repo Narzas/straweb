@@ -167,7 +167,19 @@ function calcGainersLosers(coins) {
 }
 
 async function fetchLongShortRatio() {
-  // Binance (geo-blocked on US servers like GitHub Actions)
+  // OKX (globally accessible, no geo-block)
+  try {
+    const res = await safeFetch(
+      "https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio-contract?instId=BTC-USDT-SWAP&period=1D&limit=1"
+    );
+    if (res) {
+      const data = await res.json();
+      const ratio = parseFloat(data?.data?.[0]?.[1]);
+      if (!isNaN(ratio) && ratio > 0) return Math.round((ratio / (1 + ratio)) * 100);
+    }
+  } catch {}
+
+  // Fallback: Binance
   try {
     const res = await safeFetch(
       "https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=BTCUSDT&period=1d&limit=1"
@@ -179,19 +191,19 @@ async function fetchLongShortRatio() {
     }
   } catch {}
 
-  // Fallback: Bybit (not geo-blocked)
+  // Fallback: Bybit
   try {
     const res = await safeFetch(
       "https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=BTCUSDT&period=1d&limit=1"
     );
-    if (!res) return null;
-    const data = await res.json();
-    const buyRatio = parseFloat(data?.result?.list?.[0]?.buyRatio);
-    if (isNaN(buyRatio)) return null;
-    return Math.round(buyRatio * 100);
-  } catch {
-    return null;
-  }
+    if (res) {
+      const data = await res.json();
+      const buyRatio = parseFloat(data?.result?.list?.[0]?.buyRatio);
+      if (!isNaN(buyRatio)) return Math.round(buyRatio * 100);
+    }
+  } catch {}
+
+  return null;
 }
 
 async function fetchSmartMoneyNetflows() {

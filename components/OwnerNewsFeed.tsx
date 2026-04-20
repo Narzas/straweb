@@ -131,15 +131,15 @@ function PostCard({ post }: { post: TwitterPost }) {
             <button
               onClick={handleTranslate}
               disabled={translating}
-              className="text-[10px] text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 disabled:opacity-50 transition-colors"
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/60 disabled:opacity-50 transition-colors"
             >
-              {translating ? "번역 중…" : "번역"}
+              {translating ? "번역 중…" : "🌐 번역"}
             </button>
           )}
           {translated && (
             <button
               onClick={() => setTranslated(null)}
-              className="text-[10px] text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
             >
               원문으로
             </button>

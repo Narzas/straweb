@@ -56,8 +56,10 @@ async function translateBatch(texts) {
           content: `다음 JSON 배열의 영어 텍스트를 한국어로 번역해줘. 크립토/금융 전문용어는 그대로 유지해. 번역 결과만 동일한 순서의 JSON 배열로 반환해 (다른 텍스트 없이):\n${JSON.stringify(entries.map((x) => x.t))}`,
         }],
       });
-      const raw = response.content[0].text.replace(/^```[^\n]*\n?|\n?```$/g, "").trim();
-      translated = JSON.parse(raw);
+      const rawText = response.content[0].text;
+      const stripped = rawText.replace(/^```[^\n]*\n?|\n?```$/g, "").trim();
+      const arrMatch = stripped.match(/\[[\s\S]*\]/);
+      translated = JSON.parse(arrMatch ? arrMatch[0] : stripped);
     } else {
       // Fallback: Google Translate 개별 호출
       translated = await Promise.all(

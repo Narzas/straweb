@@ -74,13 +74,10 @@ function parseTelegram(html: string): TelegramPost | null {
     const time = timeMatch ? new Date(timeMatch[1]).toISOString() : new Date().toISOString();
 
     let photo: string | null = null;
-    const bgMatch = candidate.block.match(/background-image:url\('(https:\/\/cdn[^']+)'\)/);
-    if (bgMatch) {
-      photo = bgMatch[1];
-    } else {
-      const imgMatch = candidate.block.match(/<img[^>]+src="(https:\/\/cdn[^"]+)"/);
-      if (imgMatch) photo = imgMatch[1];
-    }
+    const photoWrapMatch = candidate.block.match(
+      /class="[^"]*tgme_widget_message_photo_wrap[^"]*"[^>]*style="[^"]*background-image:url\('(https:\/\/cdn[^']+)'\)/
+    );
+    if (photoWrapMatch) photo = photoWrapMatch[1];
 
     return {
       id: candidate.id,

@@ -1049,7 +1049,7 @@ async function sendTelegramBriefing(date, payload, editorial) {
     editorial.netflow_comment ? `<i>${editorial.netflow_comment}</i>` : null,
     editorial.dex_comment ? `\n🌐 <b>온체인 자금흐름</b>\n<i>${stripDash(editorial.dex_comment)}</i>` : null,
     predLines ? `\n🎯 <b>예측시장</b>\n${predLines}` : null,
-    `\n<a href="https://stragos.xyz/crypto">➡️ 전체 브리핑 보기</a>\n📌 <i>웹 페이지 데이터는 최대 1시간 캐시됩니다</i>`,
+    `\n<a href="https://stragos.xyz/crypto">➡️ 전체 브리핑 보기</a>`,
     `🔄 <i>매일 06·12·18·00시 업데이트 (KST)</i>`,
   ].filter((l) => l !== null).join("\n");
 

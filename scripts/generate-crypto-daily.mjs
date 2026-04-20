@@ -408,7 +408,6 @@ async function fetchPredictionMarkets() {
       signal: ctrl.signal,
       body: JSON.stringify({
         status: "active",
-        tags: ["Crypto"],
         pagination: { page: 1, per_page: 5 },
         order_by: [{ field: "volume", direction: "DESC" }],
         min_volume_24hr: 1000,

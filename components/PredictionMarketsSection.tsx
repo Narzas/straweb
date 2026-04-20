@@ -39,9 +39,9 @@ export default function PredictionMarketsSection({ items }: { items: PredictionM
       <div className="flex items-baseline justify-between mb-3">
         <div>
           <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300">
-            🔮 크립토 예측 시장
+            🔮 실시간 인기 예측 시장
           </h2>
-          <p className="text-[11px] text-gray-400 mt-0.5">Polymarket · 인기 시장 · 진행 중</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">Polymarket · 전체 카테고리 · 거래량순</p>
         </div>
       </div>
 

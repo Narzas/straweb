@@ -360,37 +360,49 @@ async function fetchRsiHeatmap() {
   const symbols = infoData.symbols
     .filter((s) => s.quoteAsset === "USDT" && s.status === "TRADING")
     .map((s) => s.symbol);
-  const results = await Promise.all(
-    symbols.map(async (sym) => {
-      try {
-        const res = await safeFetch(
-          `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=4h&limit=700`,
-          {},
-          20_000
-        );
-        if (!res) return null;
-        const klines = await res.json();
-        if (!Array.isArray(klines) || klines.length < 30) return null;
-        const c4h = klines.map((k) => parseFloat(k[4]));
-        const c1d = c4h.filter((_, i) => (i + 1) % 6 === 0);
-        const c1w = c4h.filter((_, i) => (i + 1) % 42 === 0);
-        const label = sym.replace("USDT", "");
-        return {
-          symbol: label,
-          rsi_4h: calcRSI(c4h),
-          rsi_1d: calcRSI(c1d),
-          rsi_1w: calcRSI(c1w),
-        };
-      } catch {
-        return null;
-      }
-    })
-  );
+
+  // 배치 처리로 rate limit 회피 (동시 20개씩, 배치 간 200ms 대기)
+  const BATCH = 20;
+  const results = [];
+  for (let i = 0; i < symbols.length; i += BATCH) {
+    const batch = symbols.slice(i, i + BATCH);
+    const batchResults = await Promise.all(
+      batch.map(async (sym) => {
+        try {
+          const res = await safeFetch(
+            `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=4h&limit=700`,
+            {},
+            20_000
+          );
+          if (!res) return null;
+          const klines = await res.json();
+          if (!Array.isArray(klines) || klines.length < 30) return null;
+          const c4h = klines.map((k) => parseFloat(k[4]));
+          const c1d = c4h.filter((_, i) => (i + 1) % 6 === 0);
+          const c1w = c4h.filter((_, i) => (i + 1) % 42 === 0);
+          const label = sym.replace("USDT", "");
+          return {
+            symbol: label,
+            rsi_4h: calcRSI(c4h),
+            rsi_1d: calcRSI(c1d),
+            rsi_1w: calcRSI(c1w),
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+    results.push(...batchResults);
+    if (i + BATCH < symbols.length) await new Promise((r) => setTimeout(r, 200));
+  }
+
   const valid = results.filter((r) => r && r.rsi_4h != null);
   if (!valid.length) return null;
   const overbought = valid.filter((r) => r.rsi_4h >= 70).sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 8);
   const oversold   = valid.filter((r) => r.rsi_4h <= 30).sort((a, b) => a.rsi_4h - b.rsi_4h).slice(0, 8);
-  return { overbought, oversold };
+  // 히트맵용 전체 데이터: RSI 내림차순, 최대 80개
+  const all = valid.sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 80);
+  return { overbought, oversold, all };
 }
 
 async function fetchCoinCategories() {
@@ -510,7 +522,7 @@ async function fetchAll() {
     safeFetch("https://api.coingecko.com/api/v3/global"),
     safeFetch("https://api.coingecko.com/api/v3/search/trending"),
     safeFetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana,bnb,xrp&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d"
+      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana,bnb,xrp,hyperliquid&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d"
     ),
     safeFetch("https://cointelegraph.com/rss"),
     safeFetch("https://api.alternative.me/fng/?limit=1"),
@@ -623,14 +635,14 @@ async function fetchAll() {
         total_market_cap_usd: gd.total_market_cap?.usd ?? null,
         market_cap_change_24h: gd.market_cap_change_percentage_24h_usd ?? null,
         btc_dominance: gd.market_cap_percentage?.btc ?? null,
-        eth_dominance: gd.market_cap_percentage?.eth ?? null,
+        usdt_dominance: gd.market_cap_percentage?.usdt ?? null,
         active_cryptocurrencies: gd.active_cryptocurrencies ?? null,
         coins: markets ?? [],
       }
     : null;
 
   // 트렌딩 정리
-  const trendingCoins = (trending?.coins ?? []).slice(0, 7).map((e) => ({
+  const trendingCoins = (trending?.coins ?? []).slice(0, 6).map((e) => ({
     name: e.item.name,
     symbol: e.item.symbol,
     market_cap_rank: e.item.market_cap_rank ?? null,

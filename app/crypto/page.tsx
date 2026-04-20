@@ -11,6 +11,7 @@ import SectorPerformanceSection from "@/components/SectorPerformanceSection";
 import GainersLosersSection from "@/components/GainersLosersSection";
 import RsiHeatmapSection from "@/components/RsiHeatmapSection";
 import DexChainsSection from "@/components/DexChainsSection";
+import AnimatedSection from "@/components/AnimatedSection";
 
 export const revalidate = 3600;
 
@@ -123,6 +124,7 @@ type Editorial = {
   rsi_heatmap?: {
     overbought: Array<{ symbol: string; rsi_4h: number | null; rsi_1d: number | null; rsi_1w: number | null }>;
     oversold:   Array<{ symbol: string; rsi_4h: number | null; rsi_1d: number | null; rsi_1w: number | null }>;
+    all?:       Array<{ symbol: string; rsi_4h: number | null; rsi_1d: number | null; rsi_1w: number | null }>;
   } | null;
   gainers_losers?: {
     gainers: Array<{ symbol: string; name: string; current_price: number; price_change_percentage_24h: number; image?: string | null }>;
@@ -136,7 +138,7 @@ type CryptoDaily = {
     total_market_cap_usd: number | null;
     market_cap_change_24h: number | null;
     btc_dominance: number | null;
-    eth_dominance: number | null;
+    usdt_dominance: number | null;
     active_cryptocurrencies: number | null;
     coins: Coin[];
   } | null;
@@ -269,10 +271,10 @@ export default async function CryptoPage({ searchParams }: PageProps) {
             </h2>
             {(() => {
               const STAT_COLORS = {
-                "시가총액": { from: "from-blue-500/10", border: "border-blue-500/20", text: "text-blue-400" },
-                "24h 변동": { from: "from-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-400" },
-                "BTC 도미넌스": { from: "from-orange-500/10", border: "border-orange-500/20", text: "text-orange-400" },
-                "ETH 도미넌스": { from: "from-indigo-500/10", border: "border-indigo-500/20", text: "text-indigo-400" },
+                "시가총액": { from: "from-blue-500/10", border: "border-blue-500/20", text: "text-blue-600 dark:text-blue-400" },
+                "24h 변동": { from: "from-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-600 dark:text-emerald-400" },
+                "BTC 도미넌스": { from: "from-orange-500/10", border: "border-orange-500/20", text: "text-orange-600 dark:text-orange-400" },
+                "USDT 도미넌스": { from: "from-indigo-500/10", border: "border-indigo-500/20", text: "text-indigo-600 dark:text-indigo-400" },
               };
               return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -280,7 +282,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
                     { label: "시가총액", value: fmtUsd(market.total_market_cap_usd) },
                     { label: "24h 변동", value: <Change v={market.market_cap_change_24h} /> },
                     { label: "BTC 도미넌스", value: `${fmt(market.btc_dominance)}%` },
-                    { label: "ETH 도미넌스", value: `${fmt(market.eth_dominance)}%` },
+                    { label: "USDT 도미넌스", value: `${fmt(market.usdt_dominance)}%` },
                   ].map((item) => {
                     const c = STAT_COLORS[item.label as keyof typeof STAT_COLORS];
                     return (
@@ -318,7 +320,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
                         <tr key={c.id} className="border-b border-gray-200 dark:border-slate-800 last:border-0">
                           <td className="py-2">
                             <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[9px] text-slate-300 font-bold shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-[9px] text-gray-500 dark:text-slate-300 font-bold shrink-0">
                                 {c.symbol[0].toUpperCase()}
                               </div>
                               <span className="font-semibold text-gray-900 dark:text-gray-100">{c.name}</span>
@@ -344,68 +346,87 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           </section>
         )}
 
-        {editorial?.gainers_losers && (
-          <GainersLosersSection data={editorial.gainers_losers} />
-        )}
-
-        {editorial?.coin_categories?.length && (
-          <SectorPerformanceSection sectors={editorial.coin_categories} />
-        )}
+        <AnimatedSection delay={0.05}>
+          <MarketSentimentSection
+            fearGreed={fearGreed}
+            fngComment={editorial?.fng_comment}
+            altcoinSeason={editorial?.altcoin_season}
+            longShortRatio={editorial?.long_short_ratio}
+          />
+        </AnimatedSection>
 
         {/* 트렌딩 코인 */}
         {trending?.length > 0 && (
-          <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
-              🔥 오늘의 트렌딩 코인
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {trending.map((c, i) => (
-                <div key={c.symbol} className="flex items-center gap-2 rounded-xl px-3 py-2 bg-slate-800/60 dark:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/40 transition-colors">
-                  <span className="text-[10px] text-indigo-400 font-black w-4">#{i + 1}</span>
-                  {c.thumb && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.thumb} alt={c.name} className="w-5 h-5 rounded-full" />
-                  )}
-                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{c.name}</span>
-                  <span className="text-[10px] text-slate-500">{c.symbol}</span>
-                </div>
-              ))}
-            </div>
-            {editorial?.trending_comment && (
-              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl px-3 py-2.5 leading-relaxed">
-                💡 {editorial.trending_comment}
-              </p>
-            )}
-          </section>
+          <AnimatedSection delay={0.05}>
+            <section>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+                🔥 오늘의 트렌딩 코인
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {trending.map((c, i) => (
+                  <div key={c.symbol} className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 bg-white dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700/50 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 transition-colors">
+                    <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-black w-4 shrink-0">#{i + 1}</span>
+                    {c.thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.thumb} alt={c.name} className="w-5 h-5 rounded-full shrink-0" />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-slate-700 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{c.name}</p>
+                      <p className="text-[10px] text-gray-400 dark:text-slate-500">{c.symbol.toUpperCase()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {editorial?.trending_comment && (
+                <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl px-3 py-2.5 leading-relaxed">
+                  💡 {editorial.trending_comment}
+                </p>
+              )}
+            </section>
+          </AnimatedSection>
         )}
+
+        <AnimatedSection delay={0.05}>
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+            {editorial?.gainers_losers && (
+              <GainersLosersSection data={editorial.gainers_losers} />
+            )}
+            {editorial?.coin_categories?.length && (
+              <SectorPerformanceSection sectors={editorial.coin_categories} />
+            )}
+          </div>
+        </AnimatedSection>
 
         <CryptoTicker />
 
         {editorial?.rsi_heatmap && (
-          <RsiHeatmapSection data={editorial.rsi_heatmap} />
+          <AnimatedSection delay={0.05}>
+            <RsiHeatmapSection data={editorial.rsi_heatmap} />
+          </AnimatedSection>
         )}
 
-        <DexChainsSection
-          dexChains={dexChains ?? []}
-          dexComment={editorial?.dex_comment}
-        />
-
-        <MarketSentimentSection
-          fearGreed={fearGreed}
-          fngComment={editorial?.fng_comment}
-          altcoinSeason={editorial?.altcoin_season}
-          longShortRatio={editorial?.long_short_ratio}
-        />
+        <AnimatedSection delay={0.05}>
+          <DexChainsSection
+            dexChains={dexChains ?? []}
+            dexComment={editorial?.dex_comment}
+          />
+        </AnimatedSection>
 
         {(editorial?.netflows?.length || editorial?.hyperliquid_perps?.length) && (
-          <SmartMoneyDashboardSection
-            netflows={editorial.netflows ?? []}
-            perps={editorial.hyperliquid_perps ?? []}
-          />
+          <AnimatedSection delay={0.05}>
+            <SmartMoneyDashboardSection
+              netflows={editorial.netflows ?? []}
+              perps={editorial.hyperliquid_perps ?? []}
+            />
+          </AnimatedSection>
         )}
 
         {editorial?.prediction_markets?.length && (
-          <PredictionMarketsSection items={editorial.prediction_markets} />
+          <AnimatedSection delay={0.05}>
+            <PredictionMarketsSection items={editorial.prediction_markets} />
+          </AnimatedSection>
         )}
 
 

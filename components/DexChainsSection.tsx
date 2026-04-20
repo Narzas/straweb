@@ -16,9 +16,9 @@ function fmt(n: number) {
 }
 
 const PALETTE = [
-  "#6366f1", "#8b5cf6", "#ec4899", "#f97316", "#eab308",
-  "#06b6d4", "#3b82f6", "#a855f7", "#f43f5e", "#14b8a6",
-  "#84cc16", "#fb923c",
+  "#3b82f6", "#a78bfa", "#f472b6", "#fb923c", "#facc15",
+  "#34d399", "#22d3ee", "#818cf8", "#f87171", "#2dd4bf",
+  "#a3e635", "#e879f9",
 ];
 
 const W = 500;
@@ -51,8 +51,8 @@ const ANIM_STYLE = `
     50%       { opacity: 0.5; }
   }
   @keyframes dexBandBreath {
-    0%, 100% { opacity: 0.14; }
-    50%       { opacity: 0.26; }
+    0%, 100% { opacity: 0.18; }
+    50%       { opacity: 0.32; }
   }
   @keyframes dexGlowPulse {
     0%, 100% { r: 35; opacity: 0.12; }
@@ -151,10 +151,10 @@ export default function DexChainsSection({
     return (
       <section>
         <style>{ANIM_STYLE}</style>
-        <div className="rounded-2xl border border-slate-700/60 bg-[#080e1a] overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-[#0c1320] shadow-sm dark:shadow-none overflow-hidden">
           <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-            <h2 className="text-sm font-bold text-slate-200 tracking-wide">체인별 자금 흐름</h2>
-            <span className="text-[10px] text-slate-500 ml-auto">24h</span>
+            <h2 className="text-sm font-bold text-gray-800 dark:text-slate-200 tracking-wide">체인별 자금 흐름</h2>
+            <span className="text-[10px] text-gray-400 dark:text-slate-500 ml-auto">24h</span>
           </div>
           <div className="px-3 pb-3">
             <svg viewBox={`0 0 ${W} ${svgH}`} className="w-full" style={{ display: "block", height: "auto" }}>
@@ -176,7 +176,7 @@ export default function DexChainsSection({
                 ))}
                 {/* Glow filter */}
                 <filter id="dexGlow">
-                  <feGaussianBlur stdDeviation="2.5" />
+                  <feGaussianBlur stdDeviation="1.8" />
                   <feMerge>
                     <feMergeNode />
                     <feMergeNode in="SourceGraphic" />
@@ -192,9 +192,6 @@ export default function DexChainsSection({
                   <stop offset="100%" stopColor="#0c1120" stopOpacity={0} />
                 </radialGradient>
               </defs>
-
-              {/* Background */}
-              <rect x={0} y={0} width={W} height={svgH} fill="url(#bgGrad)" />
 
               {/* Bands */}
               {bands.map((b, i) => {
@@ -277,7 +274,7 @@ export default function DexChainsSection({
           </div>
         </div>
         {dexComment && (
-          <p className="mt-3 text-xs text-slate-400 bg-slate-800/40 border border-slate-700/50 rounded-xl px-3 py-2">
+          <p className="mt-3 text-xs text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-xl px-3 py-2">
             {dexComment}
           </p>
         )}
@@ -315,10 +312,10 @@ export default function DexChainsSection({
   return (
     <section>
       <style>{ANIM_STYLE}</style>
-      <div className="rounded-2xl border border-slate-700/60 bg-[#080e1a] overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-[#0c1320] shadow-sm dark:shadow-none overflow-hidden">
         <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-          <h2 className="text-sm font-bold text-slate-200 tracking-wide">체인별 자금 흐름</h2>
-          <span className="text-[10px] text-slate-500 ml-auto">24h</span>
+          <h2 className="text-sm font-bold text-gray-800 dark:text-slate-200 tracking-wide">체인별 자금 흐름</h2>
+          <span className="text-[10px] text-gray-400 dark:text-slate-500 ml-auto">24h</span>
         </div>
         <div className="px-3 pb-3">
           <svg viewBox={`0 0 ${W} ${svgH}`} className="w-full" style={{ display: "block", height: "auto" }}>
@@ -333,7 +330,7 @@ export default function DexChainsSection({
               ))}
               {/* Glow filter */}
               <filter id="dexGlow">
-                <feGaussianBlur stdDeviation="2.5" />
+                <feGaussianBlur stdDeviation="1.8" />
                 <feMerge>
                   <feMergeNode />
                   <feMergeNode in="SourceGraphic" />
@@ -354,9 +351,6 @@ export default function DexChainsSection({
                 <stop offset="100%" stopColor="#0c1120" stopOpacity={0} />
               </radialGradient>
             </defs>
-
-            {/* Background */}
-            <rect x={0} y={0} width={W} height={svgH} fill="url(#bgGrad)" />
 
             {/* Bands */}
             {links.map((l, i) => (
@@ -436,7 +430,7 @@ export default function DexChainsSection({
         </div>
       </div>
       {dexComment && (
-        <p className="mt-3 text-xs text-slate-400 bg-slate-800/40 border border-slate-700/50 rounded-xl px-3 py-2">
+        <p className="mt-3 text-xs text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-xl px-3 py-2">
           {dexComment}
         </p>
       )}

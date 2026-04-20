@@ -69,23 +69,17 @@ export default function MarketSentimentSection({
         📊 시장 심리 &amp; 자금 흐름
       </h2>
 
-      <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-800/80 to-slate-900 overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 overflow-hidden">
 
-        <div className="grid grid-cols-3 divide-x divide-slate-700/60 border-b border-slate-700/60">
+        <div className="grid grid-cols-3 divide-x divide-gray-200 dark:divide-slate-700/60 border-b border-gray-200 dark:border-slate-700/60">
           {fearGreed && (
-            <div className="bg-slate-800/30">
-              <GaugeCell v={fearGreed.value} label={fearGreed.classification_ko} title="공포·탐욕" />
-            </div>
+            <GaugeCell v={fearGreed.value} label={fearGreed.classification_ko} title="공포·탐욕" />
           )}
           {altcoinSeason != null && (
-            <div className="bg-slate-800/30">
-              <GaugeCell v={altcoinSeason} label={altcoinLabel(altcoinSeason)} title="알트코인 시즌" />
-            </div>
+            <GaugeCell v={altcoinSeason} label={altcoinLabel(altcoinSeason)} title="알트코인 시즌" />
           )}
           {longShortRatio != null && (
-            <div className="bg-slate-800/30">
-              <GaugeCell v={longShortRatio} label={lsLabel(longShortRatio)} title="롱/숏 비율" />
-            </div>
+            <GaugeCell v={longShortRatio} label={lsLabel(longShortRatio)} title="롱/숏 비율" />
           )}
         </div>
 

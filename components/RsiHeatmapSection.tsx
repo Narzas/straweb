@@ -1,3 +1,5 @@
+"use client";
+
 type RsiItem = {
   symbol: string;
   rsi_4h: number | null;
@@ -8,77 +10,150 @@ type RsiItem = {
 type RsiData = {
   overbought: RsiItem[];
   oversold: RsiItem[];
+  all?: RsiItem[];
 };
 
-function rsiCellColor(v: number | null, isOverbought: boolean): string {
-  if (v == null) return "text-gray-400";
-  if (v >= 75) return "text-red-600 dark:text-red-400 font-black";
-  if (v >= 70) return "text-red-500 font-bold";
-  if (v <= 25) return "text-emerald-600 dark:text-emerald-400 font-black";
-  if (v <= 30) return "text-emerald-500 font-bold";
-  return isOverbought ? "text-orange-400" : "text-sky-400";
+const CHART_H = 260;
+const Y_AXIS_W = 32;
+const PAD_X = 16;
+const DOT_R = 7;
+
+const Y_LABELS = [100, 80, 70, 50, 30, 20, 0];
+
+function rsiToY(rsi: number) {
+  return ((100 - rsi) / 100) * CHART_H;
 }
 
-function Row({ r, isOverbought }: { r: RsiItem; isOverbought: boolean }) {
-  return (
-    <div className="grid grid-cols-4 items-center px-3 py-2 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
-      <span className="text-sm font-bold text-gray-700 dark:text-gray-200">{r.symbol}</span>
-      <span className={`text-center text-sm tabular-nums ${rsiCellColor(r.rsi_4h, isOverbought)}`}>{r.rsi_4h ?? "—"}</span>
-      <span className={`text-center text-sm tabular-nums ${rsiCellColor(r.rsi_1d, isOverbought)}`}>{r.rsi_1d ?? "—"}</span>
-      <span className={`text-center text-sm tabular-nums ${rsiCellColor(r.rsi_1w, isOverbought)}`}>{r.rsi_1w ?? "—"}</span>
-    </div>
-  );
-}
-
-function TableHeader() {
-  return (
-    <div className="grid grid-cols-4 text-[11px] font-bold text-gray-400 uppercase px-3 py-2 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50">
-      <span>코인</span>
-      <span className="text-center">4H</span>
-      <span className="text-center">1D</span>
-      <span className="text-center">1W</span>
-    </div>
-  );
+function dotColor(rsi: number): { fill: string; stroke: string; label: string } {
+  if (rsi >= 80) return { fill: "#ef4444", stroke: "#b91c1c", label: "#fee2e2" };
+  if (rsi >= 70) return { fill: "#f97316", stroke: "#c2410c", label: "#ffedd5" };
+  if (rsi <= 20) return { fill: "#10b981", stroke: "#059669", label: "#d1fae5" };
+  if (rsi <= 30) return { fill: "#22c55e", stroke: "#15803d", label: "#dcfce7" };
+  return { fill: "#94a3b8", stroke: "#64748b", label: "#f1f5f9" };
 }
 
 export default function RsiHeatmapSection({ data }: { data: RsiData }) {
   const { overbought, oversold } = data;
   if (!overbought.length && !oversold.length) return null;
 
+  const items = [
+    ...overbought.filter((r) => r.rsi_4h != null),
+    ...oversold.filter((r) => r.rsi_4h != null),
+  ].sort((a, b) => (b.rsi_4h ?? 0) - (a.rsi_4h ?? 0));
+
+  if (!items.length) return null;
+
+  const totalW_ref = 480;
+  const plotW = totalW_ref - Y_AXIS_W - PAD_X;
+  const step = plotW / (items.length + 1);
+
   return (
     <section>
-      <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
-        📈 RSI 히트맵 <span className="text-[11px] font-normal text-gray-400">(4h 기준)</span>
+      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+        📈 RSI 산점도 <span className="text-[11px] font-normal text-gray-400">(4H 기준)</span>
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {overbought.length > 0 && (
-          <div className="rounded-2xl border border-red-200 dark:border-red-900/50 bg-white dark:bg-slate-800 overflow-hidden">
-            <div className="px-3 py-2 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-900/50">
-              <span className="text-[12px] font-bold text-red-500">🔴 과매수 RSI ≥ 70</span>
-            </div>
-            <TableHeader />
-            {overbought.map((r) => <Row key={r.symbol} r={r} isOverbought={true} />)}
-          </div>
-        )}
-        {oversold.length > 0 && (
-          <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-800 overflow-hidden">
-            <div className="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">
-              <span className="text-[12px] font-bold text-emerald-500">🟢 과매도 RSI ≤ 30</span>
-            </div>
-            <TableHeader />
-            {oversold.map((r) => <Row key={r.symbol} r={r} isOverbought={false} />)}
-          </div>
-        )}
-        {!overbought.length && (
-          <div className="rounded-2xl border border-red-200 dark:border-red-900/50 bg-white dark:bg-slate-800 px-4 py-6 flex items-center justify-center">
-            <span className="text-sm text-gray-400">과매수 없음</span>
-          </div>
-        )}
-        {!oversold.length && (
-          <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-800 px-4 py-6 flex items-center justify-center">
-            <span className="text-sm text-gray-400">과매도 없음</span>
-          </div>
-        )}
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 overflow-x-auto">
+        <svg
+          viewBox={`0 0 ${totalW_ref} ${CHART_H + 24}`}
+          className="w-full"
+          style={{ minWidth: 320, maxWidth: "100%" }}
+        >
+          {/* 그라디언트 정의 */}
+          <defs>
+            <linearGradient id="rsi-bg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor="#ef4444" stopOpacity="0.25" />
+              <stop offset="28%"  stopColor="#f97316" stopOpacity="0.12" />
+              <stop offset="50%"  stopColor="#6366f1" stopOpacity="0.06" />
+              <stop offset="72%"  stopColor="#22d3ee" stopOpacity="0.10" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.22" />
+            </linearGradient>
+          </defs>
+          {/* 전체 배경 그라디언트 */}
+          <rect
+            x={Y_AXIS_W}
+            y={0}
+            width={plotW + PAD_X}
+            height={CHART_H}
+            fill="url(#rsi-bg)"
+          />
+
+          {/* 그리드 라인 */}
+          {Y_LABELS.map((v) => (
+            <line
+              key={v}
+              x1={Y_AXIS_W}
+              y1={rsiToY(v)}
+              x2={totalW_ref}
+              y2={rsiToY(v)}
+              stroke={v === 70 ? "#ef444460" : v === 30 ? "#22c55e60" : "#e2e8f0"}
+              strokeWidth={v === 70 || v === 30 ? 1.5 : 0.8}
+              strokeDasharray={v === 70 || v === 30 ? "4 3" : "2 4"}
+            />
+          ))}
+
+          {/* Y축 레이블 */}
+          {Y_LABELS.map((v) => (
+            <text
+              key={v}
+              x={Y_AXIS_W - 5}
+              y={rsiToY(v) + 4}
+              textAnchor="end"
+              fontSize={9}
+              fill="#94a3b8"
+              fontFamily="monospace"
+            >
+              {v}
+            </text>
+          ))}
+
+          {/* 존 레이블 */}
+          <text x={Y_AXIS_W + 4} y={rsiToY(100) + 13} fontSize={9} fill="#ef4444" opacity={0.7}>과매수</text>
+          <text x={Y_AXIS_W + 4} y={rsiToY(0) - 4} fontSize={9} fill="#22c55e" opacity={0.7}>과매도</text>
+
+          {/* 점 + 심볼 레이블 */}
+          {items.map((item, i) => {
+            const rsi = item.rsi_4h!;
+            const cx = Y_AXIS_W + step * (i + 1);
+            const cy = rsiToY(rsi);
+            const { fill, stroke, label } = dotColor(rsi);
+
+            return (
+              <g key={item.symbol}>
+                {/* 수직 점선 */}
+                <line
+                  x1={cx} y1={cy + DOT_R + 1}
+                  x2={cx} y2={CHART_H}
+                  stroke={fill}
+                  strokeWidth={0.5}
+                  opacity={0.25}
+                />
+                {/* 글로우 */}
+                <circle cx={cx} cy={cy} r={DOT_R + 4} fill={fill} opacity={0.12} />
+                {/* 점 */}
+                <circle cx={cx} cy={cy} r={DOT_R} fill={fill} stroke={stroke} strokeWidth={1.5} />
+                {/* RSI 숫자 (점 위) */}
+                <text x={cx} y={cy - DOT_R - 3} textAnchor="middle" fontSize={8} fill={fill} fontWeight="700" fontFamily="monospace">
+                  {rsi.toFixed(0)}
+                </text>
+                {/* 심볼 (하단) */}
+                <text x={cx} y={CHART_H + 14} textAnchor="middle" fontSize={8.5} fill="#64748b" fontWeight="600">
+                  {item.symbol.length > 5 ? item.symbol.slice(0, 5) : item.symbol}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* 테두리 */}
+          <rect
+            x={Y_AXIS_W}
+            y={0}
+            width={plotW + PAD_X}
+            height={CHART_H}
+            fill="none"
+            stroke="#e2e8f040"
+            strokeWidth={1}
+          />
+        </svg>
       </div>
     </section>
   );

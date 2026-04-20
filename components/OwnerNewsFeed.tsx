@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { TwitterPost } from "@/app/api/twitter-feed/[username]/route";
+import type { TelegramPost } from "@/app/api/telegram-feed/[channel]/route";
 
 const ACCOUNTS = [
-  { username: "WuBlockchain", label: "Wu Blockchain", apiPath: "/api/twitter-feed/WuBlockchain" },
-  { username: "top7ico", label: "TOP 7 ICO", apiPath: "/api/top7ico-feed" },
+  { label: "Wu KR", apiPath: "/api/telegram-feed/wublockchainkr", noTranslate: true },
+  { label: "TOP 7 ICO", apiPath: "/api/telegram-feed/top7ico", noTranslate: false },
+  { label: "LookOnChain", apiPath: "/api/telegram-feed/lookonchainchannel", noTranslate: false },
 ] as const;
 
 function timeAgo(iso: string) {
@@ -78,7 +79,7 @@ async function gtranslate(text: string): Promise<string> {
   return (data[0] as [string, string][]).map((s) => s[0]).join("");
 }
 
-function PostCard({ post }: { post: TwitterPost }) {
+function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boolean }) {
   const [lightbox, setLightbox] = useState(false);
   const [translated, setTranslated] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
@@ -127,7 +128,7 @@ function PostCard({ post }: { post: TwitterPost }) {
               </p>
             )}
           </div>
-          {post.text && !translated && (
+          {post.text && !noTranslate && !translated && (
             <button
               onClick={handleTranslate}
               disabled={translating}
@@ -150,26 +151,26 @@ function PostCard({ post }: { post: TwitterPost }) {
   );
 }
 
-const LS_KEY = "owner-news-feed-v3";
+const LS_KEY = "owner-news-feed-v4";
 
-function loadFromStorage(): (TwitterPost | null)[] {
+function loadFromStorage(): (TelegramPost | null)[] {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return ACCOUNTS.map(() => null);
-    return JSON.parse(raw) as (TwitterPost | null)[];
+    return JSON.parse(raw) as (TelegramPost | null)[];
   } catch {
     return ACCOUNTS.map(() => null);
   }
 }
 
-function saveToStorage(posts: (TwitterPost | null)[]) {
+function saveToStorage(posts: (TelegramPost | null)[]) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(posts));
   } catch {}
 }
 
 type FeedState = {
-  post: TwitterPost | null;
+  post: TelegramPost | null;
 };
 
 export default function OwnerNewsFeed() {
@@ -178,7 +179,7 @@ export default function OwnerNewsFeed() {
   );
   const [currentIdx, setCurrentIdx] = useState(0);
   const prevIdsRef = useRef<(string | null)[]>(ACCOUNTS.map(() => null));
-  const currentPostsRef = useRef<(TwitterPost | null)[]>(ACCOUNTS.map(() => null));
+  const currentPostsRef = useRef<(TelegramPost | null)[]>(ACCOUNTS.map(() => null));
 
   // localStorage에서 이전 글 즉시 복원
   useEffect(() => {
@@ -197,7 +198,7 @@ export default function OwnerNewsFeed() {
       ACCOUNTS.map((a) =>
         fetch(a.apiPath)
           .then((r) => r.json())
-          .then((d) => (d.posts?.[0] as TwitterPost) ?? null)
+          .then((d) => (d.posts?.[0] as TelegramPost) ?? null)
           .catch(() => null)
       )
     );
@@ -247,10 +248,10 @@ export default function OwnerNewsFeed() {
           className="flex transition-transform duration-300 ease-in-out"
           style={{ transform: `translateX(-${currentIdx * 100}%)` }}
         >
-          {ACCOUNTS.map((_, i) => (
+          {ACCOUNTS.map((a, i) => (
             <div key={i} className="w-full flex-shrink-0">
               {feeds[i].post ? (
-                <PostCard post={feeds[i].post!} />
+                <PostCard post={feeds[i].post!} noTranslate={a.noTranslate} />
               ) : (
                 <FeedPlaceholder />
               )}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getAllPosts } from "@/lib/posts";
+import Link from "next/link";
+import { getAllPosts, getAllCategories } from "@/lib/posts";
 import { createServiceClient } from "@/lib/supabase";
 import PostCard from "@/components/PostCard";
 import PostSortTabs from "@/components/PostSortTabs";
@@ -45,8 +46,17 @@ type Props = {
   searchParams: Promise<{ sort?: string }>;
 };
 
+const CATEGORY_ICONS: Record<string, string> = {
+  개발: "💻",
+  리뷰: "📦",
+  일상: "☀️",
+  투자: "📈",
+  정보: "📌",
+};
+
 export default async function PostsPage({ searchParams }: Props) {
   const { sort } = await searchParams;
+  const categories = getAllCategories();
 
   let posts = getAllPosts(); // 기본: 최신순
 
@@ -73,6 +83,27 @@ export default async function PostsPage({ searchParams }: Props) {
             <PostSortTabs />
           </Suspense>
         </div>
+
+        {categories.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">카테고리</h2>
+            <div className="flex flex-wrap gap-2">
+              {categories.map(({ name, count }) => (
+                <Link
+                  key={name}
+                  href={`/category/${encodeURIComponent(name.toLowerCase())}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-400"
+                >
+                  <span>{CATEGORY_ICONS[name] ?? "🗂️"}</span>
+                  {name}
+                  <span className="rounded-full bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    {count}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <ul className="grid gap-3">
           {posts.map((post, i) => (

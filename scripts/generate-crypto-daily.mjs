@@ -1076,6 +1076,7 @@ async function main() {
   const date = kst.toISOString().slice(0, 10); // YYYY-MM-DD
 
   const isDryRun = process.argv.includes("--dry-run");
+  const noTelegram = process.argv.includes("--no-telegram");
 
   const payload = await fetchAll();
   const editorial = generateEditorial(payload);
@@ -1097,7 +1098,7 @@ async function main() {
   }
 
   console.log(`✓ 저장 완료: ${date}`);
-  await sendTelegramBriefing(date, payload, editorial);
+  if (!noTelegram) await sendTelegramBriefing(date, payload, editorial);
 }
 
 main().catch((e) => {

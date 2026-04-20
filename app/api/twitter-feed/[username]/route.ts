@@ -154,7 +154,7 @@ export async function GET(
         Accept: "text/html,application/xhtml+xml",
         "Accept-Language": "en-US,en;q=0.9",
       },
-      next: { revalidate: 180 },
+      cache: "no-store",
     });
 
     if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
@@ -172,11 +172,11 @@ export async function GET(
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const posts = [first, ...rest].map(({ articleUrl: _a, ...p }) => p);
-      return NextResponse.json({ posts });
+      return NextResponse.json({ posts }, { headers: { "Cache-Control": "no-store" } });
     }
   } catch (e) {
     console.error(`[twitter-feed/${username}]`, e);
   }
 
-  return NextResponse.json({ posts: [] });
+  return NextResponse.json({ posts: [] }, { headers: { "Cache-Control": "no-store" } });
 }

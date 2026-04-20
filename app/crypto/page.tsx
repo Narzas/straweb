@@ -10,6 +10,7 @@ import { CryptoTicker } from "@/components/CryptoTicker";
 import SectorPerformanceSection from "@/components/SectorPerformanceSection";
 import GainersLosersSection from "@/components/GainersLosersSection";
 import RsiHeatmapSection from "@/components/RsiHeatmapSection";
+import DexChainsSection from "@/components/DexChainsSection";
 
 export const revalidate = 3600;
 
@@ -263,24 +264,37 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         {/* 시장 개요 */}
         {market && (
           <section>
-            <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
               전체 시장 개요
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "시가총액", value: fmtUsd(market.total_market_cap_usd) },
-                { label: "24h 변동", value: <Change v={market.market_cap_change_24h} /> },
-                { label: "BTC 도미넌스", value: `${fmt(market.btc_dominance)}%` },
-                { label: "ETH 도미넌스", value: `${fmt(market.eth_dominance)}%` },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 px-4 py-3">
-                  <p className="text-[11px] text-gray-400 mb-1">{item.label}</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">{item.value}</p>
+            {(() => {
+              const STAT_COLORS = {
+                "시가총액": { from: "from-blue-500/10", border: "border-blue-500/20", text: "text-blue-400" },
+                "24h 변동": { from: "from-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-400" },
+                "BTC 도미넌스": { from: "from-orange-500/10", border: "border-orange-500/20", text: "text-orange-400" },
+                "ETH 도미넌스": { from: "from-indigo-500/10", border: "border-indigo-500/20", text: "text-indigo-400" },
+              };
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: "시가총액", value: fmtUsd(market.total_market_cap_usd) },
+                    { label: "24h 변동", value: <Change v={market.market_cap_change_24h} /> },
+                    { label: "BTC 도미넌스", value: `${fmt(market.btc_dominance)}%` },
+                    { label: "ETH 도미넌스", value: `${fmt(market.eth_dominance)}%` },
+                  ].map((item) => {
+                    const c = STAT_COLORS[item.label as keyof typeof STAT_COLORS];
+                    return (
+                      <div key={item.label} className={`rounded-xl bg-gradient-to-br ${c.from} border ${c.border} px-4 py-3`}>
+                        <p className={`text-[11px] ${c.text} mb-1 font-semibold`}>{item.label}</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white tabular-nums">{item.value}</p>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
             {editorial?.market_comment && (
-              <p className="mt-3 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2">
+              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl px-3 py-2.5 leading-relaxed">
                 💡 {editorial.market_comment}
               </p>
             )}
@@ -302,9 +316,14 @@ export default async function CryptoPage({ searchParams }: PageProps) {
                     <tbody>
                       {market.coins.map((c) => (
                         <tr key={c.id} className="border-b border-gray-200 dark:border-slate-800 last:border-0">
-                          <td className="py-2 font-medium text-gray-800 dark:text-gray-200">
-                            {c.name}{" "}
-                            <span className="text-[11px] text-gray-400 font-normal">{c.symbol.toUpperCase()}</span>
+                          <td className="py-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[9px] text-slate-300 font-bold shrink-0">
+                                {c.symbol[0].toUpperCase()}
+                              </div>
+                              <span className="font-semibold text-gray-900 dark:text-gray-100">{c.name}</span>
+                              <span className="text-[10px] text-gray-400">{c.symbol.toUpperCase()}</span>
+                            </div>
                           </td>
                           <td className="py-2 text-right tabular-nums text-gray-800 dark:text-gray-200">${fmt(c.current_price)}</td>
                           <td className="py-2 text-right tabular-nums"><Change v={c.price_change_percentage_24h} /></td>
@@ -316,7 +335,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
                   </table>
                 </div>
                 {editorial?.coin_comment && (
-                  <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2">
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl px-3 py-2.5 leading-relaxed">
                     💡 {editorial.coin_comment}
                   </p>
                 )}
@@ -336,24 +355,24 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         {/* 트렌딩 코인 */}
         {trending?.length > 0 && (
           <section>
-            <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
               🔥 오늘의 트렌딩 코인
             </h2>
             <div className="flex flex-wrap gap-2">
               {trending.map((c, i) => (
-                <div key={c.symbol} className="flex items-center gap-2 rounded-full px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50">
-                  <span className="text-[11px] text-indigo-400 font-bold">#{i + 1}</span>
+                <div key={c.symbol} className="flex items-center gap-2 rounded-xl px-3 py-2 bg-slate-800/60 dark:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/40 transition-colors">
+                  <span className="text-[10px] text-indigo-400 font-black w-4">#{i + 1}</span>
                   {c.thumb && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.thumb} alt={c.name} className="w-4 h-4 rounded-full" />
+                    <img src={c.thumb} alt={c.name} className="w-5 h-5 rounded-full" />
                   )}
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{c.name}</span>
-                  <span className="text-[11px] text-gray-400">{c.symbol}</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{c.name}</span>
+                  <span className="text-[10px] text-slate-500">{c.symbol}</span>
                 </div>
               ))}
             </div>
             {editorial?.trending_comment && (
-              <p className="mt-3 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2">
+              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl px-3 py-2.5 leading-relaxed">
                 💡 {editorial.trending_comment}
               </p>
             )}
@@ -366,11 +385,14 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           <RsiHeatmapSection data={editorial.rsi_heatmap} />
         )}
 
+        <DexChainsSection
+          dexChains={dexChains ?? []}
+          dexComment={editorial?.dex_comment}
+        />
+
         <MarketSentimentSection
           fearGreed={fearGreed}
-          dexChains={dexChains ?? []}
           fngComment={editorial?.fng_comment}
-          dexComment={editorial?.dex_comment}
           altcoinSeason={editorial?.altcoin_season}
           longShortRatio={editorial?.long_short_ratio}
         />

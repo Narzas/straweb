@@ -58,40 +58,40 @@ function parseTelegram(html: string): TelegramPost | null {
     };
   }
 
-  // Sort by id descending, pick latest
+  // Sort by id descending, pick latest block WITH text
   blocks.sort((a, b) => Number(b.id) - Number(a.id));
-  const latest = blocks[0];
 
-  // Extract time
-  const timeMatch = latest.block.match(/<time[^>]+datetime="([^"]+)"/);
-  const time = timeMatch ? new Date(timeMatch[1]).toISOString() : new Date().toISOString();
+  for (const candidate of blocks) {
+    const textMatch = candidate.block.match(/<div[^>]+class="[^"]*tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+    if (!textMatch) continue;
 
-  // Extract image (background-image:url or <img src> inside photo div)
-  let photo: string | null = null;
-  const bgMatch = latest.block.match(/background-image:url\('(https:\/\/cdn[^']+)'\)/);
-  if (bgMatch) {
-    photo = bgMatch[1];
-  } else {
-    const imgMatch = latest.block.match(/<img[^>]+src="(https:\/\/cdn[^"]+)"/);
-    if (imgMatch) photo = imgMatch[1];
-  }
-
-  // Extract text
-  let text = "";
-  const textMatch = latest.block.match(/<div[^>]+class="[^"]*tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/);
-  if (textMatch) {
-    text = stripHtml(textMatch[1])
+    const text = stripHtml(textMatch[1])
       .replace(/Top 7 Ecosystem:.*$/m, "")
       .trim();
+    if (!text) continue;
+
+    const timeMatch = candidate.block.match(/<time[^>]+datetime="([^"]+)"/);
+    const time = timeMatch ? new Date(timeMatch[1]).toISOString() : new Date().toISOString();
+
+    let photo: string | null = null;
+    const bgMatch = candidate.block.match(/background-image:url\('(https:\/\/cdn[^']+)'\)/);
+    if (bgMatch) {
+      photo = bgMatch[1];
+    } else {
+      const imgMatch = candidate.block.match(/<img[^>]+src="(https:\/\/cdn[^"]+)"/);
+      if (imgMatch) photo = imgMatch[1];
+    }
+
+    return {
+      id: candidate.id,
+      text,
+      photo,
+      time,
+      url: `https://t.me/top7ico/${candidate.id}`,
+    };
   }
 
-  return {
-    id: latest.id,
-    text,
-    photo,
-    time,
-    url: `https://t.me/top7ico/${latest.id}`,
-  };
+  return null;
 }
 
 async function translateToKorean(text: string): Promise<string> {

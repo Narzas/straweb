@@ -150,7 +150,7 @@ function PostCard({ post }: { post: TwitterPost }) {
   );
 }
 
-const LS_KEY = "owner-news-feed-v2";
+const LS_KEY = "owner-news-feed-v3";
 
 function loadFromStorage(): (TwitterPost | null)[] {
   try {

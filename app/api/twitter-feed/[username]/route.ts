@@ -155,7 +155,7 @@ export async function GET(
         Accept: "text/html,application/xhtml+xml",
         "Accept-Language": "en-US,en;q=0.9",
       },
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
 
     if (!res.ok) throw new Error(`fetch failed: ${res.status}`);

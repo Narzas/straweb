@@ -1049,8 +1049,8 @@ async function sendTelegramBriefing(date, payload, editorial) {
     editorial.netflow_comment ? `<i>${editorial.netflow_comment}</i>` : null,
     editorial.dex_comment ? `\n🌐 <b>온체인 자금흐름</b>\n<i>${stripDash(editorial.dex_comment)}</i>` : null,
     predLines ? `\n🎯 <b>예측시장</b>\n${predLines}` : null,
-    `\n<a href="https://stragos.xyz/crypto">➡️ 전체 브리핑 보기</a>`,
-    `🔄 <i>매일 06·12·18·00시 업데이트 (KST)</i>`,
+    `\n<a href="https://stragos.xyz/crypto">➡️ 최신 브리핑 전체 보기</a>`,
+    `🔄 <i>웹 브리핑 매시간 갱신</i>\n📨 <i>텔레그램 알림 6시간마다 발송</i>`,
   ].filter((l) => l !== null).join("\n");
 
   // 4096자 제한

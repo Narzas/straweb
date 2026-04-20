@@ -229,7 +229,7 @@ async function fetchSmartMoneyNetflows() {
       if (!res.ok) return [];
       const json = await res.json();
       return (json.data ?? [])
-        .filter((r) => r.token_symbol && r.net_flow_24h_usd !== 0)
+        .filter((r) => r.token_symbol && Math.abs(r.net_flow_24h_usd) >= 10_000)
         .slice(0, 8)
         .map((r) => ({
           chain: r.chain,

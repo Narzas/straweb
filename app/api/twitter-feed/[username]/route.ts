@@ -26,6 +26,7 @@ interface TwitterTweet {
   full_text?: string;
   text?: string;
   created_at: string;
+  conversation_id_str?: string;
   in_reply_to_screen_name?: string | null;
   note_tweet?: { note_tweet_results?: { result?: { text?: string } } };
   extended_tweet?: { full_text?: string; entities?: { urls?: TwitterUrl[]; media?: TwitterMedia[] }; extended_entities?: { media?: TwitterMedia[] } };

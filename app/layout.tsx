@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import Script from "next/script";
 import Header from "@/components/Header";
 import DeployBanner from "@/components/DeployBanner";
+import { NavigationProgress } from "@/components/NavigationProgress";
 import Footer from "@/components/Footer";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {/* Google Tag Manager (noscript) */}
         <noscript dangerouslySetInnerHTML={{ __html: '<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-56CDQRKW" height="0" width="0" style="display:none;visibility:hidden"></iframe>' }} />
+        <NavigationProgress />
         <DeployBanner />
         <Header />
         <main className="mx-auto w-full max-w-screen-xl flex-1 px-4 sm:px-6 lg:px-8 py-10">

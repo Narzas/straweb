@@ -223,7 +223,6 @@ export default function SmartMoneyDashboardSection({
     <section>
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300">🧠 스마트머니 동향</h2>
-        <p className="text-[11px] text-gray-400">{subtitle}</p>
       </div>
       <div className="flex gap-2 mb-3 p-1 bg-gray-100 dark:bg-slate-800 rounded-xl">
         {TABS.map((t) => (

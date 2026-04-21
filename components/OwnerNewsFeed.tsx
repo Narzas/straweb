@@ -80,16 +80,19 @@ async function gtranslate(text: string): Promise<string> {
   return (data[0] as [string, string][]).map((s) => s[0]).join("");
 }
 
+const TEXT_THRESHOLD = 300;
+
 function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boolean }) {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [translated, setTranslated] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const photos = post.photos ?? [];
   const hasMultiple = photos.length > 1;
 
-  useEffect(() => { setPhotoIdx(0); }, [post.id]);
+  useEffect(() => { setPhotoIdx(0); setExpanded(false); }, [post.id]);
 
   async function handleTranslate() {
     if (!post.text) return;
@@ -109,7 +112,7 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
       {lightboxSrc && (
         <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
       )}
-      <div className="h-full rounded-lg border-l-2 border-indigo-400 dark:border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/20 overflow-hidden select-none flex flex-col">
+      <div className="rounded-lg border-l-2 border-indigo-400 dark:border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/20 overflow-hidden select-none">
         {photos.length > 0 && (
           <div className="relative flex-shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -146,10 +149,26 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
           </div>
         )}
         {post.text && (
-          <div className="px-3 pt-2.5 flex-1 overflow-y-auto">
-            <p className="text-[13px] leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words font-medium">
-              {translated ?? post.text}
-            </p>
+          <div className="px-3 pt-2.5">
+            {(() => {
+              const displayText = translated ?? post.text;
+              const isLong = displayText.length > TEXT_THRESHOLD;
+              return (
+                <>
+                  <p className={`text-[13px] leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words font-medium ${isLong && !expanded ? "line-clamp-8" : ""}`}>
+                    {displayText}
+                  </p>
+                  {isLong && (
+                    <button
+                      onClick={() => setExpanded((v) => !v)}
+                      className="mt-1 text-[11px] font-semibold text-indigo-400 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                    >
+                      {expanded ? "접기 ▲" : "더보기 ▼"}
+                    </button>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
         <div className="px-3 py-2 flex items-center justify-between flex-shrink-0">
@@ -271,25 +290,23 @@ export default function OwnerNewsFeed() {
   }, []);
 
   const currentPost = feeds[currentIdx]?.post;
-
   return (
     <div>
       {/* 슬라이드 영역 */}
-      <div className="overflow-hidden">
-        <div
-          className="flex items-stretch transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateX(-${currentIdx * 100}%)` }}
-        >
-          {ACCOUNTS.map((a, i) => (
-            <div key={i} className="w-full flex-shrink-0">
-              {feeds[i].post ? (
-                <PostCard post={feeds[i].post!} noTranslate={a.noTranslate} />
-              ) : (
-                <FeedPlaceholder />
-              )}
-            </div>
-          ))}
-        </div>
+      <div>
+        {ACCOUNTS.map((a, i) => (
+          <div
+            key={i}
+            className="transition-opacity duration-300"
+            style={{ display: i === currentIdx ? "block" : "none" }}
+          >
+            {feeds[i].post ? (
+              <PostCard post={feeds[i].post!} noTranslate={a.noTranslate} />
+            ) : (
+              <FeedPlaceholder />
+            )}
+          </div>
+        ))}
       </div>
 
       {/* 하단: 점 인디케이터 + 좌우 버튼 */}

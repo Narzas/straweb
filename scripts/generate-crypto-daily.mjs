@@ -353,36 +353,44 @@ function resampleCloses(prices, intervalHours) {
 }
 
 async function fetchRsiHeatmap() {
-  // Binance 전체 USDT 스팟 심볼 동적 취득 → RSI 정렬로 과매수/과매도 추출
-  const infoRes = await safeFetch("https://api.binance.com/api/v3/exchangeInfo", {}, 30_000);
-  if (!infoRes) return null;
-  const infoData = await infoRes.json();
-  const symbols = infoData.symbols
-    .filter((s) => s.quoteAsset === "USDT" && s.status === "TRADING")
-    .map((s) => s.symbol);
+  // OKX 거래량 상위 100개 USDT 스팟 심볼 취득 (US 서버 geo-block 없음)
+  const tickersRes = await safeFetch(
+    "https://www.okx.com/api/v5/market/tickers?instType=SPOT",
+    {},
+    15_000
+  );
+  if (!tickersRes) return null;
+  const tickersData = await tickersRes.json();
+  if (tickersData.code !== "0" || !Array.isArray(tickersData.data)) return null;
 
-  // 배치 처리로 rate limit 회피 (동시 20개씩, 배치 간 200ms 대기)
-  const BATCH = 20;
+  const symbols = tickersData.data
+    .filter((t) => t.instId.endsWith("-USDT"))
+    .sort((a, b) => parseFloat(b.volCcy24h) - parseFloat(a.volCcy24h))
+    .slice(0, 100)
+    .map((t) => t.instId);
+
+  // 배치 처리 (동시 10개씩, 배치 간 300ms 대기)
+  const BATCH = 10;
   const results = [];
   for (let i = 0; i < symbols.length; i += BATCH) {
     const batch = symbols.slice(i, i + BATCH);
     const batchResults = await Promise.all(
-      batch.map(async (sym) => {
+      batch.map(async (instId) => {
         try {
           const res = await safeFetch(
-            `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=4h&limit=700`,
+            `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=4H&limit=300`,
             {},
-            20_000
+            15_000
           );
           if (!res) return null;
-          const klines = await res.json();
-          if (!Array.isArray(klines) || klines.length < 30) return null;
-          const c4h = klines.map((k) => parseFloat(k[4]));
+          const data = await res.json();
+          if (data.code !== "0" || !Array.isArray(data.data) || data.data.length < 30) return null;
+          // OKX klines: [ts, open, high, low, close, ...] — 최신이 먼저 → reverse
+          const c4h = data.data.map((k) => parseFloat(k[4])).reverse();
           const c1d = c4h.filter((_, i) => (i + 1) % 6 === 0);
           const c1w = c4h.filter((_, i) => (i + 1) % 42 === 0);
-          const label = sym.replace("USDT", "");
           return {
-            symbol: label,
+            symbol: instId.replace("-USDT", ""),
             rsi_4h: calcRSI(c4h),
             rsi_1d: calcRSI(c1d),
             rsi_1w: calcRSI(c1w),
@@ -393,15 +401,14 @@ async function fetchRsiHeatmap() {
       })
     );
     results.push(...batchResults);
-    if (i + BATCH < symbols.length) await new Promise((r) => setTimeout(r, 200));
+    if (i + BATCH < symbols.length) await new Promise((r) => setTimeout(r, 1000));
   }
 
   const valid = results.filter((r) => r && r.rsi_4h != null);
   if (!valid.length) return null;
-  const overbought = valid.filter((r) => r.rsi_4h >= 70).sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 8);
-  const oversold   = valid.filter((r) => r.rsi_4h <= 30).sort((a, b) => a.rsi_4h - b.rsi_4h).slice(0, 8);
-  // 히트맵용 전체 데이터: RSI 내림차순, 최대 80개
-  const all = valid.sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 80);
+  const overbought = valid.filter((r) => r.rsi_4h >= 70).sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 10);
+  const oversold   = valid.filter((r) => r.rsi_4h <= 30).sort((a, b) => a.rsi_4h - b.rsi_4h).slice(0, 10);
+  const all = [...valid].sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 80);
   return { overbought, oversold, all };
 }
 
@@ -438,7 +445,7 @@ async function fetchPredictionMarkets() {
       signal: ctrl.signal,
       body: JSON.stringify({
         status: "active",
-        pagination: { page: 1, per_page: 5 },
+        pagination: { page: 1, per_page: 20 },
         order_by: [{ field: "volume", direction: "DESC" }],
         min_volume_24hr: 1000,
       }),
@@ -447,7 +454,9 @@ async function fetchPredictionMarkets() {
     if (!res.ok) return null;
     const json = await res.json();
     const rows = json.data ?? [];
-    return rows.slice(0, 5).map((r) => ({
+    // 상위 20개 풀에서 매 실행마다 5개 무작위 선택
+    const shuffled = rows.sort(() => Math.random() - 0.5).slice(0, 5);
+    return shuffled.map((r) => ({
       market_id: r.market_id ?? r.id,
       question: r.question ?? r.title,
       yes_price: r.yes_price ?? r.last_trade_price ?? r.outcome_prices?.[0] ?? null,

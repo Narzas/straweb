@@ -151,11 +151,10 @@ export default function DexChainsSection({
     return (
       <section>
         <style>{ANIM_STYLE}</style>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+          체인별 자금흐름 <span className="text-[11px] font-normal text-gray-400">24h</span>
+        </h2>
         <div className="rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-[#0c1320] shadow-sm dark:shadow-none overflow-hidden">
-          <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-            <h2 className="text-sm font-bold text-gray-800 dark:text-slate-200 tracking-wide">체인별 자금 흐름</h2>
-            <span className="text-[10px] text-gray-400 dark:text-slate-500 ml-auto">24h</span>
-          </div>
           <div className="px-3 pb-3">
             <svg viewBox={`0 0 ${W} ${svgH}`} className="w-full" style={{ display: "block", height: "auto" }}>
               <defs>
@@ -312,11 +311,10 @@ export default function DexChainsSection({
   return (
     <section>
       <style>{ANIM_STYLE}</style>
+      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+        체인별 자금흐름 <span className="text-[11px] font-normal text-gray-400">24h</span>
+      </h2>
       <div className="rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-[#0c1320] shadow-sm dark:shadow-none overflow-hidden">
-        <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-          <h2 className="text-sm font-bold text-gray-800 dark:text-slate-200 tracking-wide">체인별 자금 흐름</h2>
-          <span className="text-[10px] text-gray-400 dark:text-slate-500 ml-auto">24h</span>
-        </div>
         <div className="px-3 pb-3">
           <svg viewBox={`0 0 ${W} ${svgH}`} className="w-full" style={{ display: "block", height: "auto" }}>
             <defs>

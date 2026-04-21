@@ -98,9 +98,10 @@ async function fetchRsiHeatmap() {
 
   const valid = results.filter((r) => r && r.rsi_4h != null);
   if (!valid.length) return null;
-  const overbought = valid.filter((r) => r.rsi_4h >= 70).sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 10);
-  const oversold   = valid.filter((r) => r.rsi_4h <= 30).sort((a, b) => a.rsi_4h - b.rsi_4h).slice(0, 10);
-  const all = [...valid].sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 80);
+  const sorted = [...valid].sort((a, b) => b.rsi_4h - a.rsi_4h);
+  const overbought = sorted.slice(0, 5);
+  const oversold   = [...valid].sort((a, b) => a.rsi_4h - b.rsi_4h).slice(0, 5);
+  const all = sorted.slice(0, 80);
   console.log(`\n과매수 ${overbought.length}개, 과매도 ${oversold.length}개`);
   return { overbought, oversold, all };
 }

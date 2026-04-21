@@ -406,9 +406,10 @@ async function fetchRsiHeatmap() {
 
   const valid = results.filter((r) => r && r.rsi_4h != null);
   if (!valid.length) return null;
-  const overbought = valid.filter((r) => r.rsi_4h >= 70).sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 10);
-  const oversold   = valid.filter((r) => r.rsi_4h <= 30).sort((a, b) => a.rsi_4h - b.rsi_4h).slice(0, 10);
-  const all = [...valid].sort((a, b) => b.rsi_4h - a.rsi_4h).slice(0, 80);
+  const sorted = [...valid].sort((a, b) => b.rsi_4h - a.rsi_4h);
+  const overbought = sorted.slice(0, 5);
+  const oversold   = [...valid].sort((a, b) => a.rsi_4h - b.rsi_4h).slice(0, 5);
+  const all = sorted.slice(0, 80);
   return { overbought, oversold, all };
 }
 
@@ -668,6 +669,8 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
   const btcDom = market?.btc_dominance;
   const coins = market?.coins ?? [];
 
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
   // 시장 심리 판단
   let sentiment, sentimentDetail;
   if (change == null) {
@@ -675,35 +678,99 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
     sentimentDetail = "오늘 시장 데이터를 불러오지 못했습니다.";
   } else if (change >= 5) {
     sentiment = "강한 상승장";
-    sentimentDetail = `전체 시장이 ${change.toFixed(1)}% 급등했습니다. 강한 매수세가 유입되고 있습니다.`;
+    sentimentDetail = pick([
+      `전체 시장이 ${change.toFixed(1)}% 급등했습니다. 강한 매수세가 유입되고 있습니다.`,
+      `시장 전반이 ${change.toFixed(1)}% 폭등했습니다. 공격적인 매수가 시장을 이끌고 있습니다.`,
+      `${change.toFixed(1)}% 급등 — 전방위 매수세가 쏟아지고 있습니다.`,
+      `전체 시총이 ${change.toFixed(1)}% 뛰었습니다. 단기 모멘텀이 매우 강합니다.`,
+      `시장이 ${change.toFixed(1)}% 폭등하며 강세 신호를 보내고 있습니다.`,
+    ]);
   } else if (change >= 2) {
     sentiment = "상승세";
-    sentimentDetail = `전체 시장이 ${change.toFixed(1)}% 올랐습니다. 긍정적인 흐름이 이어지고 있습니다.`;
+    sentimentDetail = pick([
+      `전체 시장이 ${change.toFixed(1)}% 올랐습니다. 긍정적인 흐름이 이어지고 있습니다.`,
+      `시장이 ${change.toFixed(1)}% 상승하며 매수 우위 흐름이 나타나고 있습니다.`,
+      `${change.toFixed(1)}% 상승 — 시장 전반에 걸쳐 매수세가 살아있습니다.`,
+      `전체 시총이 ${change.toFixed(1)}% 늘었습니다. 상승 모멘텀이 유지되고 있습니다.`,
+      `시장이 ${change.toFixed(1)}% 올라 긍정적인 방향으로 움직이고 있습니다.`,
+    ]);
   } else if (change >= 0) {
     sentiment = "보합 상승";
-    sentimentDetail = `전체 시장이 소폭 ${change.toFixed(1)}% 상승했습니다. 방향성을 탐색하는 분위기입니다.`;
+    sentimentDetail = pick([
+      `전체 시장이 소폭 ${change.toFixed(1)}% 상승했습니다. 방향성을 탐색하는 분위기입니다.`,
+      `${change.toFixed(1)}% 소폭 상승 — 뚜렷한 방향 없이 관망세가 이어지고 있습니다.`,
+      `시장이 ${change.toFixed(1)}% 오르며 보합권에 머물고 있습니다.`,
+      `소폭 ${change.toFixed(1)}% 상승 — 큰 움직임 없이 숨고르기 중입니다.`,
+      `전체 시총이 미미하게 ${change.toFixed(1)}% 올랐습니다. 명확한 방향성이 부재합니다.`,
+    ]);
   } else if (change >= -2) {
     sentiment = "보합 하락";
-    sentimentDetail = `전체 시장이 소폭 ${Math.abs(change).toFixed(1)}% 하락했습니다. 관망세가 우세합니다.`;
+    sentimentDetail = pick([
+      `전체 시장이 소폭 ${Math.abs(change).toFixed(1)}% 하락했습니다. 관망세가 우세합니다.`,
+      `${Math.abs(change).toFixed(1)}% 소폭 하락 — 뚜렷한 매도세 없이 소화 중인 구간입니다.`,
+      `시장이 ${Math.abs(change).toFixed(1)}% 밀리며 보합권을 유지하고 있습니다.`,
+      `소폭 ${Math.abs(change).toFixed(1)}% 조정 — 단기 방향성이 불분명합니다.`,
+      `전체 시총이 ${Math.abs(change).toFixed(1)}% 내렸습니다. 시장이 추가 신호를 기다리고 있습니다.`,
+    ]);
   } else if (change >= -5) {
     sentiment = "하락세";
-    sentimentDetail = `전체 시장이 ${Math.abs(change).toFixed(1)}% 내렸습니다. 매도 압력이 커지고 있습니다.`;
+    sentimentDetail = pick([
+      `전체 시장이 ${Math.abs(change).toFixed(1)}% 내렸습니다. 매도 압력이 커지고 있습니다.`,
+      `시장이 ${Math.abs(change).toFixed(1)}% 하락하며 약세 흐름이 형성되고 있습니다.`,
+      `${Math.abs(change).toFixed(1)}% 하락 — 매도세가 확산되고 있습니다.`,
+      `전체 시총이 ${Math.abs(change).toFixed(1)}% 줄었습니다. 단기 하락 압력에 주의가 필요합니다.`,
+      `시장이 ${Math.abs(change).toFixed(1)}% 빠지며 약세 신호를 보내고 있습니다.`,
+    ]);
   } else {
     sentiment = "강한 하락장";
-    sentimentDetail = `전체 시장이 ${Math.abs(change).toFixed(1)}% 급락했습니다. 강한 매도세가 나타나고 있습니다.`;
+    sentimentDetail = pick([
+      `전체 시장이 ${Math.abs(change).toFixed(1)}% 급락했습니다. 강한 매도세가 나타나고 있습니다.`,
+      `시장이 ${Math.abs(change).toFixed(1)}% 폭락했습니다. 공포 심리가 급격히 확산되고 있습니다.`,
+      `${Math.abs(change).toFixed(1)}% 급락 — 전방위 투매가 쏟아지고 있습니다.`,
+      `전체 시총이 ${Math.abs(change).toFixed(1)}% 증발했습니다. 단기 바닥 확인이 필요합니다.`,
+      `시장이 ${Math.abs(change).toFixed(1)}% 붕괴하며 강한 하락장 신호를 보내고 있습니다.`,
+    ]);
   }
 
   // BTC 도미넌스 해석
   let marketComment = null;
   if (btcDom != null) {
     if (btcDom >= 58)
-      marketComment = `BTC 도미넌스 ${btcDom.toFixed(1)}% — 비트코인이 시장을 독주하는 전형적인 BTC 시즌입니다.`;
+      marketComment = pick([
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 비트코인이 시장을 독주하는 전형적인 BTC 시즌입니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 자금이 비트코인에 집중되고, 알트는 소외되고 있습니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — BTC가 시장 주도권을 확실히 쥐고 있습니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 비트코인 독주 구간, 알트 반등은 제한적입니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 전형적인 BTC 시즌, 알트코인 자금 이탈이 지속 중입니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 비트코인이 시장 유동성을 흡수하고 있습니다.`,
+      ]);
     else if (btcDom >= 52)
-      marketComment = `BTC 도미넌스 ${btcDom.toFixed(1)}% — 비트코인 우세 장세, 알트코인은 상대적으로 부진합니다.`;
+      marketComment = pick([
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 비트코인 우세 장세, 알트코인은 상대적으로 부진합니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 비트코인이 주도권을 쥔 구간, 알트 반등은 제한적입니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 자금이 BTC에 집중되는 흐름, 알트 시즌과는 거리가 있습니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — BTC 강세 구간, 알트 선별적 접근이 필요합니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 비트코인이 시장을 이끄는 흐름이 계속되고 있습니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 알트코인 약세가 지속, BTC 중심 장세입니다.`,
+      ]);
     else if (btcDom >= 47)
-      marketComment = `BTC 도미넌스 ${btcDom.toFixed(1)}% — BTC·알트 균형 구간, 자금이 고르게 분산되어 있습니다.`;
+      marketComment = pick([
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — BTC·알트 균형 구간, 자금이 고르게 분산되어 있습니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — BTC와 알트가 균형을 이루는 중립 구간입니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 자금 흐름이 고르게 분산, 방향성이 불분명합니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — BTC와 알트가 혼재하는 균형 장세입니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 중립 구간, BTC 시즌과 알트 시즌의 경계에 있습니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 자금이 BTC와 알트에 골고루 유입되는 흐름입니다.`,
+      ]);
     else
-      marketComment = `BTC 도미넌스 ${btcDom.toFixed(1)}% — 알트코인에 자금이 쏠리는 알트 시즌 신호입니다.`;
+      marketComment = pick([
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 알트코인에 자금이 쏠리는 알트 시즌 신호입니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 자금이 알트로 이동 중, 알트 시즌 가능성이 높아졌습니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 알트코인 강세 구간, 비트코인 도미넌스가 낮아지고 있습니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 알트 자금 유입 가속화, 알트 시즌 흐름이 감지됩니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 알트코인이 비트코인을 아웃퍼폼하는 구간입니다.`,
+        `BTC 도미넌스 ${btcDom.toFixed(1)}% — 전형적인 알트 시즌 신호, 알트 강세 흐름에 주목하세요.`,
+      ]);
   }
 
   // 주요 코인 흐름
@@ -712,9 +779,21 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
   let coinComment = null;
   if (coins.length > 0) {
     if (upCoins.length === coins.length)
-      coinComment = `주요 코인 ${coins.length}개 모두 상승 — 전반적인 매수 분위기가 형성됐습니다.`;
+      coinComment = pick([
+        `주요 코인 ${coins.length}개 모두 상승 — 전반적인 매수 분위기가 형성됐습니다.`,
+        `주요 코인 ${coins.length}개 전부 플러스 — 시장 전체에 매수세가 확산되고 있습니다.`,
+        `전 종목 상승 — 강한 시장 분위기가 형성됐습니다.`,
+        `주요 코인 모두 상승권 — 투자 심리가 전반적으로 개선되고 있습니다.`,
+        `${coins.length}개 전 종목 상승 — 리스크온 흐름이 뚜렷합니다.`,
+      ]);
     else if (downCoins.length === coins.length)
-      coinComment = `주요 코인 ${coins.length}개 모두 하락 — 전반적인 위험 회피 심리가 우세합니다.`;
+      coinComment = pick([
+        `주요 코인 ${coins.length}개 모두 하락 — 전반적인 위험 회피 심리가 우세합니다.`,
+        `주요 코인 ${coins.length}개 전부 마이너스 — 시장 전체에 매도세가 퍼지고 있습니다.`,
+        `전 종목 하락 — 리스크오프 심리가 확산되고 있습니다.`,
+        `주요 코인 모두 하락권 — 투자 심리가 전반적으로 위축됐습니다.`,
+        `${coins.length}개 전 종목 하락 — 강한 매도 압력이 시장을 짓누르고 있습니다.`,
+      ]);
     else {
       const btc = coins.find((c) => c.id === "bitcoin");
       const eth = coins.find((c) => c.id === "ethereum");
@@ -722,13 +801,37 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
         const btcUp = btc.price_change_percentage_24h > 0;
         const ethUp = eth.price_change_percentage_24h > 0;
         if (btcUp && !ethUp)
-          coinComment = `BTC 상승, ETH 하락 — 비트코인 단독 강세가 나타나고 있습니다.`;
+          coinComment = pick([
+            `BTC 상승, ETH 하락 — 비트코인 단독 강세가 나타나고 있습니다.`,
+            `BTC는 오르고 ETH는 내리는 BTC 단독 장세입니다.`,
+            `BTC 강세, ETH 부진 — 비트코인 중심의 편중 흐름이 감지됩니다.`,
+            `BTC가 ETH를 아웃퍼폼하는 흐름, 비트코인 단독 수요가 유입되고 있습니다.`,
+            `${upCoins.length}개 상승, ${downCoins.length}개 하락 — BTC 주도의 차별화 장세입니다.`,
+          ]);
         else if (!btcUp && ethUp)
-          coinComment = `ETH 상승, BTC 하락 — 이더리움 중심의 알트 흐름이 감지됩니다.`;
+          coinComment = pick([
+            `ETH 상승, BTC 하락 — 이더리움 중심의 알트 흐름이 감지됩니다.`,
+            `ETH가 BTC를 아웃퍼폼 — 이더리움 수요가 부각되고 있습니다.`,
+            `BTC 부진, ETH 강세 — 알트 선호 심리가 이더리움에 집중되고 있습니다.`,
+            `ETH 단독 강세 — 이더리움 중심의 자금 흐름이 포착됩니다.`,
+            `${upCoins.length}개 상승, ${downCoins.length}개 하락 — ETH 주도의 차별화 장세입니다.`,
+          ]);
         else
-          coinComment = `${upCoins.length}개 상승, ${downCoins.length}개 하락 — 종목별 차별화 장세입니다.`;
+          coinComment = pick([
+            `${upCoins.length}개 상승, ${downCoins.length}개 하락 — 종목별 차별화 장세입니다.`,
+            `${upCoins.length}개 상승 vs ${downCoins.length}개 하락 — 혼조세 속 선별적 흐름입니다.`,
+            `상승 ${upCoins.length}개, 하락 ${downCoins.length}개 — 뚜렷한 방향 없이 종목별로 갈리고 있습니다.`,
+            `${upCoins.length}개가 오르고 ${downCoins.length}개가 내리는 혼재 장세입니다.`,
+            `종목별 등락이 엇갈리는 차별화 장세가 이어지고 있습니다.`,
+          ]);
       } else {
-        coinComment = `${upCoins.length}개 상승, ${downCoins.length}개 하락 — 혼조세가 이어지고 있습니다.`;
+        coinComment = pick([
+          `${upCoins.length}개 상승, ${downCoins.length}개 하락 — 혼조세가 이어지고 있습니다.`,
+          `상승 ${upCoins.length}개, 하락 ${downCoins.length}개 — 방향성이 엇갈리는 장세입니다.`,
+          `${upCoins.length}개가 오르고 ${downCoins.length}개가 밀리는 혼재 흐름입니다.`,
+          `뚜렷한 방향 없이 종목별로 등락이 엇갈리고 있습니다.`,
+          `상승·하락 혼재 — 단기 방향성이 불분명한 구간입니다.`,
+        ]);
       }
     }
   }
@@ -737,7 +840,14 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
   let trendingComment = null;
   if (trending?.length > 0) {
     const top3 = trending.slice(0, 3).map((c) => c.name).join(", ");
-    trendingComment = `${top3} 등이 검색 상위권 — 시장의 관심이 집중된 종목들입니다.`;
+    trendingComment = pick([
+      `${top3} 등이 검색 상위권 — 시장의 관심이 집중된 종목들입니다.`,
+      `${top3} 등이 트렌딩 상위권 — 단기 테마 수요가 집중되고 있습니다.`,
+      `${top3} 등이 급부상 — 투자자들의 이목이 쏠리고 있습니다.`,
+      `트렌딩 1~3위: ${top3} — 시장 관심이 이 종목들에 집중되고 있습니다.`,
+      `${top3} 등이 검색 급상승 — 단기 모멘텀이 발생하고 있습니다.`,
+      `${top3} 등에 관심이 몰리고 있습니다. 단기 테마 흐름에 주목하세요.`,
+    ]);
   }
 
   // 체인 자금 흐름 코멘트
@@ -751,11 +861,28 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
       const inAmt = Math.abs(topIn.flow_usd) >= 1e9
         ? `$${(Math.abs(topIn.flow_usd) / 1e9).toFixed(1)}B`
         : `$${(Math.abs(topIn.flow_usd) / 1e6).toFixed(0)}M`;
-      dexComment = `${topIn.chain}에 ${inAmt} 유입 — 자금이 집중되고 있습니다. ${topOut.chain}은(는) 상대적으로 이탈 중.`;
+      dexComment = pick([
+        `${topIn.chain}에 ${inAmt} 유입 — 자금이 집중되고 있습니다. ${topOut.chain}은(는) 상대적으로 이탈 중.`,
+        `온체인 자금이 ${topIn.chain}으로 ${inAmt} 몰리고 있습니다. ${topOut.chain}은 유출 흐름.`,
+        `${topIn.chain} ${inAmt} 순유입 — 체인별 자금 쏠림이 뚜렷합니다. ${topOut.chain}은 이탈 중.`,
+        `자금이 ${topIn.chain}으로 집중(${inAmt}), ${topOut.chain}에서는 이탈이 이어지고 있습니다.`,
+        `${topIn.chain}이 온체인 유입을 주도(${inAmt}), ${topOut.chain}은 상대적으로 소외되고 있습니다.`,
+        `체인 자금 흐름: ${topIn.chain} 유입 강세(${inAmt}) vs ${topOut.chain} 이탈.`,
+      ]);
     } else if (topIn) {
-      dexComment = `${topIn.chain} 중심으로 온체인 자금 유입이 활발합니다.`;
+      dexComment = pick([
+        `${topIn.chain} 중심으로 온체인 자금 유입이 활발합니다.`,
+        `전반적으로 온체인 자금이 유입되는 흐름, ${topIn.chain}이 선두입니다.`,
+        `${topIn.chain}을 중심으로 온체인 매수세가 강하게 유입되고 있습니다.`,
+        `온체인 자금 유입 우세 — ${topIn.chain}이 가장 많은 유입을 기록 중입니다.`,
+      ]);
     } else if (topOut) {
-      dexComment = `전반적으로 온체인 자금 이탈 흐름이 감지됩니다.`;
+      dexComment = pick([
+        `전반적으로 온체인 자금 이탈 흐름이 감지됩니다.`,
+        `온체인 자금이 빠져나가는 흐름, 단기 주의가 필요합니다.`,
+        `전체 체인에서 자금 유출 흐름이 우세합니다.`,
+        `온체인 매도 압력이 확산되고 있습니다. 유출 흐름에 주목하세요.`,
+      ]);
     }
   }
 
@@ -765,15 +892,45 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
     const v = fearGreed.value;
     const label = fearGreed.classification_ko;
     if (v <= 25)
-      fngComment = `공포·탐욕 지수 ${v} (${label}) — 시장 참여자들이 극도로 위축돼 있습니다. 과거 바닥권 신호일 수 있습니다.`;
+      fngComment = pick([
+        `공포·탐욕 지수 ${v} (${label}) — 시장 참여자들이 극도로 위축돼 있습니다. 과거 바닥권 신호일 수 있습니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 극단적 공포 구간, 역발상 매수의 기회일 수 있습니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 투자 심리가 바닥 수준입니다. 과거 저점과 유사한 구간입니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 공포가 극단에 달했습니다. 추가 하락 또는 반등의 기로입니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 시장 참여자 대부분이 공포를 느끼는 구간입니다.`,
+      ]);
     else if (v <= 45)
-      fngComment = `공포·탐욕 지수 ${v} (${label}) — 투자 심리가 위축돼 있습니다. 신중한 접근이 필요합니다.`;
+      fngComment = pick([
+        `공포·탐욕 지수 ${v} (${label}) — 투자 심리가 위축돼 있습니다. 신중한 접근이 필요합니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 공포 심리가 우세한 구간, 변동성에 주의하세요.`,
+        `공포·탐욕 지수 ${v} (${label}) — 투자자들이 방어적으로 움직이고 있습니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 심리 위축 구간, 무리한 추격 매수는 피하는 게 좋습니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 시장 불안 심리가 여전히 남아있습니다.`,
+      ]);
     else if (v <= 55)
-      fngComment = `공포·탐욕 지수 ${v} (${label}) — 시장 심리가 균형 상태입니다. 방향성을 탐색 중입니다.`;
+      fngComment = pick([
+        `공포·탐욕 지수 ${v} (${label}) — 시장 심리가 균형 상태입니다. 방향성을 탐색 중입니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 공포도 탐욕도 아닌 중립 구간입니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 투자 심리가 안정적입니다. 다음 방향성에 주목하세요.`,
+        `공포·탐욕 지수 ${v} (${label}) — 시장이 숨고르기 중입니다. 추세 확인 후 대응이 필요합니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 매수·매도 심리가 균형을 이루고 있습니다.`,
+      ]);
     else if (v <= 75)
-      fngComment = `공포·탐욕 지수 ${v} (${label}) — 투자 심리가 낙관적입니다. 과열 여부를 주시해야 합니다.`;
+      fngComment = pick([
+        `공포·탐욕 지수 ${v} (${label}) — 투자 심리가 낙관적입니다. 과열 여부를 주시해야 합니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 탐욕 구간 진입, 단기 과열 가능성을 염두에 두세요.`,
+        `공포·탐욕 지수 ${v} (${label}) — 시장 심리가 강세로 기울었습니다. 고점 경계가 필요합니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 낙관론이 우세하지만 과열 신호는 아직입니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 투자 심리가 달아오르고 있습니다. 분할 매도를 고려할 구간입니다.`,
+      ]);
     else
-      fngComment = `공포·탐욕 지수 ${v} (${label}) — 시장이 극도로 과열돼 있습니다. 단기 조정 가능성에 유의하세요.`;
+      fngComment = pick([
+        `공포·탐욕 지수 ${v} (${label}) — 시장이 극도로 과열돼 있습니다. 단기 조정 가능성에 유의하세요.`,
+        `공포·탐욕 지수 ${v} (${label}) — 극단적 탐욕 구간, 과거 고점과 겹치는 신호입니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 탐욕이 최고조에 달했습니다. 리스크 관리가 필요합니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 시장 과열 경보, 단기 매도 압력이 높아질 수 있습니다.`,
+        `공포·탐욕 지수 ${v} (${label}) — 모두가 낙관적일 때가 가장 위험합니다. 고점 주의.`,
+      ]);
   }
 
   // 스마트머니 넷플로우 코멘트
@@ -790,11 +947,27 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
     const totalOut = netflows.reduce((s, n) => s + (n.net_flow_24h_usd < 0 ? Math.abs(n.net_flow_24h_usd) : 0), 0);
     if (topIn && topOut) {
       const dominant = totalIn > totalOut ? "순유입" : "순유출";
-      netflowComment = `순유입: ${topIn.token_symbol} / 순유출: ${topOut.token_symbol}\n전반적 ${dominant} 기조.`;
+      netflowComment = pick([
+        `순유입: ${topIn.token_symbol} / 순유출: ${topOut.token_symbol}\n전반적 ${dominant} 기조.`,
+        `스마트머니 ${dominant} 우세 — ${topIn.token_symbol} 매집, ${topOut.token_symbol} 이탈 포착.`,
+        `${topIn.token_symbol} 유입 vs ${topOut.token_symbol} 유출 — 전반적으로 ${dominant} 흐름입니다.`,
+        `스마트머니가 ${topIn.token_symbol}을 담고 ${topOut.token_symbol}을 덜어내는 흐름입니다.`,
+        `${dominant} 기조 속 ${topIn.token_symbol} 강한 유입, ${topOut.token_symbol} 지속 이탈 중.`,
+      ]);
     } else if (topIn) {
-      netflowComment = `전 종목 스마트머니 순유입 우세, ${topIn.token_symbol} 선두\n단기 매수세 강화 흐름 지속 중.`;
+      netflowComment = pick([
+        `전 종목 스마트머니 순유입 우세, ${topIn.token_symbol} 선두\n단기 매수세 강화 흐름 지속 중.`,
+        `스마트머니가 전반적으로 유입되는 흐름, ${topIn.token_symbol}이 가장 강합니다.`,
+        `${topIn.token_symbol} 중심으로 스마트머니 순매수가 집중되고 있습니다.`,
+        `전 종목 유입 우세 — ${topIn.token_symbol}이 스마트머니 매집을 주도하고 있습니다.`,
+      ]);
     } else if (topOut) {
-      netflowComment = `전 종목 스마트머니 순유출 우세, ${topOut.token_symbol} 선두\n단기 매도 압력 확대 가능성 주시 필요.`;
+      netflowComment = pick([
+        `전 종목 스마트머니 순유출 우세, ${topOut.token_symbol} 선두\n단기 매도 압력 확대 가능성 주시 필요.`,
+        `스마트머니가 전반적으로 빠져나가는 흐름, ${topOut.token_symbol} 이탈이 가장 큽니다.`,
+        `${topOut.token_symbol} 중심으로 스마트머니 순매도가 집중되고 있습니다.`,
+        `전 종목 유출 우세 — ${topOut.token_symbol}에서 스마트머니 이탈이 가속화되고 있습니다.`,
+      ]);
     }
   }
 

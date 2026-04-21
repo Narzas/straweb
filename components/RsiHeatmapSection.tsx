@@ -13,7 +13,7 @@ type RsiData = {
   all?: RsiItem[];
 };
 
-const CHART_H = 260;
+const CHART_H = 200;
 const Y_AXIS_W = 32;
 const PAD_X = 16;
 const DOT_R = 7;
@@ -52,9 +52,9 @@ export default function RsiHeatmapSection({ data }: { data: RsiData }) {
       <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
         📈 RSI 산점도 <span className="text-[11px] font-normal text-gray-400">(4H 기준)</span>
       </h2>
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 overflow-x-auto">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 pt-4 pb-0 overflow-x-auto">
         <svg
-          viewBox={`0 0 ${totalW_ref} ${CHART_H + 24}`}
+          viewBox={`0 -10 ${totalW_ref} ${CHART_H + 34}`}
           className="w-full"
           style={{ minWidth: 320, maxWidth: "100%" }}
         >

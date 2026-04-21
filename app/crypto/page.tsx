@@ -6,7 +6,6 @@ import RightSidebar from "@/components/RightSidebar";
 import MarketSentimentSection from "@/components/MarketSentimentSection";
 import SmartMoneyDashboardSection from "@/components/SmartMoneyDashboardSection";
 import PredictionMarketsSection from "@/components/PredictionMarketsSection";
-import { CryptoTicker } from "@/components/CryptoTicker";
 import SectorPerformanceSection from "@/components/SectorPerformanceSection";
 import GainersLosersSection from "@/components/GainersLosersSection";
 import RsiHeatmapSection from "@/components/RsiHeatmapSection";
@@ -399,9 +398,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           </div>
         </AnimatedSection>
 
-        <CryptoTicker />
-
-        {editorial?.rsi_heatmap && (
+{editorial?.rsi_heatmap && (
           <AnimatedSection delay={0.05}>
             <RsiHeatmapSection data={editorial.rsi_heatmap} />
           </AnimatedSection>

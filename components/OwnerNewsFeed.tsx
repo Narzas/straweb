@@ -109,9 +109,9 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
       {lightboxSrc && (
         <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
       )}
-      <div className="rounded-lg border-l-2 border-indigo-400 dark:border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/20 overflow-hidden select-none">
+      <div className="h-full rounded-lg border-l-2 border-indigo-400 dark:border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/20 overflow-hidden select-none flex flex-col">
         {photos.length > 0 && (
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={photos[photoIdx]}
@@ -146,13 +146,13 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
           </div>
         )}
         {post.text && (
-          <div className="px-3 pt-2.5 max-h-[16.5rem] overflow-y-auto">
+          <div className="px-3 pt-2.5 flex-1 overflow-y-auto">
             <p className="text-[13px] leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words font-medium">
               {translated ?? post.text}
             </p>
           </div>
         )}
-        <div className="px-3 pb-2 flex items-center justify-between">
+        <div className="px-3 py-2 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             {post.time && (
               <p className="text-[10px] text-indigo-400">
@@ -277,7 +277,7 @@ export default function OwnerNewsFeed() {
       {/* 슬라이드 영역 */}
       <div className="overflow-hidden">
         <div
-          className="flex transition-transform duration-300 ease-in-out"
+          className="flex items-stretch transition-transform duration-300 ease-in-out"
           style={{ transform: `translateX(-${currentIdx * 100}%)` }}
         >
           {ACCOUNTS.map((a, i) => (

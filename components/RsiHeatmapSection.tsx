@@ -32,6 +32,11 @@ function dotColor(rsi: number): { fill: string; stroke: string; label: string } 
   return { fill: "#94a3b8", stroke: "#64748b", label: "#f1f5f9" };
 }
 
+function dotRadius(rsi: number): number {
+  const dist = Math.max(rsi - 70, 30 - rsi, 0);
+  return DOT_R + Math.min(dist / 10, 1) * 4;
+}
+
 export default function RsiHeatmapSection({ data }: { data: RsiData }) {
   const { overbought, oversold } = data;
   if (!overbought.length && !oversold.length) return null;
@@ -69,12 +74,18 @@ export default function RsiHeatmapSection({ data }: { data: RsiData }) {
             </linearGradient>
           </defs>
           {/* 전체 배경 그라디언트 */}
+          <rect x={Y_AXIS_W} y={0} width={plotW + PAD_X} height={CHART_H} fill="url(#rsi-bg)" />
+          {/* 과매수 밴드 (RSI 70~100) */}
           <rect
-            x={Y_AXIS_W}
-            y={0}
-            width={plotW + PAD_X}
-            height={CHART_H}
-            fill="url(#rsi-bg)"
+            x={Y_AXIS_W} y={rsiToY(100)}
+            width={plotW + PAD_X} height={rsiToY(70) - rsiToY(100)}
+            fill="#ef4444" opacity={0.08}
+          />
+          {/* 과매도 밴드 (RSI 0~30) */}
+          <rect
+            x={Y_AXIS_W} y={rsiToY(30)}
+            width={plotW + PAD_X} height={rsiToY(0) - rsiToY(30)}
+            fill="#22c55e" opacity={0.08}
           />
 
           {/* 그리드 라인 */}
@@ -116,23 +127,24 @@ export default function RsiHeatmapSection({ data }: { data: RsiData }) {
             const cx = Y_AXIS_W + step * (i + 1);
             const cy = rsiToY(rsi);
             const { fill, stroke, label } = dotColor(rsi);
+            const r = dotRadius(rsi);
 
             return (
               <g key={item.symbol}>
                 {/* 수직 점선 */}
                 <line
-                  x1={cx} y1={cy + DOT_R + 1}
+                  x1={cx} y1={cy + r + 1}
                   x2={cx} y2={CHART_H}
                   stroke={fill}
                   strokeWidth={0.5}
                   opacity={0.25}
                 />
                 {/* 글로우 */}
-                <circle cx={cx} cy={cy} r={DOT_R + 4} fill={fill} opacity={0.12} />
+                <circle cx={cx} cy={cy} r={r + 4} fill={fill} opacity={0.12} />
                 {/* 점 */}
-                <circle cx={cx} cy={cy} r={DOT_R} fill={fill} stroke={stroke} strokeWidth={1.5} />
+                <circle cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} strokeWidth={1.5} />
                 {/* RSI 숫자 (점 위) */}
-                <text x={cx} y={cy - DOT_R - 3} textAnchor="middle" fontSize={8} fill={fill} fontWeight="700" fontFamily="monospace">
+                <text x={cx} y={cy - r - 3} textAnchor="middle" fontSize={8} fill={fill} fontWeight="700" fontFamily="monospace">
                   {rsi.toFixed(0)}
                 </text>
                 {/* 심볼 (하단) */}

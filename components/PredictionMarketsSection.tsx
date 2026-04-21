@@ -41,7 +41,7 @@ export default function PredictionMarketsSection({ items }: { items: PredictionM
           <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300">
             🔮 실시간 인기 예측 시장
           </h2>
-          <p className="text-[11px] text-gray-400 mt-0.5">Polymarket · 전체 카테고리 · 거래량순</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">Polymarket · 전체 카테고리 · 인기 마켓 중 선정</p>
         </div>
       </div>
 

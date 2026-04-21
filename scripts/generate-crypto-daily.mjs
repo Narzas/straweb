@@ -446,7 +446,7 @@ async function fetchPredictionMarkets() {
       signal: ctrl.signal,
       body: JSON.stringify({
         status: "active",
-        pagination: { page: 1, per_page: 20 },
+        pagination: { page: 1, per_page: 30 },
         order_by: [{ field: "volume", direction: "DESC" }],
         min_volume_24hr: 1000,
       }),

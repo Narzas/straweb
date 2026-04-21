@@ -62,30 +62,8 @@ export function CryptoTicker({
         .ticker-track:hover { animation-play-state: paused; }
       `}</style>
 
-      {/* 좌측 라벨 */}
-      <div
-        className="shrink-0 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase"
-        style={{
-          background: "rgba(99,102,241,0.12)",
-          border: "1px solid rgba(99,102,241,0.3)",
-          color: "#818cf8",
-        }}
-      >
-        <span
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            background: "#818cf8",
-            display: "inline-block",
-            animation: "pulse 1.5s ease-in-out infinite",
-          }}
-        />
-        LIVE
-      </div>
-
       {/* 좌측 페이드 */}
-      <div className="absolute left-[68px] top-0 bottom-0 w-12 z-10 pointer-events-none bg-gradient-to-r from-white dark:from-[#0f172a] to-transparent" />
+      <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-r from-white dark:from-[#0f172a] to-transparent" />
 
       {/* 티커 스크롤 영역 */}
       <div className="flex-1 overflow-hidden">

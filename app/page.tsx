@@ -141,16 +141,18 @@ export default async function HomePage() {
       {categories.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">카테고리</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          <div className="flex flex-wrap gap-2">
             {categories.map(({ name, count }) => (
               <Link
                 key={name}
                 href={`/category/${encodeURIComponent(name.toLowerCase())}`}
-                className="group flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-4 text-center shadow-sm transition-all hover:border-teal-400 dark:hover:border-cyan-500 hover:shadow-md hover:-translate-y-0.5"
+                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-all hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-700 dark:hover:text-indigo-400"
               >
-                <span className="text-2xl leading-none">{CATEGORY_ICONS[name] ?? "🗂️"}</span>
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors">{name}</span>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500">{count}개</span>
+                <span>{CATEGORY_ICONS[name] ?? "🗂️"}</span>
+                {name}
+                <span className="rounded-full bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  {count}
+                </span>
               </Link>
             ))}
           </div>

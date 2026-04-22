@@ -39,8 +39,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." }, { status: 429 });
   }
 
-  const body = await req.json();
-  const { post_slug, author, content, is_secret, password } = body;
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch {
+    return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
+  }
+  const post_slug = body.post_slug as string | undefined;
+  const author    = body.author    as string | undefined;
+  const content   = body.content   as string | undefined;
+  const is_secret = body.is_secret as boolean | undefined;
+  const password  = body.password  as string | undefined;
 
   if (!post_slug || !author?.trim() || !content?.trim()) {
     return NextResponse.json({ error: "필수 항목을 입력해 주세요." }, { status: 400 });
@@ -55,7 +62,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "비밀글은 비밀번호가 필요합니다." }, { status: 400 });
   }
 
-  const password_hash = is_secret ? await bcrypt.hash(password, 10) : null;
+  const password_hash = is_secret ? await bcrypt.hash(password as string, 10) : null;
 
   const supabase = createServiceClient();
   const { data, error } = await supabase

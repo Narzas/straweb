@@ -64,10 +64,10 @@ export default function Sidebar() {
       <ClockWeatherWidget />
 
       {/* 인기글 */}
-      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 border-l-2 border-l-amber-400 dark:border-l-amber-600 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-            🔥 인기글
+            <span aria-hidden="true">🔥</span> 인기글
           </p>
           <Link
             href="/posts"
@@ -110,11 +110,11 @@ export default function Sidebar() {
                   </Link>
                   <div className="mt-0.5 flex items-center gap-1.5">
                     <span className="text-[10px] text-gray-400">
-                      {CATEGORY_ICONS[post.category] ?? "🗂️"} {post.category}
+                      <span aria-hidden="true">{CATEGORY_ICONS[post.category] ?? "🗂️"}</span> {post.category}
                     </span>
                     <span className="text-[10px] text-gray-300 dark:text-slate-600">·</span>
                     <span className="text-[10px] text-gray-400 tabular-nums">
-                      👁 {fmtViews(post.views)}
+                      <span aria-hidden="true">👁</span> {fmtViews(post.views)}
                     </span>
                   </div>
                 </div>
@@ -125,16 +125,18 @@ export default function Sidebar() {
       </div>
 
       {/* 실시간 뉴스 */}
-      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 border-l-2 border-l-indigo-400 dark:border-l-indigo-600 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
           실시간 뉴스
         </p>
 
         {!newsLoading && categories.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1">
+          <div className="mb-3 flex flex-wrap gap-1" role="tablist" aria-label="뉴스 카테고리">
             {categories.map((cat, i) => (
               <button
                 key={cat.key}
+                role="tab"
+                aria-selected={i === activeTab}
                 onClick={() => setActiveTab(i)}
                 className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
                   i === activeTab

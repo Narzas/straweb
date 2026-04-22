@@ -50,7 +50,7 @@ export default function SmartMoneyNetflowsSection({ items }: { items: NetflowIte
     <section>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300">
+          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
             💸 스마트머니 넷플로우
           </h2>
           <p className="text-[11px] text-gray-400 mt-0.5">Nansen · 스테이블코인 제외 · 24h</p>

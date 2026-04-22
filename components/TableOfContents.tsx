@@ -29,7 +29,7 @@ export default function TableOfContents({ toc }: { toc: TocItem[] }) {
 
   return (
     <nav aria-label="Table of contents">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
         On this page
       </p>
       <ul className="space-y-1">
@@ -44,8 +44,8 @@ export default function TableOfContents({ toc }: { toc: TocItem[] }) {
               className={[
                 "block rounded py-0.5 text-sm transition-colors",
                 activeId === id
-                  ? "font-medium text-indigo-600"
-                  : "text-gray-500 hover:text-gray-900",
+                  ? "font-medium text-indigo-600 dark:text-indigo-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100",
               ].join(" ")}
             >
               {text}

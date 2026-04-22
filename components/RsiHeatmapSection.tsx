@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 type RsiItem = {
   symbol: string;
   rsi_4h: number | null;
@@ -39,6 +41,17 @@ function dotRadius(rsi: number): number {
 
 export default function RsiHeatmapSection({ data }: { data: RsiData }) {
   const { overbought, oversold } = data;
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const el = document.documentElement;
+    const update = () => setIsDark(el.classList.contains("dark"));
+    update();
+    const obs = new MutationObserver(update);
+    obs.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
   if (!overbought.length && !oversold.length) return null;
 
   const items = [
@@ -54,7 +67,7 @@ export default function RsiHeatmapSection({ data }: { data: RsiData }) {
 
   return (
     <section>
-      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
         📈 RSI 산점도 <span className="text-[11px] font-normal text-gray-400">(4H 기준)</span>
       </h2>
       <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 pt-4 pb-0 overflow-x-auto">
@@ -96,7 +109,7 @@ export default function RsiHeatmapSection({ data }: { data: RsiData }) {
               y1={rsiToY(v)}
               x2={totalW_ref}
               y2={rsiToY(v)}
-              stroke={v === 70 ? "#ef444460" : v === 30 ? "#22c55e60" : "#e2e8f0"}
+              stroke={v === 70 ? "#ef444460" : v === 30 ? "#22c55e60" : isDark ? "#334155" : "#e2e8f0"}
               strokeWidth={v === 70 || v === 30 ? 1.5 : 0.8}
               strokeDasharray={v === 70 || v === 30 ? "4 3" : "2 4"}
             />
@@ -148,7 +161,7 @@ export default function RsiHeatmapSection({ data }: { data: RsiData }) {
                   {rsi.toFixed(0)}
                 </text>
                 {/* 심볼 (하단) */}
-                <text x={cx} y={CHART_H + 14} textAnchor="middle" fontSize={8.5} fill="#64748b" fontWeight="600">
+                <text x={cx} y={CHART_H + 14} textAnchor="middle" fontSize={8.5} fill={isDark ? "#94a3b8" : "#64748b"} fontWeight="600">
                   {item.symbol.length > 5 ? item.symbol.slice(0, 5) : item.symbol}
                 </text>
               </g>
@@ -162,7 +175,7 @@ export default function RsiHeatmapSection({ data }: { data: RsiData }) {
             width={plotW + PAD_X}
             height={CHART_H}
             fill="none"
-            stroke="#e2e8f040"
+            stroke={isDark ? "#33415560" : "#e2e8f040"}
             strokeWidth={1}
           />
         </svg>

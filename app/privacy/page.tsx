@@ -63,34 +63,34 @@ export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-10">
       <section className="space-y-3">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900">Privacy Policy</h1>
-        <p className="text-sm text-gray-500">최종 업데이트: {LAST_UPDATED}</p>
-        <p className="text-gray-600 leading-relaxed">
+        <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Privacy Policy</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">최종 업데이트: {LAST_UPDATED}</p>
+        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
           StraWeb(이하 "본 블로그")은 이용자의 개인정보를 소중히 여기며, 관련 법령을 준수합니다.
           본 방침은 수집하는 정보의 종류와 이용 방법을 안내합니다.
         </p>
       </section>
 
-      <hr className="border-gray-200" />
+      <hr className="border-gray-200 dark:border-slate-700" />
 
       <div className="space-y-8">
         {sections.map(({ title, content }) => (
           <section key={title} className="space-y-3">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            <div className="text-sm leading-relaxed text-gray-600 whitespace-pre-line">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
+            <div className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 whitespace-pre-line">
               {content}
             </div>
           </section>
         ))}
       </div>
 
-      <hr className="border-gray-200" />
+      <hr className="border-gray-200 dark:border-slate-700" />
 
-      <section className="rounded-xl bg-gray-50 p-5 space-y-2">
-        <h2 className="font-semibold text-gray-900">문의</h2>
-        <p className="text-sm text-gray-600">
+      <section className="rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-5 space-y-2">
+        <h2 className="font-semibold text-gray-900 dark:text-gray-100">문의</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           개인정보 처리방침에 관한 문의사항은{" "}
-          <a href="/contact" className="text-indigo-600 underline hover:text-indigo-800">
+          <a href="/contact" className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800 dark:hover:text-indigo-300">
             문의 페이지
           </a>
           를 통해 접수해 주시기 바랍니다.

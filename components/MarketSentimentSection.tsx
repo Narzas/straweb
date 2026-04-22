@@ -20,15 +20,15 @@ function GaugeCell({ v, label, title }: { v: number; label: string; title: strin
 
   return (
     <div className="flex flex-col items-center py-3 px-2">
-      <p className="text-[10px] text-gray-500 font-medium mb-1 text-center">{title}</p>
+      <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium mb-1 text-center">{title}</p>
       <svg viewBox="0 0 108 60" style={{ width: 90, height: 50 }}>
-        <path d="M 10 54 A 44 44 0 0 1 98 54" fill="none" strokeWidth="8" strokeLinecap="round" stroke="#e5e7eb" />
+        <path d="M 10 54 A 44 44 0 0 1 98 54" fill="none" strokeWidth="8" strokeLinecap="round" className="stroke-gray-200 dark:stroke-slate-600" />
         <path d="M 10 54 A 44 44 0 0 1 98 54" fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" strokeDasharray={`${filled} ${arcLen}`} />
-        <text x="8" y="60" fontSize="7" textAnchor="middle" fill="#6b7280">0</text>
-        <text x="54" y="10" fontSize="7" textAnchor="middle" fill="#6b7280">50</text>
-        <text x="100" y="60" fontSize="7" textAnchor="middle" fill="#6b7280">100</text>
-        <line x1={cx} y1={cy} x2={nx} y2={ny} strokeWidth="2" strokeLinecap="round" stroke="#374151" />
-        <circle cx={cx} cy={cy} r="3.5" fill="#374151" />
+        <text x="8" y="60" fontSize="7" textAnchor="middle" className="fill-gray-500 dark:fill-slate-400">0</text>
+        <text x="54" y="10" fontSize="7" textAnchor="middle" className="fill-gray-500 dark:fill-slate-400">50</text>
+        <text x="100" y="60" fontSize="7" textAnchor="middle" className="fill-gray-500 dark:fill-slate-400">100</text>
+        <line x1={cx} y1={cy} x2={nx} y2={ny} strokeWidth="2" strokeLinecap="round" className="stroke-gray-700 dark:stroke-slate-400" />
+        <circle cx={cx} cy={cy} r="3.5" className="fill-gray-700 dark:fill-slate-400" />
       </svg>
       <span className={`text-2xl font-black tabular-nums leading-none ${cls}`}>{v}</span>
       <span className={`text-[11px] font-semibold mt-0.5 ${cls}`}>{label}</span>
@@ -65,7 +65,7 @@ export default function MarketSentimentSection({
 
   return (
     <section style={{ contentVisibility: "visible" }}>
-      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
         📊 시장 심리 &amp; 자금 흐름
       </h2>
 

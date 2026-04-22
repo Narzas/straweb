@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getAllPosts, getAllCategories } from "@/lib/posts";
 import { createServiceClient } from "@/lib/supabase";
+import { siteConfig } from "@/lib/site";
 import PostCard from "@/components/PostCard";
 import PostSortTabs from "@/components/PostSortTabs";
 import Sidebar from "@/components/Sidebar";
@@ -11,16 +12,17 @@ import RightSidebar from "@/components/RightSidebar";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Posts",
-  description: "All blog posts on StraWeb.",
+  title: "글 목록",
+  description: "StraWeb의 모든 블로그 글 목록입니다. 개발, 크립토·투자, 게임 리뷰, 일상 등 다양한 주제를 다룹니다.",
   alternates: {
     canonical: "/posts",
   },
   openGraph: {
-    title: "Posts",
-    description: "All blog posts on StraWeb.",
+    title: "글 목록 — StraWeb",
+    description: "StraWeb의 모든 블로그 글 목록입니다. 개발, 크립토·투자, 게임 리뷰, 일상 등 다양한 주제를 다룹니다.",
     type: "website",
-    url: "/posts",
+    url: "https://www.stragos.xyz/posts",
+    images: [{ url: `${siteConfig.url}/og?title=${encodeURIComponent("글 목록")}`, width: 1200, height: 630 }],
   },
 };
 
@@ -76,8 +78,8 @@ export default async function PostsPage({ searchParams }: Props) {
       <div className="space-y-8">
         <div className="flex items-end justify-between">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Posts</h1>
-            <p className="text-gray-500">{posts.length} posts total</p>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Posts</h1>
+            <p className="text-gray-500 dark:text-gray-400">{posts.length} posts total</p>
           </div>
           <Suspense>
             <PostSortTabs />
@@ -92,7 +94,7 @@ export default async function PostsPage({ searchParams }: Props) {
                 <Link
                   key={name}
                   href={`/category/${encodeURIComponent(name.toLowerCase())}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-400"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-all hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-700 dark:hover:text-indigo-400"
                 >
                   <span>{CATEGORY_ICONS[name] ?? "🗂️"}</span>
                   {name}

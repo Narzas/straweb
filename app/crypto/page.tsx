@@ -1,16 +1,22 @@
 import { createServiceClient } from "@/lib/supabase";
 import type { Metadata } from "next";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import RightSidebar from "@/components/RightSidebar";
-import MarketSentimentSection from "@/components/MarketSentimentSection";
-import SmartMoneyDashboardSection from "@/components/SmartMoneyDashboardSection";
-import PredictionMarketsSection from "@/components/PredictionMarketsSection";
-import SectorPerformanceSection from "@/components/SectorPerformanceSection";
-import GainersLosersSection from "@/components/GainersLosersSection";
-import RsiHeatmapSection from "@/components/RsiHeatmapSection";
-import DexChainsSection from "@/components/DexChainsSection";
 import AnimatedSection from "@/components/AnimatedSection";
+
+function SectionSkeleton() {
+  return <div className="h-48 animate-pulse rounded-xl bg-gray-100 dark:bg-slate-800" />;
+}
+
+const MarketSentimentSection = dynamic(() => import("@/components/MarketSentimentSection"), { loading: () => <SectionSkeleton /> });
+const GainersLosersSection    = dynamic(() => import("@/components/GainersLosersSection"),    { loading: () => <SectionSkeleton /> });
+const SectorPerformanceSection = dynamic(() => import("@/components/SectorPerformanceSection"), { loading: () => <SectionSkeleton /> });
+const RsiHeatmapSection        = dynamic(() => import("@/components/RsiHeatmapSection"),        { loading: () => <SectionSkeleton /> });
+const DexChainsSection         = dynamic(() => import("@/components/DexChainsSection"),         { loading: () => <SectionSkeleton /> });
+const SmartMoneyDashboardSection = dynamic(() => import("@/components/SmartMoneyDashboardSection"), { loading: () => <SectionSkeleton /> });
+const PredictionMarketsSection   = dynamic(() => import("@/components/PredictionMarketsSection"),   { loading: () => <SectionSkeleton /> });
 
 export const revalidate = 3600;
 
@@ -22,7 +28,7 @@ export const metadata: Metadata = {
   title: "크립토 브리핑",
   description: "매일 업데이트되는 크립토 시장 현황, 트렌딩 코인, DeFi 동향, 주요 뉴스",
   alternates: {
-    canonical: "https://www.stragos.xyz/crypto",
+    canonical: "/crypto",
   },
 };
 
@@ -41,6 +47,9 @@ type TrendingCoin = {
   symbol: string;
   market_cap_rank: number | null;
   thumb: string | null;
+  price: number | null;
+  price_change_24h: number | null;
+  price_change_7d: number | null;
 };
 
 type FearGreed = {
@@ -54,14 +63,6 @@ type DexChain = {
   tvl: number;
   change_1d: number;
   flow_usd: number;
-};
-
-type NewsItem = {
-  title: string;
-  url: string;
-  description: string;
-  image: string | null;
-  pubDate: string;
 };
 
 type NetflowItem = {
@@ -144,9 +145,27 @@ type CryptoDaily = {
   trending: TrendingCoin[];
   fearGreed: FearGreed | null;
   dexChains: DexChain[];
-  news: NewsItem[];
   editorial: Editorial | null;
 };
+
+function fmtPct(n: number) {
+  const abs = Math.abs(n);
+  const sign = n >= 0 ? "▲" : "▼";
+  let val: string;
+  if (abs >= 1_000_000) val = `${(abs / 1_000_000).toFixed(1)}M`;
+  else if (abs >= 1_000) val = `${(abs / 1_000).toFixed(1)}K`;
+  else val = abs.toFixed(1);
+  return `${sign}${val}%`;
+}
+
+function fmtPrice(n: number | null | undefined) {
+  if (n == null) return "–";
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  if (n >= 1) return `$${n.toFixed(2)}`;
+  if (n >= 0.01) return `$${n.toFixed(4)}`;
+  return `$${n.toFixed(6)}`;
+}
 
 function fmt(n: number | null | undefined, digits = 2) {
   if (n == null) return "–";
@@ -224,7 +243,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
     );
   }
 
-  const { market, trending, fearGreed, dexChains, news, date, editorial } = data;
+  const { market, trending, fearGreed, dexChains, date, editorial } = data;
   const adjacent = await getAdjacentDates(date);
   const [y, m, d] = date.split("-");
   const dateLabel = `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
@@ -232,7 +251,9 @@ export default async function CryptoPage({ searchParams }: PageProps) {
 
   return (
     <div className="relative z-[1] lg:grid lg:grid-cols-[240px_1fr_220px] lg:gap-6 xl:gap-8">
-      <Sidebar />
+      <aside className="hidden lg:block">
+        <Sidebar />
+      </aside>
       <main className="min-w-0 space-y-8">
 
         {/* 헤더 */}
@@ -243,29 +264,56 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             크립토 브리핑 — {dateLabel}
           </h1>
-          <div className="flex items-center gap-3 mt-3">
-            {adjacent.prev ? (
-              <Link href={`/crypto?date=${adjacent.prev}`} className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
-                ← {adjacent.prev}
-              </Link>
-            ) : (
-              <span className="text-xs text-gray-300 dark:text-gray-600">← 이전 없음</span>
-            )}
-            <span className="text-gray-300 dark:text-gray-700">|</span>
-            {adjacent.next ? (
-              <Link href={`/crypto?date=${adjacent.next}`} className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
-                {adjacent.next} →
-              </Link>
-            ) : (
-              <span className="text-xs text-gray-300 dark:text-gray-600">최신글</span>
-            )}
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center gap-3">
+              {adjacent.prev ? (
+                <Link href={`/crypto?date=${adjacent.prev}`} className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                  ← {adjacent.prev}
+                </Link>
+              ) : (
+                <span className="text-xs text-gray-300 dark:text-gray-600">← 이전 없음</span>
+              )}
+              <span className="text-gray-300 dark:text-gray-700">|</span>
+              {adjacent.next ? (
+                <Link href={`/crypto?date=${adjacent.next}`} className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                  {adjacent.next} →
+                </Link>
+              ) : (
+                <span className="text-xs text-gray-300 dark:text-gray-600">최신글</span>
+              )}
+            </div>
+            <span className="text-[11px] text-gray-400 dark:text-gray-500">🔄 매시간 갱신</span>
           </div>
+        </div>
+
+        {/* 섹션 앵커 nav */}
+        <div className="sticky top-[73px] z-10 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-0 py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-slate-800 lg:border-0 lg:bg-transparent lg:dark:bg-transparent lg:backdrop-blur-none lg:py-0">
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+          {[
+            { id: "overview",    label: "시장개요" },
+            { id: "sentiment",   label: "심리지표" },
+            { id: "trending",    label: "트렌딩" },
+            { id: "gainers",     label: "급등/락" },
+            { id: "rsi",         label: "RSI" },
+            { id: "dex",         label: "DEX" },
+            { id: "smartmoney",  label: "스마트머니" },
+            { id: "prediction",  label: "예측시장" },
+          ].map(({ id, label }) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className="shrink-0 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              {label}
+            </a>
+          ))}
+        </div>
         </div>
 
         {/* 시장 개요 */}
         {market && (
-          <section>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+          <section id="overview" className="scroll-mt-24">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
               전체 시장 개요
             </h2>
             {(() => {
@@ -346,34 +394,54 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         )}
 
         <AnimatedSection delay={0.05}>
-          <MarketSentimentSection
-            fearGreed={fearGreed}
-            fngComment={editorial?.fng_comment}
-            altcoinSeason={editorial?.altcoin_season}
-            longShortRatio={editorial?.long_short_ratio}
-          />
+          <div id="sentiment" className="scroll-mt-24">
+            <MarketSentimentSection
+              fearGreed={fearGreed}
+              fngComment={editorial?.fng_comment}
+              altcoinSeason={editorial?.altcoin_season}
+              longShortRatio={editorial?.long_short_ratio}
+            />
+          </div>
         </AnimatedSection>
 
         {/* 트렌딩 코인 */}
         {trending?.length > 0 && (
           <AnimatedSection delay={0.05}>
-            <section>
-              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+            <section id="trending" className="scroll-mt-24">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
                 🔥 오늘의 트렌딩 코인
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {trending.map((c, i) => (
-                  <div key={c.symbol} className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 bg-white dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700/50 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 transition-colors">
+                  <div key={c.symbol} title={c.name} className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700/50 hover:border-indigo-400/60 dark:hover:border-indigo-500/40 transition-colors cursor-default">
                     <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-black w-4 shrink-0">#{i + 1}</span>
                     {c.thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.thumb} alt={c.name} className="w-5 h-5 rounded-full shrink-0" />
+                      <img src={c.thumb} alt={c.name} loading="lazy" className="w-5 h-5 rounded-full shrink-0" />
                     ) : (
                       <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-slate-700 shrink-0" />
                     )}
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{c.name}</p>
                       <p className="text-[10px] text-gray-400 dark:text-slate-500">{c.symbol.toUpperCase()}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[11px] font-semibold text-gray-800 dark:text-gray-100 tabular-nums">{fmtPrice(c.price)}</p>
+                      <div className="flex items-center gap-1 justify-end">
+                        {c.price_change_24h != null && (
+                          <span className={`text-[10px] tabular-nums ${c.price_change_24h >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                            {fmtPct(c.price_change_24h)}
+                          </span>
+                        )}
+                        {c.price_change_7d != null && (
+                          <>
+                            <span className="text-[9px] text-gray-300 dark:text-slate-600">·</span>
+                            <span className={`text-[10px] tabular-nums ${c.price_change_7d >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                              7d {fmtPct(c.price_change_7d)}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -388,7 +456,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         )}
 
         <AnimatedSection delay={0.05}>
-          <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+          <div id="gainers" className="grid gap-6 lg:grid-cols-2 lg:items-stretch scroll-mt-24">
             {editorial?.gainers_losers && (
               <GainersLosersSection data={editorial.gainers_losers} />
             )}
@@ -398,40 +466,59 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           </div>
         </AnimatedSection>
 
-{editorial?.rsi_heatmap && (
+        {editorial?.rsi_heatmap && (
           <AnimatedSection delay={0.05}>
-            <RsiHeatmapSection data={editorial.rsi_heatmap} />
+            <div id="rsi" className="scroll-mt-24">
+              <RsiHeatmapSection data={editorial.rsi_heatmap} />
+            </div>
           </AnimatedSection>
         )}
 
         <AnimatedSection delay={0.05}>
-          <DexChainsSection
-            dexChains={dexChains ?? []}
-            dexComment={editorial?.dex_comment}
-          />
+          <div id="dex" className="scroll-mt-24">
+            <DexChainsSection
+              dexChains={dexChains ?? []}
+              dexComment={editorial?.dex_comment}
+            />
+          </div>
         </AnimatedSection>
 
         {(editorial?.netflows?.length || editorial?.hyperliquid_perps?.length) && (
           <AnimatedSection delay={0.05}>
-            <SmartMoneyDashboardSection
-              netflows={editorial.netflows ?? []}
-              perps={editorial.hyperliquid_perps ?? []}
-            />
+            <div id="smartmoney" className="scroll-mt-24">
+              <SmartMoneyDashboardSection
+                netflows={editorial.netflows ?? []}
+                perps={editorial.hyperliquid_perps ?? []}
+              />
+            </div>
           </AnimatedSection>
         )}
 
         {editorial?.prediction_markets?.length && (
           <AnimatedSection delay={0.05}>
-            <PredictionMarketsSection items={editorial.prediction_markets} />
+            <div id="prediction" className="scroll-mt-24">
+              <PredictionMarketsSection items={editorial.prediction_markets} />
+            </div>
           </AnimatedSection>
         )}
 
 
-        <p className="text-[11px] text-gray-300 dark:text-gray-600 border-t border-gray-300 dark:border-slate-800 pt-4">
-          매일 자동 갱신됩니다. 정보 제공 목적이며 투자 권유가 아닙니다.
-        </p>
+        <div className="border-t border-gray-200 dark:border-slate-700 pt-5 mt-2">
+          <p className="flex items-center gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 px-4 py-3 text-xs text-amber-700 dark:text-amber-400 font-medium">
+            <span className="text-base leading-none">⚠️</span>
+            본 페이지는 정보 제공 목적이며 투자 권유가 아닙니다. 매시간 자동 갱신됩니다.
+          </p>
+        </div>
+
+        {/* 모바일 사이드바 */}
+        <div className="lg:hidden space-y-6">
+          <Sidebar />
+          <RightSidebar />
+        </div>
       </main>
-      <RightSidebar />
+      <aside className="hidden lg:block">
+        <RightSidebar />
+      </aside>
     </div>
   );
 }

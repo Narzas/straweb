@@ -231,6 +231,7 @@ export default function OwnerNewsFeed() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const prevIdsRef = useRef<(string | null)[]>(ACCOUNTS.map(() => null));
   const currentPostsRef = useRef<(TelegramPost | null)[]>(ACCOUNTS.map(() => null));
+  const isLoadingRef = useRef(false);
 
   // localStorage에서 이전 글 즉시 복원
   useEffect(() => {
@@ -245,42 +246,48 @@ export default function OwnerNewsFeed() {
   }, []);
 
   async function loadAll(isFirst = false) {
-    const results = await Promise.allSettled(
-      ACCOUNTS.map((a) =>
-        fetch(a.apiPath)
-          .then((r) => r.json())
-          .then((d) => (d.posts?.[0] as TelegramPost) ?? null)
-          .catch(() => null)
-      )
-    );
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
+    try {
+      const results = await Promise.allSettled(
+        ACCOUNTS.map((a) =>
+          fetch(a.apiPath)
+            .then((r) => r.json())
+            .then((d) => (d.posts?.[0] as TelegramPost) ?? null)
+            .catch(() => null)
+        )
+      );
 
-    const fetched = results.map((r) => (r.status === "fulfilled" ? r.value : null));
+      const fetched = results.map((r) => (r.status === "fulfilled" ? r.value : null));
 
-    // 텍스트 없는 결과는 무시하고 기존 글 유지
-    const merged = currentPostsRef.current.map((cur, i) =>
-      fetched[i]?.text ? fetched[i] : cur
-    );
-    currentPostsRef.current = merged;
-    setFeeds(merged.map((post) => ({ post })));
-    saveToStorage(merged);
+      // 텍스트 없는 결과는 무시하고 기존 글 유지
+      const merged = currentPostsRef.current.map((cur, i) =>
+        fetched[i]?.text ? fetched[i] : cur
+      );
+      currentPostsRef.current = merged;
+      setFeeds(merged.map((post) => ({ post })));
+      saveToStorage(merged);
 
-    if (isFirst) {
-      const times = merged.map((p) => (p?.time ? new Date(p.time).getTime() : 0));
-      setCurrentIdx(times[1] > times[0] ? 1 : 0);
-      prevIdsRef.current = merged.map((p) => p?.id ?? null);
-      return;
-    }
-
-    // 갱신 감지: 새 글 올라온 계정으로 자동 전환
-    let updatedIdx = -1;
-    for (let i = 0; i < fetched.length; i++) {
-      if (fetched[i]?.id && fetched[i]!.id !== prevIdsRef.current[i]) {
-        updatedIdx = i;
-        break;
+      if (isFirst) {
+        const times = merged.map((p) => (p?.time ? new Date(p.time).getTime() : 0));
+        setCurrentIdx(times[1] > times[0] ? 1 : 0);
+        prevIdsRef.current = merged.map((p) => p?.id ?? null);
+        return;
       }
+
+      // 갱신 감지: 새 글 올라온 계정으로 자동 전환
+      let updatedIdx = -1;
+      for (let i = 0; i < fetched.length; i++) {
+        if (fetched[i]?.id && fetched[i]!.id !== prevIdsRef.current[i]) {
+          updatedIdx = i;
+          break;
+        }
+      }
+      prevIdsRef.current = merged.map((p) => p?.id ?? null);
+      if (updatedIdx !== -1) setCurrentIdx(updatedIdx);
+    } finally {
+      isLoadingRef.current = false;
     }
-    prevIdsRef.current = merged.map((p) => p?.id ?? null);
-    if (updatedIdx !== -1) setCurrentIdx(updatedIdx);
   }
 
   useEffect(() => {

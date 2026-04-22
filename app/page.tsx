@@ -16,6 +16,15 @@ export const revalidate = 60; // 60초마다 서버 재렌더 → 조회수 최�
 export const metadata: Metadata = {
   title: "StraWeb",
   description: "개발, 리뷰, 투자 등 관심 있는 것들을 편하게 기록하는 블로그입니다.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "StraWeb",
+    description: "개발, 리뷰, 투자 등 관심 있는 것들을 편하게 기록하는 블로그입니다.",
+    type: "website",
+    url: "https://www.stragos.xyz",
+    siteName: "StraWeb",
+    locale: "ko_KR",
+  },
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -41,8 +50,27 @@ export default async function HomePage() {
   const season = getSeason(new Date().getMonth() + 1);
   const viewCounts = await getViewCounts(recentPosts.map((p) => p.slug));
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "StraWeb",
+    url: "https://www.stragos.xyz",
+    description: "개발, 리뷰, 투자 등 관심 있는 것들을 편하게 기록하는 블로그입니다.",
+    author: { "@type": "Person", name: "Stragos" },
+    inLanguage: "ko-KR",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://www.stragos.xyz/search?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
     <ClientOnly><SeasonalEffect season={season} /></ClientOnly>
 
     <div className="relative z-[1] lg:grid lg:grid-cols-[240px_1fr_220px] lg:gap-6 xl:gap-8">
@@ -53,7 +81,7 @@ export default async function HomePage() {
       </aside>
 
       {/* ── 메인 콘텐츠 ── */}
-      <div className="space-y-6">
+      <div className="space-y-8">
 
       {/* ── Hero (로컬 개발환경·모바일에서는 숨김) ── */}
       {process.env.NODE_ENV !== "development" && (
@@ -70,7 +98,7 @@ export default async function HomePage() {
         </div>
 
         {/* 설명 — ATB 패널 바로 아래 */}
-        <p className="px-5 py-2.5 text-base leading-relaxed text-slate-300">
+        <p className="px-5 py-3.5 text-base leading-relaxed text-slate-300">
           개발하면서 겪은 것들, 관심 가는 것들을 편하게 기록하는 공간입니다.<br />게임, 투자, 일상 등 다양한 주제를 다룹니다.
         </p>
       </section>
@@ -86,7 +114,7 @@ export default async function HomePage() {
               <Link
                 key={name}
                 href={`/category/${encodeURIComponent(name.toLowerCase())}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-400"
+                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-all hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-700 dark:hover:text-indigo-400"
               >
                 <span>{CATEGORY_ICONS[name] ?? "🗂️"}</span>
                 {name}

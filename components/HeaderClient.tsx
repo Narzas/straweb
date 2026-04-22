@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import GuestbookMinimi from "./GuestbookMinimi";
 
 type Category = { name: string; count: number };
 
@@ -12,6 +13,7 @@ export default function HeaderClient({ categories }: { categories: Category[] })
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showNewBadge, setShowNewBadge] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -38,11 +40,22 @@ export default function HeaderClient({ categories }: { categories: Category[] })
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
 
+  // 크립토브리핑 NEW 뱃지 — 한 번 클릭하면 숨김
+  useEffect(() => {
+    setShowNewBadge(!localStorage.getItem("crypto-new-seen"));
+  }, []);
+
   const closeAll = () => {
     setMobileOpen(false);
     setDropdownOpen(false);
     setSearchOpen(false);
   };
+
+  function handleCryptoClick() {
+    localStorage.setItem("crypto-new-seen", "1");
+    setShowNewBadge(false);
+    closeAll();
+  }
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,38 +72,48 @@ export default function HeaderClient({ categories }: { categories: Category[] })
       <nav className="hidden md:flex items-center gap-2">
         <Link
           href="/about"
-          className="px-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:text-gray-900 dark:hover:text-white"
+          className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:text-gray-900 dark:hover:text-white"
         >
           About
         </Link>
         <Link
           href="/posts"
-          className="px-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:text-gray-900 dark:hover:text-white"
+          className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:text-gray-900 dark:hover:text-white"
         >
           Posts
         </Link>
         <Link
           href="/guestbook"
-          className="px-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:text-gray-900 dark:hover:text-white"
+          className="relative flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:text-gray-900 dark:hover:text-white"
         >
-          방명록
+          방<span className="relative inline-block">{/* '명' 뒤에 캐릭터 숨김 */}
+            <span
+              style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', lineHeight: 0, zIndex: 0 }}
+            >
+              <GuestbookMinimi />
+            </span>
+            <span className="relative bg-white dark:bg-slate-900" style={{ zIndex: 1 }}>명</span>
+          </span>록
         </Link>
         <Link
           href="/crypto"
-          className="relative px-2 pt-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-800 dark:hover:text-indigo-300"
+          onClick={handleCryptoClick}
+          className="relative flex items-center px-3 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-800 dark:hover:text-indigo-300"
         >
           크립토브리핑
-          <span className="absolute top-0 left-1/2 -translate-x-1/2 whitespace-nowrap">
-            <span className="absolute inset-0 rounded-full bg-pink-400 opacity-75 animate-ping" />
-            <span className="relative flex rounded-full bg-gradient-to-r from-violet-500 to-pink-500 px-1.5 py-px text-[8px] font-bold text-white leading-none">NEW</span>
-          </span>
+          {showNewBadge && (
+            <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+              <span className="absolute inset-0 rounded-full bg-pink-400 opacity-75 animate-ping" />
+              <span className="relative flex rounded-full bg-gradient-to-r from-violet-500 to-pink-500 px-1.5 py-px text-[8px] font-bold text-white leading-none">NEW</span>
+            </span>
+          )}
         </Link>
 
         {/* 카테고리 드롭다운 (클릭 방식) */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((v) => !v)}
-            className="flex items-center gap-1 px-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:text-gray-900 dark:hover:text-white"
+            className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:text-gray-900 dark:hover:text-white"
             aria-expanded={dropdownOpen}
           >
             Categories
@@ -223,7 +246,7 @@ export default function HeaderClient({ categories }: { categories: Category[] })
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="검색..."
-              className="flex-1 rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-indigo-400"
+              className="flex-1 rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
             />
             <button
               type="submit"
@@ -260,20 +283,23 @@ export default function HeaderClient({ categories }: { categories: Category[] })
           <Link
             href="/guestbook"
             onClick={closeAll}
-            className="rounded-lg px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
+            className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
           >
+            <GuestbookMinimi />
             방명록
           </Link>
           <Link
             href="/crypto"
-            onClick={closeAll}
-            className="relative inline-flex rounded-lg px-3 pt-5 pb-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+            onClick={handleCryptoClick}
+            className={`relative inline-flex rounded-lg px-3 pb-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${showNewBadge ? "pt-5" : "pt-3"}`}
           >
             크립토브리핑
-            <span className="absolute top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="absolute inset-0 rounded-full bg-pink-400 opacity-75 animate-ping" />
-              <span className="relative flex rounded-full bg-gradient-to-r from-violet-500 to-pink-500 px-1.5 py-px text-[8px] font-bold text-white leading-none">NEW</span>
-            </span>
+            {showNewBadge && (
+              <span className="absolute top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <span className="absolute inset-0 rounded-full bg-pink-400 opacity-75 animate-ping" />
+                <span className="relative flex rounded-full bg-gradient-to-r from-violet-500 to-pink-500 px-1.5 py-px text-[8px] font-bold text-white leading-none">NEW</span>
+              </span>
+            )}
           </Link>
 
           {/* 카테고리 섹션 */}

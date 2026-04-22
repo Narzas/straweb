@@ -1,9 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Metadata } from "next";
+import Toast from "@/components/Toast";
 
 type Entry = { id: string; author: string; message: string; created_at: string; ip?: string };
+
+const AVATAR_COLORS = [
+  "bg-violet-500", "bg-indigo-500", "bg-sky-500",
+  "bg-emerald-500", "bg-orange-500", "bg-pink-500",
+];
+
+function Avatar({ name }: { name: string }) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  const color = AVATAR_COLORS[hash % AVATAR_COLORS.length];
+  return (
+    <div className={`flex-shrink-0 h-8 w-8 rounded-full ${color} flex items-center justify-center`}>
+      <span className="text-xs font-bold text-white select-none">
+        {name.charAt(0).toUpperCase()}
+      </span>
+    </div>
+  );
+}
 
 function timeAgo(iso: string) {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -17,17 +35,19 @@ function timeAgo(iso: string) {
 export default function GuestbookPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [author, setAuthor] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     fetch("/api/guestbook")
-      .then((r) => r.ok ? r.json() : Promise.resolve([]))
+      .then((r) => r.ok ? r.json() : Promise.reject())
       .then((d) => setEntries(Array.isArray(d) ? d : []))
-      .catch(() => setEntries([]))
+      .catch(() => { setEntries([]); setFetchError(true); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -50,6 +70,7 @@ export default function GuestbookPage() {
       setAuthor("");
       setMessage("");
       formRef.current?.reset();
+      setToast("방명록이 등록되었습니다!");
     } finally {
       setSubmitting(false);
     }
@@ -74,7 +95,8 @@ export default function GuestbookPage() {
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             required
-            className="w-36 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-indigo-400 focus:outline-none"
+            autoComplete="name"
+            className="w-36 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
           />
         </div>
         <textarea
@@ -84,10 +106,10 @@ export default function GuestbookPage() {
           onChange={(e) => setMessage(e.target.value)}
           required
           rows={3}
-          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none focus:border-indigo-400 focus:outline-none"
+          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
         />
         <div className="flex items-center justify-between">
-          {error ? <p className="text-xs text-red-500">{error}</p> : <span />}
+          {error ? <p role="alert" aria-live="polite" className="text-xs text-red-500">{error}</p> : <span />}
           <div className="flex items-center gap-3">
             <span className="text-xs text-gray-400">{message.length}/200</span>
             <button
@@ -105,12 +127,14 @@ export default function GuestbookPage() {
       {loading ? (
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-2">
-              <div className="h-3 w-20 rounded bg-gray-200" />
-              <div className="h-3 w-4/5 rounded bg-gray-200" />
+            <div key={i} className="animate-pulse rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 p-4 space-y-2">
+              <div className="h-3 w-20 rounded bg-gray-200 dark:bg-slate-700" />
+              <div className="h-3 w-4/5 rounded bg-gray-200 dark:bg-slate-700" />
             </div>
           ))}
         </div>
+      ) : fetchError ? (
+        <p className="text-center text-sm text-red-400 dark:text-red-500 py-12">목록을 불러올 수 없습니다. 잠시 후 다시 시도해주세요.</p>
       ) : entries.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-12">첫 번째 방명록을 남겨주세요!</p>
       ) : (
@@ -118,21 +142,26 @@ export default function GuestbookPage() {
           {entries.map((entry) => (
             <li
               key={entry.id}
-              className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4 shadow-sm"
+              className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4 shadow-sm border-l-2 border-l-indigo-300 dark:border-l-indigo-700"
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{entry.author}</span>
+              <div className="flex items-start gap-3">
+                <Avatar name={entry.author} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{entry.author}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(entry.created_at)}</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words leading-relaxed">
+                    {entry.message}
+                  </p>
                 </div>
-                <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(entry.created_at)}</span>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words leading-relaxed">
-                {entry.message}
-              </p>
             </li>
           ))}
         </ul>
       )}
+
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }

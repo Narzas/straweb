@@ -65,7 +65,7 @@ export default function PostCard({
   }, []);
 
   return (
-    <div className="group relative flex flex-row overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="group relative flex flex-row overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer">
 
       {/* Thumbnail */}
       <div
@@ -108,12 +108,13 @@ export default function PostCard({
             {post.category}
           </Link>
           {post.tags.slice(0, 2).map((tag) => (
-            <span
+            <Link
               key={tag}
-              className="rounded-full bg-gray-100 dark:bg-slate-600 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300"
+              href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
+              className="relative z-10 rounded-full bg-gray-100 dark:bg-slate-600 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
-              {tag}
-            </span>
+              #{tag}
+            </Link>
           ))}
         </div>
 
@@ -122,6 +123,8 @@ export default function PostCard({
           <Link
             href={`/posts/${post.slug}`}
             className="after:absolute after:inset-0 after:z-0"
+            onFocus={handleEnter}
+            onBlur={handleLeave}
           >
             {post.title.includes("—") ? (
               <>
@@ -139,7 +142,11 @@ export default function PostCard({
         )}
 
         <div className="mt-auto flex items-center justify-between pt-1">
-          <time className="text-xs text-gray-400 dark:text-gray-500">{post.date}</time>
+          <div className="flex items-center gap-1.5">
+            <time className="text-xs text-gray-400 dark:text-gray-500">{post.date}</time>
+            <span className="text-xs text-gray-300 dark:text-slate-600">·</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">약 {post.readTime}분</span>
+          </div>
           <ViewCount slug={post.slug} initialCount={viewCount} />
         </div>
       </div>
@@ -147,6 +154,7 @@ export default function PostCard({
       {/* Hover preview portal */}
       {mounted && popup && post.cover && createPortal(
         <div
+          aria-hidden="true"
           className="pointer-events-none fixed z-[9999] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-800"
           style={{ left: popup.x, top: popup.y, width: POPUP_W, height: POPUP_H }}
         >

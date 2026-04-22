@@ -26,6 +26,14 @@
   to   { transform: translateX(100%); }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+button, a {
+  touch-action: manipulation;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -43,9 +51,14 @@ main > div > section {
   contain-intrinsic-size: 0 400px; /* 예상 높이 — CLS 방지 */
 }
 
-/* 이미지 기본 lazy */
-img:not([loading]) {
-  loading: lazy;
+/* prefers-reduced-motion: 모든 애니메이션·트랜지션 중단 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── AdSense: 광고 미게재 슬롯 숨김 ── */
@@ -394,7 +407,9 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   z-index: 50;
 }
 .post-body abbr:hover::after,
-.post-body abbr:hover::before {
+.post-body abbr:focus::after,
+.post-body abbr:hover::before,
+.post-body abbr:focus::before {
   opacity: 1;
 }
 .dark .post-body abbr {
@@ -408,6 +423,26 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 .dark .post-body abbr::before {
   border-top-color: #0f172a;
 }
+
+/* ── Pixel canvas (cross-browser image-rendering) ──────────── */
+.pixel-canvas {
+  image-rendering: -webkit-optimize-contrast; /* Safari < 15.4 */
+  image-rendering: crisp-edges;               /* Firefox fallback */
+  image-rendering: pixelated;                 /* Modern */
+}
+
+/* ── 방명록 미니미 픽셀 캐릭터 ─────────────────────────────── */
+@keyframes minimi-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-2px); }
+}
+@keyframes minimi-wave {
+  0%, 30%  { top: 12px; }
+  50%, 80% { top:  6px; }
+  100%     { top: 12px; }
+}
+.minimi-bob  { animation: minimi-bob  1.6s ease-in-out infinite; }
+.minimi-wave { animation: minimi-wave 1.6s ease-in-out infinite; }
 
 @keyframes flowLine {
   from { stroke-dashoffset: 20; }

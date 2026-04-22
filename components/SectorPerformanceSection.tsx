@@ -53,7 +53,7 @@ export default function SectorPerformanceSection({ sectors }: { sectors: SectorI
 
   return (
     <section className="flex flex-col h-full">
-      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
         🏷️ 섹터별 24h 성과
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 flex-1 sm:items-stretch">

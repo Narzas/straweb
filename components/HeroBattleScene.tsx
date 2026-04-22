@@ -116,6 +116,7 @@ export default function HeroBattleScene() {
   useEffect(() => {
     const canvas = canvasRef.current as HTMLCanvasElement;
     if (!canvas) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) return;
 
@@ -873,8 +874,8 @@ export default function HeroBattleScene() {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none block w-full"
-      style={{ height: "200px", opacity: 0.82, imageRendering: "pixelated" }}
+      className="pixel-canvas pointer-events-none block w-full"
+      style={{ height: "200px", opacity: 0.82 }}
     />
   );
 }

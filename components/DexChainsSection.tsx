@@ -151,7 +151,7 @@ export default function DexChainsSection({
     return (
       <section>
         <style>{ANIM_STYLE}</style>
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
           체인별 자금흐름 <span className="text-[11px] font-normal text-gray-400">24h</span>
         </h2>
         <div className="rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-[#0c1320] shadow-sm dark:shadow-none overflow-hidden">
@@ -311,7 +311,7 @@ export default function DexChainsSection({
   return (
     <section>
       <style>{ANIM_STYLE}</style>
-      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
         체인별 자금흐름 <span className="text-[11px] font-normal text-gray-400">24h</span>
       </h2>
       <div className="rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-[#0c1320] shadow-sm dark:shadow-none overflow-hidden">

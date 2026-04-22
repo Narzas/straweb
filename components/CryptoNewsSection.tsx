@@ -42,7 +42,7 @@ export default function CryptoNewsSection({ news }: { news: NewsItem[] }) {
   return (
     <section>
       <div className="flex items-baseline justify-between mb-2">
-        <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300">
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
           📰 주요 뉴스
         </h2>
         <span className="text-[11px] text-gray-400">CoinTelegraph</span>

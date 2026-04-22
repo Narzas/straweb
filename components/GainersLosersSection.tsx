@@ -23,7 +23,7 @@ function Row({ item, isGainer }: { item: GainerLoserItem; isGainer: boolean }) {
       <div className="flex items-center gap-1.5 min-w-0">
         {item.image && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image} alt={item.symbol} className="w-4 h-4 rounded-full shrink-0" />
+          <img src={item.image} alt={item.symbol} loading="lazy" className="w-4 h-4 rounded-full shrink-0" />
         )}
         <div className="min-w-0">
           <p className="text-[12px] font-bold text-gray-800 dark:text-gray-100 truncate">{item.symbol}</p>
@@ -50,7 +50,7 @@ export default function GainersLosersSection({ data }: { data: GainersLosersData
 
   return (
     <section className="flex flex-col h-full">
-      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
         📊 수익률 TOP/BOTTOM <span className="text-[11px] font-normal text-gray-400">(시총 250위 내 24h)</span>
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 flex-1 sm:items-stretch">

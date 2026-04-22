@@ -8,7 +8,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { password } = await req.json();
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch {
+    return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
+  }
+  const { password } = body as { password?: string };
 
   if (!password) {
     return NextResponse.json({ error: "비밀번호를 입력해 주세요." }, { status: 400 });
@@ -25,7 +29,10 @@ export async function POST(
     return NextResponse.json({ error: "댓글을 찾을 수 없습니다." }, { status: 404 });
   }
 
-  const match = await bcrypt.compare(password, data.password_hash ?? "");
+  if (!data.password_hash) {
+    return NextResponse.json({ error: "비밀글이 아닙니다." }, { status: 400 });
+  }
+  const match = await bcrypt.compare(password, data.password_hash);
   if (!match) {
     return NextResponse.json({ error: "비밀번호가 올바르지 않습니다." }, { status: 403 });
   }

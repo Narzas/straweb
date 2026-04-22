@@ -43,7 +43,7 @@ export default function HyperliquidPerpsSection({ items }: { items: PerpItem[] }
     <section>
       <div className="flex items-baseline justify-between mb-3">
         <div>
-          <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300">
+          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
             ⚡ 스마트머니 퍼프 포지션
           </h2>
           <p className="text-[11px] text-gray-400 mt-0.5">Hyperliquid · 스마트머니 거래량 상위 · 24h</p>

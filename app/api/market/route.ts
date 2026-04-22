@@ -11,8 +11,8 @@ async function yahooQuote(symbol: string): Promise<{ price: number | null; chang
     const json = await res.json();
     const meta = json?.chart?.result?.[0]?.meta;
     if (!meta) return { price: null, change: null };
-    const price: number = meta.regularMarketPrice ?? meta.previousClose ?? null;
-    const prev: number = meta.chartPreviousClose ?? meta.previousClose ?? null;
+    const price: number | null = meta.regularMarketPrice ?? meta.previousClose ?? null;
+    const prev: number | null = meta.chartPreviousClose ?? meta.previousClose ?? null;
     const change = price && prev ? ((price - prev) / prev) * 100 : null;
     return { price, change };
   } catch {
@@ -33,8 +33,8 @@ export async function GET() {
       yahooQuote("^KQ11"),
     ]);
 
-    const btcData = await btcRes.json();
-    const fxData = await fxRes.json();
+    const btcData = btcRes.ok ? await btcRes.json() : {};
+    const fxData  = fxRes.ok  ? await fxRes.json()  : {};
 
     return NextResponse.json(
       {

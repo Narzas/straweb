@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import GuestbookPreview from "./GuestbookPreview";
 // import TelegramFeed from "./TelegramFeed";
 // import WuBlockchainFeed from "./WuBlockchainFeed";
 import OwnerNewsFeed from "./OwnerNewsFeed";
@@ -11,7 +10,6 @@ type MarketData = {
   bitcoin: { usd: number | null; krw: number | null; change24h: number | null };
   nasdaq: IndexData;
   kospi: IndexData;
-  kosdaq: IndexData;
   usdKrw: number | null;
 };
 
@@ -53,7 +51,7 @@ function MarketRow({
 export default function RightSidebar() {
   const [market, setMarket] = useState<MarketData | null>(null);
   const [marketLoading, setMarketLoading] = useState(true);
-  const [marketOpen, setMarketOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(true);
 
   useEffect(() => {
     async function loadMarket() {
@@ -80,10 +78,12 @@ export default function RightSidebar() {
       <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
         <button
           onClick={() => setMarketOpen((v) => !v)}
+          aria-expanded={marketOpen}
+          aria-label={marketOpen ? "시세 패널 접기" : "시세 패널 펼치기"}
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
         >
           <div className="flex items-center gap-1.5">
-            <span className="text-sm">📈</span>
+            <span className="text-sm" aria-hidden="true">📈</span>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
               시세
             </span>
@@ -130,13 +130,6 @@ export default function RightSidebar() {
                   labelColor="text-rose-700 dark:text-rose-400"
                 />
                 <MarketRow
-                  icon="📊" label="코스닥"
-                  value={market.kosdaq.price != null ? fmtIdx(market.kosdaq.price) : null}
-                  change={market.kosdaq.change}
-                  bg="bg-purple-50 dark:bg-purple-900/20 border-purple-100 dark:border-purple-800/30"
-                  labelColor="text-purple-700 dark:text-purple-400"
-                />
-                <MarketRow
                   icon="💵" label="달러 환율"
                   value={
                     market.usdKrw != null
@@ -156,7 +149,7 @@ export default function RightSidebar() {
       {/* 주인장 관심 뉴스 */}
       <div className="rounded-xl overflow-hidden shadow-sm border border-indigo-100 dark:border-indigo-900/40">
         <div className="bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2.5 flex items-center gap-2">
-          <span className="text-base leading-none">🔥</span>
+          <span className="text-base leading-none" aria-hidden="true">🔥</span>
           <span className="text-[11px] font-bold tracking-widest text-white/90 uppercase">
             주인장 관심 뉴스
           </span>
@@ -166,8 +159,6 @@ export default function RightSidebar() {
         </div>
       </div>
 
-      {/* 방명록 */}
-      <GuestbookPreview />
     </div>
   );
 }

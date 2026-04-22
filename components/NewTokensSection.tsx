@@ -66,7 +66,7 @@ export default function NewTokensSection({ items }: { items: NewTokenItem[] }) {
   return (
     <section>
       <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300">
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
           🌱 신규 토큰 발굴
         </h2>
         <span className="text-[11px] text-gray-400">Nansen · 7일 이내 출시</span>

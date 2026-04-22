@@ -1,19 +1,34 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import Header from "@/components/Header";
 import DeployBanner from "@/components/DeployBanner";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import Footer from "@/components/Footer";
+import BackToTop from "@/components/BackToTop";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist-sans",
-  display: "swap",        // FOUT 방지 — fallback 폰트 먼저 표시
+  display: "swap",
   preload: true,
 });
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+  preload: false,
+});
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)",  color: "#0f172a" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -33,11 +48,13 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: siteConfig.name,
     description: siteConfig.description,
+    images: [{ url: `${siteConfig.url}/og?title=${encodeURIComponent(siteConfig.name)}`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
+    images: [`${siteConfig.url}/og?title=${encodeURIComponent(siteConfig.name)}`],
   },
   robots: {
     index: true,
@@ -52,8 +69,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={geist.variable} suppressHydrationWarning>
+    <html lang="ko" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
+        {/* RSS 자동 발견 */}
+        <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} RSS`} href="/rss.xml" />
         {/* Google Fonts preconnect */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -82,13 +101,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {/* Google Tag Manager (noscript) */}
         <noscript dangerouslySetInnerHTML={{ __html: '<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-56CDQRKW" height="0" width="0" style="display:none;visibility:hidden"></iframe>' }} />
+        <a
+          href="#main-content"
+          className="fixed left-4 top-4 z-[99999] -translate-y-20 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-transform focus:translate-y-0"
+        >
+          본문 바로가기
+        </a>
         <NavigationProgress />
         <DeployBanner />
         <Header />
-        <main className="mx-auto w-full max-w-screen-xl flex-1 px-4 sm:px-6 lg:px-8 py-10">
+        <main id="main-content" className="mx-auto w-full max-w-screen-xl flex-1 px-4 sm:px-6 lg:px-8 py-10">
           {children}
         </main>
         <Footer />
+        <BackToTop />
       </body>
     </html>
   );

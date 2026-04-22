@@ -28,6 +28,17 @@ function rehypeLazyImages() {
   };
 }
 
+/** <abbr>에 tabindex="0" 추가 — 키보드로 툴팁 접근 가능하게 */
+function rehypeAbbrTabindex() {
+  return (tree: Root) => {
+    visit(tree, "element", (node) => {
+      if (node.tagName === "abbr") {
+        node.properties = { ...node.properties, tabIndex: 0 };
+      }
+    });
+  };
+}
+
 const postsDir = path.join(process.cwd(), "posts");
 
 export type TocItem = {
@@ -45,6 +56,7 @@ export type PostMeta = {
   tags: string[];
   cover?: string;
   category: string;
+  readTime: number;
 };
 
 export type Post = PostMeta & {
@@ -106,6 +118,10 @@ export function getAllPosts(): PostMeta[] {
           })()
         : String(data.date);
 
+      const koreanChars = (content.match(/[가-힣]/g) ?? []).length;
+      const latinWords = content.replace(/[가-힣]/g, " ").split(/\s+/).filter((w) => w.length > 0).length;
+      const readTime = Math.max(1, Math.round(koreanChars / 500 + latinWords / 200));
+
       return {
         slug,
         title: data.title as string,
@@ -116,6 +132,7 @@ export function getAllPosts(): PostMeta[] {
         tags: (data.tags as string[]) ?? [],
         cover: (data.cover as string) ?? undefined,
         category: (data.category as string) ?? "Uncategorized",
+        readTime,
       };
     })
     .sort((a, b) => (a._sortKey < b._sortKey ? 1 : -1))
@@ -136,6 +153,25 @@ export function getAllCategories(): { name: string; count: number }[] {
 export function getPostsByCategory(category: string): PostMeta[] {
   return getAllPosts().filter(
     (p) => p.category.toLowerCase() === category.toLowerCase()
+  );
+}
+
+export function getAllTags(): { name: string; count: number }[] {
+  const posts = getAllPosts();
+  const map = new Map<string, number>();
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      map.set(tag, (map.get(tag) ?? 0) + 1);
+    }
+  }
+  return Array.from(map.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+export function getPostsByTag(tag: string): PostMeta[] {
+  return getAllPosts().filter((p) =>
+    p.tags.map((t) => t.toLowerCase()).includes(tag.toLowerCase())
   );
 }
 
@@ -170,8 +206,13 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
       keepBackground: true,
     })
     .use(rehypeLazyImages)
+    .use(rehypeAbbrTabindex)
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(content);
+
+  const koreanChars = (content.match(/[가-힣]/g) ?? []).length;
+  const latinWords = content.replace(/[가-힣]/g, " ").split(/\s+/).filter((w) => w.length > 0).length;
+  const readTime = Math.max(1, Math.round(koreanChars / 500 + latinWords / 200));
 
   return {
     slug,
@@ -186,6 +227,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     tags: (data.tags as string[]) ?? [],
     cover: (data.cover as string) ?? undefined,
     category: (data.category as string) ?? "Uncategorized",
+    readTime,
     contentHtml: result.toString(),
     toc,
   };

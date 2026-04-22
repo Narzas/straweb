@@ -455,8 +455,13 @@ async function fetchPredictionMarkets() {
     if (!res.ok) return null;
     const json = await res.json();
     const rows = json.data ?? [];
-    // 상위 20개 풀에서 매 실행마다 5개 무작위 선택
-    const shuffled = rows.sort(() => Math.random() - 0.5).slice(0, 5);
+    // 상위 20개 풀에서 매 실행마다 5개 무작위 선택 (Fisher-Yates)
+    const pool = [...rows];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const shuffled = pool.slice(0, 5);
     return shuffled.map((r) => ({
       market_id: r.market_id ?? r.id,
       question: r.question ?? r.title,
@@ -528,13 +533,12 @@ async function fetchHyperliquidPerps() {
 async function fetchAll() {
   console.log("데이터 수집 중...");
 
-  const [globalRes, trendingRes, marketsRes, ctRes, fngRes, dexRes] = await Promise.all([
+  const [globalRes, trendingRes, marketsRes, fngRes, dexRes] = await Promise.all([
     safeFetch("https://api.coingecko.com/api/v3/global"),
     safeFetch("https://api.coingecko.com/api/v3/search/trending"),
     safeFetch(
       "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana,bnb,xrp,hyperliquid&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d"
     ),
-    safeFetch("https://cointelegraph.com/rss"),
     safeFetch("https://api.alternative.me/fng/?limit=1"),
     safeFetch("https://api.llama.fi/v2/chains"),   // chain list
   ]);
@@ -542,27 +546,15 @@ async function fetchAll() {
   const global_ = globalRes ? await globalRes.json() : null;
   const trending = trendingRes ? await trendingRes.json() : null;
   const markets = marketsRes ? await marketsRes.json() : null;
+
+  // 트렌딩 코인 가격/변동률 보강
+  const trendingIds = (trending?.coins ?? []).slice(0, 6).map((e) => e.item.id).join(",");
+  const trendingMktRes = trendingIds
+    ? await safeFetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${trendingIds}&price_change_percentage=24h,7d&sparkline=false`)
+    : null;
+  const trendingMkt = trendingMktRes ? await trendingMktRes.json() : [];
   const fngRaw = fngRes ? await fngRes.json() : null;
   const dexRaw = dexRes ? await dexRes.json() : null;
-
-  // CoinTelegraph RSS 파싱 + 번역
-  let news = [];
-  if (ctRes) {
-    const xml = await ctRes.text();
-    const raw = parseRssItems(xml).slice(0, 8);
-    console.log("  뉴스 번역 중...");
-    const titles = raw.map((item) => item.title);
-    const descs = raw.map((item) => item.description ?? "");
-    const [translatedTitles, translatedDescs] = await Promise.all([
-      translateBatch(titles),
-      translateBatch(descs),
-    ]);
-    news = raw.map((item, i) => ({
-      ...item,
-      title: translatedTitles[i] ?? item.title,
-      description: item.description ? (translatedDescs[i] || item.description) : item.description,
-    }));
-  }
 
   // 공포·탐욕 지수
   const FNG_KO = {
@@ -618,13 +610,12 @@ async function fetchAll() {
   const altcoinSeason = calcAltcoinSeason(marketsTop250);
   const gainersLosers = calcGainersLosers(marketsTop250);
 
-  const [longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, btcEtfFlows] = await Promise.all([
+  const [longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories] = await Promise.all([
     fetchLongShortRatio(),
     fetchSmartMoneyNetflows(),
     fetchPredictionMarkets(),
     fetchHyperliquidPerps(),
     fetchCoinCategories(),
-    fetchBtcEtfFlows(),
   ]);
   // RSI는 순차 호출(CoinGecko rate limit)
   const rsiHeatmap = await fetchRsiHeatmap();
@@ -636,7 +627,7 @@ async function fetchAll() {
     predictionMarkets.forEach((p, i) => { p.question = translated[i] ?? p.question; });
   }
 
-  console.log(`  알트코인 시즌: ${altcoinSeason}, 롱/숏: ${longShortRatio}, 넷플로우: ${netflows?.length ?? 0}개, 예측시장: ${predictionMarkets?.length ?? 0}개, 하이퍼리퀴드: ${hyperliquidPerps?.length ?? 0}개, 섹터: ${coinCategories?.length ?? 0}개, ETF: ${btcEtfFlows ? "✓" : "✗"}, RSI 과매수: ${rsiHeatmap?.overbought?.length ?? 0}개, 과매도: ${rsiHeatmap?.oversold?.length ?? 0}개, 급등: ${gainersLosers?.gainers?.length ?? 0}개, 급락: ${gainersLosers?.losers?.length ?? 0}개`);
+  console.log(`  알트코인 시즌: ${altcoinSeason}, 롱/숏: ${longShortRatio}, 넷플로우: ${netflows?.length ?? 0}개, 예측시장: ${predictionMarkets?.length ?? 0}개, 하이퍼리퀴드: ${hyperliquidPerps?.length ?? 0}개, 섹터: ${coinCategories?.length ?? 0}개, RSI 과매수: ${rsiHeatmap?.overbought?.length ?? 0}개, 과매도: ${rsiHeatmap?.oversold?.length ?? 0}개, 급등: ${gainersLosers?.gainers?.length ?? 0}개, 급락: ${gainersLosers?.losers?.length ?? 0}개`);
 
   // 시장 요약
   const gd = global_?.data ?? null;
@@ -652,19 +643,25 @@ async function fetchAll() {
     : null;
 
   // 트렌딩 정리
-  const trendingCoins = (trending?.coins ?? []).slice(0, 6).map((e) => ({
-    name: e.item.name,
-    symbol: e.item.symbol,
-    market_cap_rank: e.item.market_cap_rank ?? null,
-    thumb: e.item.thumb ?? null,
-  }));
+  const trendingCoins = (trending?.coins ?? []).slice(0, 6).map((e) => {
+    const mkt = (Array.isArray(trendingMkt) ? trendingMkt : []).find((m) => m.id === e.item.id);
+    return {
+      name: e.item.name,
+      symbol: e.item.symbol,
+      market_cap_rank: e.item.market_cap_rank ?? null,
+      thumb: e.item.thumb ?? null,
+      price: mkt?.current_price ?? null,
+      price_change_24h: mkt?.price_change_percentage_24h ?? null,
+      price_change_7d: mkt?.price_change_percentage_7d_in_currency ?? null,
+    };
+  });
 
-  return { market, trending: trendingCoins, fearGreed, dexChains, news, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, btcEtfFlows, rsiHeatmap, gainersLosers };
+  return { market, trending: trendingCoins, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers };
 }
 
 // ── 편집 코멘트 생성 (룰 기반) ───────────────────────────────────────────────
 
-function generateEditorial({ market, trending, fearGreed, dexChains, news, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, btcEtfFlows, rsiHeatmap, gainersLosers }) {
+function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers }) {
   const change = market?.market_cap_change_24h;
   const btcDom = market?.btc_dominance;
   const coins = market?.coins ?? [];
@@ -976,7 +973,7 @@ function generateEditorial({ market, trending, fearGreed, dexChains, news, altco
 
   const summary = `${sentimentDetail}${btcDom != null ? ` BTC 도미넌스는 ${btcDom.toFixed(1)}%를 기록 중입니다.` : ""}`;
 
-  return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, netflow_comment: netflowComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, prediction_markets: predictionMarkets ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, btc_etf_flows: btcEtfFlows ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null };
+  return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, netflow_comment: netflowComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, prediction_markets: predictionMarkets ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null };
 }
 
 // ── RSI 차트 ──────────────────────────────────────────────────────────────────
@@ -1117,7 +1114,7 @@ async function sendTelegramBriefing(date, payload, editorial) {
   const chatId = process.env.TELEGRAM_CHANNEL_ID;
   if (!chatId) return;
 
-  const { market, fearGreed, trending, news } = payload;
+  const { market, fearGreed, trending } = payload;
   const coins = market?.coins ?? [];
 
   const SENTIMENT_EMOJI = {
@@ -1293,7 +1290,7 @@ async function main() {
 
   const payload = await fetchAll();
   const editorial = generateEditorial(payload);
-  const { altcoinSeason: _as, longShortRatio: _ls, netflows: _nf, predictionMarkets: _pm, hyperliquidPerps: _hp, coinCategories: _cc, btcEtfFlows: _ef, rsiHeatmap: _rsi, gainersLosers: _gl, ...dbPayload } = payload;
+  const { altcoinSeason: _as, longShortRatio: _ls, netflows: _nf, predictionMarkets: _pm, hyperliquidPerps: _hp, coinCategories: _cc, rsiHeatmap: _rsi, gainersLosers: _gl, ...dbPayload } = payload;
 
   if (isDryRun) {
     console.log("[dry-run] DB 저장 및 텔레그램 전송 생략");

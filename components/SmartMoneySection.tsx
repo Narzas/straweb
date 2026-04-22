@@ -29,7 +29,7 @@ export default function SmartMoneySection({ items }: { items: SmartMoneyItem[] }
   return (
     <section>
       <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300">
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
           🐳 스마트머니 보유 현황
         </h2>
         <span className="text-[11px] text-gray-400">Nansen · 24h 변화</span>

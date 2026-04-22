@@ -62,9 +62,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." }, { status: 429 });
   }
 
-  const body = await req.json();
-  const author = body.author?.trim();
-  const message = body.message?.trim();
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch {
+    return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
+  }
+  const author = (body.author as string | undefined)?.trim();
+  const message = (body.message as string | undefined)?.trim();
 
   if (!author || !message) {
     return NextResponse.json({ error: "이름과 내용을 입력해 주세요." }, { status: 400 });

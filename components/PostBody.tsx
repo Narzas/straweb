@@ -11,6 +11,46 @@ export default function PostBody({ contentHtml }: Props) {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = useState<string>("");
 
+  useEffect(() => {
+    const container = bodyRef.current;
+    if (!container) return;
+
+    container.querySelectorAll<HTMLElement>("figure[data-rehype-pretty-code-figure]").forEach((fig) => {
+      if (fig.querySelector(".copy-btn")) return;
+      const pre = fig.querySelector("pre");
+      if (!pre) return;
+      const btn = document.createElement("button");
+      btn.className = "copy-btn absolute right-2 top-2 z-10 rounded-md bg-white/10 px-2 py-1 text-xs text-gray-300 hover:bg-white/20 transition-colors";
+      btn.style.cursor = "pointer";
+      btn.setAttribute("aria-label", "코드 복사");
+      btn.textContent = "복사";
+      btn.addEventListener("click", () => {
+        const text = pre.textContent ?? "";
+        const markDone = () => {
+          btn.textContent = "복사됨";
+          setTimeout(() => { btn.textContent = "복사"; }, 2000);
+        };
+        const fallback = () => {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.cssText = "position:fixed;opacity:0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          markDone();
+        };
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(markDone).catch(fallback);
+        } else {
+          fallback();
+        }
+      });
+      fig.style.position = "relative";
+      fig.appendChild(btn);
+    });
+  }, [contentHtml]);
+
   // 이벤트 위임 방식 — 컨테이너에 핸들러 하나만 등록, cleanup 정확히 동작
   useEffect(() => {
     const container = bodyRef.current;

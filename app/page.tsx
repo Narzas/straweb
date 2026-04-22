@@ -24,6 +24,13 @@ export const metadata: Metadata = {
     url: "https://www.stragos.xyz",
     siteName: "StraWeb",
     locale: "ko_KR",
+    images: [{ url: "https://www.stragos.xyz/og?title=StraWeb", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StraWeb",
+    description: "개발, 리뷰, 투자 등 관심 있는 것들을 편하게 기록하는 블로그입니다.",
+    images: ["https://www.stragos.xyz/og?title=StraWeb"],
   },
 };
 
@@ -50,6 +57,27 @@ export default async function HomePage() {
   const season = getSeason(new Date().getMonth() + 1);
   const viewCounts = await getViewCounts(recentPosts.map((p) => p.slug));
 
+  const blogJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "StraWeb",
+    url: "https://www.stragos.xyz",
+    description: "개발, 리뷰, 투자 등 관심 있는 것들을 편하게 기록하는 블로그입니다.",
+    author: {
+      "@type": "Person",
+      name: "Stragos",
+      url: "https://www.stragos.xyz",
+      sameAs: ["https://x.com/0xStragos"],
+    },
+    blogPost: recentPosts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      url: `https://www.stragos.xyz/posts/${p.slug}`,
+      datePublished: p.date,
+      author: { "@type": "Person", name: "Stragos" },
+    })),
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -70,6 +98,10 @@ export default async function HomePage() {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
     />
     <ClientOnly><SeasonalEffect season={season} /></ClientOnly>
 
@@ -109,18 +141,16 @@ export default async function HomePage() {
       {categories.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">카테고리</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {categories.map(({ name, count }) => (
               <Link
                 key={name}
                 href={`/category/${encodeURIComponent(name.toLowerCase())}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-all hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 hover:text-indigo-700 dark:hover:text-indigo-400"
+                className="group flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-4 text-center shadow-sm transition-all hover:border-teal-400 dark:hover:border-cyan-500 hover:shadow-md hover:-translate-y-0.5"
               >
-                <span>{CATEGORY_ICONS[name] ?? "🗂️"}</span>
-                {name}
-                <span className="rounded-full bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  {count}
-                </span>
+                <span className="text-2xl leading-none">{CATEGORY_ICONS[name] ?? "🗂️"}</span>
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors">{name}</span>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500">{count}개</span>
               </Link>
             ))}
           </div>
@@ -133,7 +163,7 @@ export default async function HomePage() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">최근 글</h2>
           <Link
             href="/posts"
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="text-sm font-medium text-teal-600 dark:text-cyan-400 hover:text-teal-800 dark:hover:text-cyan-300 transition-colors"
           >
             전체 보기 →
           </Link>
@@ -153,8 +183,8 @@ export default async function HomePage() {
 
       {/* ── 모바일: 사이드바 하단 표시 ── */}
       <div className="lg:hidden space-y-6">
-        <Sidebar />
         <RightSidebar />
+        <Sidebar />
       </div>
 
       </div>{/* end 메인 콘텐츠 */}

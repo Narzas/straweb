@@ -50,24 +50,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: post.title,
       description: post.description,
       type: "article",
+      locale: "ko_KR",
+      siteName: siteConfig.name,
       url: `${siteConfig.url}/posts/${slug}`,
       publishedTime: post.date,
+      modifiedTime: post.updated ?? post.date,
       authors: [siteConfig.author],
       tags: post.tags,
       images: [
-        {
-          url: `${siteConfig.url}/og?title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}&date=${encodeURIComponent(post.date)}`,
-          width: 1200,
-          height: 630,
-          alt: post.title,
-        },
+        post.cover && !post.cover.endsWith(".svg")
+          ? { url: `${siteConfig.url}${post.cover}`, width: 1200, height: 630, alt: post.title }
+          : { url: `${siteConfig.url}/og?title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}&date=${encodeURIComponent(post.date)}`, width: 1200, height: 630, alt: post.title },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.description,
-      images: [`${siteConfig.url}/og?title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}&date=${encodeURIComponent(post.date)}`],
+      images: [post.cover && !post.cover.endsWith(".svg") ? `${siteConfig.url}${post.cover}` : `${siteConfig.url}/og?title=${encodeURIComponent(post.title)}&category=${encodeURIComponent(post.category)}&date=${encodeURIComponent(post.date)}`],
     },
   };
 }
@@ -99,7 +99,7 @@ export default async function PostPage({ params }: Props) {
     "@type": "BlogPosting",
     headline: post.title,
     description: post.description,
-    author: { "@type": "Person", name: siteConfig.author, url: siteConfig.url },
+    author: { "@type": "Person", name: siteConfig.author, url: siteConfig.url, sameAs: ["https://x.com/0xStragos"] },
     datePublished: post.date,
     dateModified: post.date,
     url: `${siteConfig.url}/posts/${slug}`,

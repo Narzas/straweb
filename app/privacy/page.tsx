@@ -90,7 +90,7 @@ export default function PrivacyPage() {
         <h2 className="font-semibold text-gray-900 dark:text-gray-100">문의</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           개인정보 처리방침에 관한 문의사항은{" "}
-          <a href="/contact" className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800 dark:hover:text-indigo-300">
+          <a href="/contact" className="text-teal-600 dark:text-cyan-400 underline hover:text-teal-800 dark:hover:text-cyan-300">
             문의 페이지
           </a>
           를 통해 접수해 주시기 바랍니다.

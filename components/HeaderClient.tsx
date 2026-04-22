@@ -45,6 +45,18 @@ export default function HeaderClient({ categories }: { categories: Category[] })
     setShowNewBadge(!localStorage.getItem("crypto-new-seen"));
   }, []);
 
+  // 헤더 스크롤 슬림화 (히스테리시스: 64px 넘으면 slim, 48px 미만이면 복귀)
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      const slim = document.documentElement.classList.contains("header-scrolled");
+      if (!slim && y > 64) document.documentElement.classList.add("header-scrolled");
+      else if (slim && y < 48) document.documentElement.classList.remove("header-scrolled");
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const closeAll = () => {
     setMobileOpen(false);
     setDropdownOpen(false);
@@ -98,7 +110,7 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         <Link
           href="/crypto"
           onClick={handleCryptoClick}
-          className="relative flex items-center px-3 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-800 dark:hover:text-indigo-300"
+          className="relative flex items-center px-3 py-2 text-sm font-medium text-teal-600 dark:text-cyan-400 transition-colors hover:text-teal-800 dark:hover:text-cyan-300"
         >
           크립토브리핑
           {showNewBadge && (
@@ -147,8 +159,8 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         {/* 검색 */}
         {searchOpen ? (
           <form onSubmit={handleSearchSubmit} className="flex items-center">
-            <div className="flex items-center rounded-full border border-indigo-400 dark:border-indigo-500 bg-white dark:bg-slate-800 px-3 py-1.5 gap-2 shadow-sm">
-              <svg className="h-4 w-4 flex-shrink-0 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <div className="flex items-center rounded-full border border-teal-400 dark:border-cyan-500 bg-white dark:bg-slate-800 px-3 py-1.5 gap-2 shadow-sm">
+              <svg className="h-4 w-4 flex-shrink-0 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 1116.65 16.65z" />
               </svg>
               <input
@@ -175,7 +187,7 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         ) : (
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 rounded-full border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors shadow-sm"
+            className="flex items-center gap-2 rounded-full border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500 hover:border-teal-400 dark:hover:border-cyan-500 hover:text-teal-600 dark:hover:text-cyan-400 transition-colors shadow-sm"
             aria-label="검색"
           >
             <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -246,11 +258,11 @@ export default function HeaderClient({ categories }: { categories: Category[] })
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="검색..."
-              className="flex-1 rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
+              className="flex-1 rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-200/60 dark:focus:ring-cyan-800/40"
             />
             <button
               type="submit"
-              className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+              className="rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700 transition-colors"
             >
               검색
             </button>
@@ -291,7 +303,7 @@ export default function HeaderClient({ categories }: { categories: Category[] })
           <Link
             href="/crypto"
             onClick={handleCryptoClick}
-            className={`relative inline-flex rounded-lg px-3 pb-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 ${showNewBadge ? "pt-5" : "pt-3"}`}
+            className={`relative inline-flex rounded-lg px-3 pb-3 text-sm font-medium text-teal-600 dark:text-cyan-400 hover:bg-teal-50 dark:hover:bg-cyan-900/20 ${showNewBadge ? "pt-5" : "pt-3"}`}
           >
             크립토브리핑
             {showNewBadge && (
@@ -315,7 +327,7 @@ export default function HeaderClient({ categories }: { categories: Category[] })
                 className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
               >
                 <span>{name}</span>
-                <span className="rounded-full bg-indigo-50 dark:bg-indigo-900/40 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                <span className="rounded-full bg-teal-50 dark:bg-cyan-900/40 px-2 py-0.5 text-xs font-medium text-teal-700 dark:text-cyan-400">
                   {count}
                 </span>
               </Link>

@@ -7,6 +7,7 @@ import ClockWeatherWidget from "./ClockWeatherWidget";
 type PopularPost = { slug: string; title: string; category: string; views: number };
 type NewsItem = { title: string; link: string; source: string };
 type NewsCategory = { key: string; label: string; items: NewsItem[] };
+type TagItem = { name: string; count: number };
 
 const CATEGORY_ICONS: Record<string, string> = {
   개발: "💻", 리뷰: "📦", 일상: "☀️", 투자: "📈", 정보: "📌",
@@ -29,6 +30,7 @@ export default function Sidebar() {
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [activeTab, setActiveTab] = useState(0);
   const [newsLoading, setNewsLoading] = useState(true);
+  const [tags, setTags] = useState<TagItem[]>([]);
 
   useEffect(() => {
     fetch("/api/popular")
@@ -36,6 +38,11 @@ export default function Sidebar() {
       .then((d) => setPopular(Array.isArray(d) ? d : []))
       .catch(() => setPopular([]))
       .finally(() => setPopularLoading(false));
+
+    fetch("/api/tags")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setTags(Array.isArray(d) ? d.slice(0, 20) : []))
+      .catch(() => {});
 
     async function loadNews() {
       try {
@@ -64,14 +71,14 @@ export default function Sidebar() {
       <ClockWeatherWidget />
 
       {/* 인기글 */}
-      <div className="rounded-xl border border-gray-200 dark:border-slate-700 border-l-2 border-l-amber-400 dark:border-l-amber-600 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
+      <div className="rounded-xl border border-gray-200/80 dark:border-slate-700/60 border-l-2 border-l-teal-400 dark:border-l-cyan-500 bg-white/90 dark:bg-slate-800/80 backdrop-blur-sm px-4 py-3 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
             <span aria-hidden="true">🔥</span> 인기글
           </p>
           <Link
             href="/posts"
-            className="text-[11px] text-indigo-400 hover:text-indigo-600 transition-colors"
+            className="text-[11px] text-teal-400 hover:text-teal-600 transition-colors"
           >
             전체 →
           </Link>
@@ -104,7 +111,7 @@ export default function Sidebar() {
                   <Link
                     href={`/posts/${post.slug}`}
                     title={post.title}
-                    className="block text-xs leading-snug font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 truncate transition-colors"
+                    className="block text-xs leading-snug font-medium text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-cyan-400 truncate transition-colors"
                   >
                     {post.title.length > 20 ? post.title.slice(0, 20) + "…" : post.title}
                   </Link>
@@ -124,8 +131,34 @@ export default function Sidebar() {
         )}
       </div>
 
+      {/* 태그 클라우드 */}
+      {tags.length > 0 && (
+        <div className="rounded-xl border border-gray-200/80 dark:border-slate-700/60 border-l-2 border-l-teal-400 dark:border-l-cyan-500 bg-white/90 dark:bg-slate-800/80 backdrop-blur-sm px-4 py-3 shadow-sm">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <span aria-hidden="true">🏷️</span> 태그
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {tags.map(({ name, count }) => {
+              const max = tags[0].count;
+              const size = 0.65 + (count / max) * 0.3;
+              return (
+                <Link
+                  key={name}
+                  href={`/tag/${encodeURIComponent(name.toLowerCase())}`}
+                  style={{ fontSize: `${size}rem` }}
+                  className="rounded-full bg-gray-100 dark:bg-slate-700 px-2 py-0.5 text-gray-600 dark:text-gray-300 hover:bg-teal-100 dark:hover:bg-cyan-900/40 hover:text-teal-600 dark:hover:text-cyan-400 transition-colors leading-snug"
+                >
+                  #{name}
+                  <span className="ml-0.5 text-[9px] text-gray-400 dark:text-gray-500">{count}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 실시간 뉴스 */}
-      <div className="rounded-xl border border-gray-200 dark:border-slate-700 border-l-2 border-l-indigo-400 dark:border-l-indigo-600 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
+      <div className="rounded-xl border border-gray-200/80 dark:border-slate-700/60 border-l-2 border-l-teal-400 dark:border-l-cyan-500 bg-white/90 dark:bg-slate-800/80 backdrop-blur-sm px-4 py-3 shadow-sm">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
           실시간 뉴스
         </p>
@@ -140,7 +173,7 @@ export default function Sidebar() {
                 onClick={() => setActiveTab(i)}
                 className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
                   i === activeTab
-                    ? "bg-indigo-500 text-white"
+                    ? "bg-teal-500 text-white"
                     : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600"
                 }`}
               >
@@ -165,7 +198,7 @@ export default function Sidebar() {
           <ol className="space-y-3">
             {activeNews.map((item, i) => (
               <li key={i} className="flex gap-2">
-                <span className="mt-0.5 flex-shrink-0 text-xs font-bold text-indigo-400 w-4">
+                <span className="mt-0.5 flex-shrink-0 text-xs font-bold text-teal-400 w-4">
                   {i + 1}
                 </span>
                 <div>
@@ -173,7 +206,7 @@ export default function Sidebar() {
                     href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block text-xs leading-snug text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 line-clamp-2 transition-colors"
+                    className="block text-xs leading-snug text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-cyan-400 line-clamp-2 transition-colors"
                   >
                     {item.title}
                   </a>

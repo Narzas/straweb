@@ -51,6 +51,7 @@ export type PostMeta = {
   slug: string;
   title: string;
   date: string;
+  updated?: string;
   description: string;
   firstHeading?: string;
   tags: string[];
@@ -132,6 +133,7 @@ export function getAllPosts(): PostMeta[] {
         tags: (data.tags as string[]) ?? [],
         cover: (data.cover as string) ?? undefined,
         category: (data.category as string) ?? "Uncategorized",
+        updated: data.updated ? String(data.updated).slice(0, 10) : undefined,
         readTime,
       };
     })
@@ -227,6 +229,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     tags: (data.tags as string[]) ?? [],
     cover: (data.cover as string) ?? undefined,
     category: (data.category as string) ?? "Uncategorized",
+    updated: data.updated ? String(data.updated).slice(0, 10) : undefined,
     readTime,
     contentHtml: result.toString(),
     toc,

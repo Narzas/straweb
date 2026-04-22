@@ -9,17 +9,39 @@ export default function ThemeToggle() {
     setDark(document.documentElement.classList.contains("dark"));
   }, []);
 
-  function toggle() {
+  function toggle(e: React.MouseEvent<HTMLButtonElement>) {
     const html = document.documentElement;
-    if (dark) {
-      html.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setDark(false);
-    } else {
-      html.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setDark(true);
+    const nextDark = !dark;
+    const x = e.clientX;
+    const y = e.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    const doToggle = () => {
+      if (nextDark) {
+        html.classList.add("dark");
+        localStorage.setItem("theme", "dark");
+      } else {
+        html.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+      }
+      setDark(nextDark);
+    };
+
+    if (!("startViewTransition" in document)) {
+      doToggle();
+      return;
     }
+
+    const transition = (document as Document & { startViewTransition: (cb: () => void) => { ready: Promise<void> } }).startViewTransition(doToggle);
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`] },
+        { duration: 400, easing: "ease-in", pseudoElement: "::view-transition-new(root)" }
+      );
+    });
   }
 
   return (

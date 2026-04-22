@@ -36,20 +36,30 @@ export default function GuestbookPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [author, setAuthor] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/guestbook")
+    setLoading(true);
+    setFetchError(false);
+    fetch(`/api/guestbook?page=${page}`)
       .then((r) => r.ok ? r.json() : Promise.reject())
-      .then((d) => setEntries(Array.isArray(d) ? d : []))
+      .then((d) => {
+        setEntries(Array.isArray(d.data) ? d.data : []);
+        setTotal(d.total ?? 0);
+        setTotalPages(d.totalPages ?? 1);
+      })
       .catch(() => { setEntries([]); setFetchError(true); })
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,11 +76,17 @@ export default function GuestbookPage() {
         setError(data.error ?? "오류가 발생했습니다.");
         return;
       }
-      setEntries((prev) => [data, ...prev]);
       setAuthor("");
       setMessage("");
       formRef.current?.reset();
       setToast("방명록이 등록되었습니다!");
+      if (page === 1) {
+        setEntries((prev) => [data, ...prev.slice(0, 9)]);
+        setTotal((t) => t + 1);
+        setTotalPages((tp) => Math.ceil((total + 1) / 10));
+      } else {
+        setPage(1);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -96,7 +112,7 @@ export default function GuestbookPage() {
             onChange={(e) => setAuthor(e.target.value)}
             required
             autoComplete="name"
-            className="w-36 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
+            className="w-36 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:focus:ring-cyan-800"
           />
         </div>
         <textarea
@@ -106,7 +122,7 @@ export default function GuestbookPage() {
           onChange={(e) => setMessage(e.target.value)}
           required
           rows={3}
-          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
+          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:focus:ring-cyan-800"
         />
         <div className="flex items-center justify-between">
           {error ? <p role="alert" aria-live="polite" className="text-xs text-red-500">{error}</p> : <span />}
@@ -115,7 +131,7 @@ export default function GuestbookPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-600 disabled:opacity-50"
+              className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-teal-600 disabled:opacity-50"
             >
               {submitting ? "등록 중..." : "등록"}
             </button>
@@ -124,6 +140,9 @@ export default function GuestbookPage() {
       </form>
 
       {/* ── 목록 ── */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-400 dark:text-gray-500">총 {total}개</p>
+      </div>
       {loading ? (
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -142,7 +161,7 @@ export default function GuestbookPage() {
           {entries.map((entry) => (
             <li
               key={entry.id}
-              className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4 shadow-sm border-l-2 border-l-indigo-300 dark:border-l-indigo-700"
+              className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4 shadow-sm border-l-2 border-l-teal-300 dark:border-l-cyan-700"
             >
               <div className="flex items-start gap-3">
                 <Avatar name={entry.author} />
@@ -159,6 +178,54 @@ export default function GuestbookPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* ── 페이지네이션 ── */}
+      {totalPages > 1 && (
+        <div ref={listRef} className="mt-8 flex items-center justify-center gap-1">
+          <button
+            onClick={() => { setPage((p) => Math.max(1, p - 1)); listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+            disabled={page === 1}
+            className="rounded-lg px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label="이전 페이지"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter((n) => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
+            .reduce<(number | "…")[]>((acc, n, i, arr) => {
+              if (i > 0 && (n as number) - (arr[i - 1] as number) > 1) acc.push("…");
+              acc.push(n);
+              return acc;
+            }, [])
+            .map((n, i) =>
+              n === "…" ? (
+                <span key={`ellipsis-${i}`} className="px-2 text-gray-400">…</span>
+              ) : (
+                <button
+                  key={n}
+                  onClick={() => { setPage(n as number); listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+                  className={`min-w-[2rem] rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    page === n
+                      ? "bg-teal-500 text-white"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  {n}
+                </button>
+              )
+            )}
+
+          <button
+            onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+            disabled={page === totalPages}
+            className="rounded-lg px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label="다음 페이지"
+          >
+            →
+          </button>
+        </div>
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}

@@ -21,8 +21,16 @@ export const metadata: Metadata = {
     title: "글 목록 — StraWeb",
     description: "StraWeb의 모든 블로그 글 목록입니다. 개발, 크립토·투자, 게임 리뷰, 일상 등 다양한 주제를 다룹니다.",
     type: "website",
+    locale: "ko_KR",
+    siteName: "StraWeb",
     url: "https://www.stragos.xyz/posts",
     images: [{ url: `${siteConfig.url}/og?title=${encodeURIComponent("글 목록")}`, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "글 목록 — StraWeb",
+    description: "StraWeb의 모든 블로그 글 목록입니다. 개발, 크립토·투자, 게임 리뷰, 일상 등 다양한 주제를 다룹니다.",
+    images: [`${siteConfig.url}/og?title=${encodeURIComponent("글 목록")}`],
   },
 };
 

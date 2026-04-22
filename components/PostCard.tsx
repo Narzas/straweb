@@ -8,8 +8,8 @@ import type { PostMeta } from "@/lib/posts";
 import ViewCount from "@/components/ViewCount";
 
 const GRADIENTS = [
-  "from-violet-500 to-indigo-600",
-  "from-sky-500 to-cyan-600",
+  "from-violet-500 to-purple-600",
+  "from-sky-500 to-teal-600",
   "from-emerald-500 to-teal-600",
   "from-orange-500 to-rose-600",
   "from-pink-500 to-purple-600",
@@ -31,10 +31,12 @@ export default function PostCard({
   post,
   priority = false,
   viewCount,
+  variant = "list",
 }: {
   post: PostMeta;
   priority?: boolean;
   viewCount?: number;
+  variant?: "list" | "grid";
 }) {
   const gradient = pickGradient(post.slug);
   const thumbRef = useRef<HTMLDivElement>(null);
@@ -64,8 +66,73 @@ export default function PostCard({
     setPopup(null);
   }, []);
 
+  if (variant === "grid") {
+    return (
+      <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-teal-400/50 dark:hover:border-cyan-500/30 cursor-pointer h-full">
+        {/* 썸네일 */}
+        <div className="relative aspect-video w-full overflow-hidden bg-gray-100 dark:bg-slate-700 shrink-0">
+          {post.cover ? (
+            <Image
+              src={post.cover}
+              alt={post.title}
+              fill
+              sizes="(min-width: 640px) 50vw, 100vw"
+              className={`transition-transform duration-500 group-hover:scale-105 ${post.cover.endsWith(".svg") ? "object-cover object-center" : "object-contain"}`}
+              priority={priority}
+              unoptimized={post.cover.endsWith(".svg")}
+            />
+          ) : (
+            <div className={`h-full w-full bg-gradient-to-br ${gradient} flex items-center justify-center transition-transform duration-500 group-hover:scale-105`}>
+              <span className="text-5xl font-black text-white/25 select-none">{post.title.charAt(0).toUpperCase()}</span>
+            </div>
+          )}
+        </div>
+
+        {/* 콘텐츠 */}
+        <div className="flex flex-1 flex-col gap-2 p-4">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Link
+              href={`/category/${encodeURIComponent(post.category.toLowerCase())}`}
+              className="relative z-10 rounded-full bg-teal-600 px-2.5 py-0.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+            >
+              {post.category}
+            </Link>
+            {post.tags.slice(0, 2).map((tag) => (
+              <Link
+                key={tag}
+                href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
+                className="relative z-10 rounded-full bg-gray-100 dark:bg-slate-600 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-teal-100 dark:hover:bg-cyan-900/30 hover:text-teal-600 dark:hover:text-cyan-400 transition-colors"
+              >
+                #{tag}
+              </Link>
+            ))}
+          </div>
+
+          <h2 className="text-sm font-semibold leading-snug text-gray-900 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-cyan-400 line-clamp-2 transition-colors">
+            <Link href={`/posts/${post.slug}`} className="after:absolute after:inset-0 after:z-0">
+              {post.title}
+            </Link>
+          </h2>
+
+          {post.firstHeading && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 line-clamp-2 leading-relaxed">{post.firstHeading}</p>
+          )}
+
+          <div className="mt-auto flex items-center justify-between pt-1">
+            <div className="flex items-center gap-1.5">
+              <time className="text-xs text-gray-400 dark:text-gray-500">{post.date}</time>
+              <span className="text-xs text-gray-300 dark:text-slate-600">·</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">약 {post.readTime}분</span>
+            </div>
+            <ViewCount slug={post.slug} initialCount={viewCount} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="group relative flex flex-row overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer">
+    <div className="group relative flex flex-row overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-teal-400/50 dark:hover:border-cyan-500/30 cursor-pointer">
 
       {/* Thumbnail */}
       <div
@@ -103,7 +170,7 @@ export default function PostCard({
         <div className="flex flex-wrap items-center gap-1.5">
           <Link
             href={`/category/${encodeURIComponent(post.category.toLowerCase())}`}
-            className="relative z-10 rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors"
+            className="relative z-10 rounded-full bg-teal-600 px-2.5 py-0.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
           >
             {post.category}
           </Link>
@@ -111,7 +178,7 @@ export default function PostCard({
             <Link
               key={tag}
               href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
-              className="relative z-10 rounded-full bg-gray-100 dark:bg-slate-600 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              className="relative z-10 rounded-full bg-gray-100 dark:bg-slate-600 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-teal-100 dark:hover:bg-cyan-900/30 hover:text-teal-600 dark:hover:text-cyan-400 transition-colors"
             >
               #{tag}
             </Link>
@@ -119,7 +186,7 @@ export default function PostCard({
         </div>
 
         {/* 제목 — stretched-link: after 가상 요소가 카드 전체를 덮음 */}
-        <h2 className="text-base font-semibold leading-snug text-gray-900 dark:text-gray-100 transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400 break-keep line-clamp-2">
+        <h2 className="text-base font-semibold leading-snug text-gray-900 dark:text-gray-100 transition-colors group-hover:text-teal-600 dark:group-hover:text-cyan-400 break-keep line-clamp-2">
           <Link
             href={`/posts/${post.slug}`}
             className="after:absolute after:inset-0 after:z-0"

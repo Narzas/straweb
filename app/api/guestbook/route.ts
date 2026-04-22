@@ -33,13 +33,20 @@ function getClientIp(req: NextRequest): string {
   );
 }
 
-export async function GET() {
+const PAGE_SIZE = 10;
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = createServiceClient();
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("guestbook")
-    .select("id, author, message, created_at, ip")
+    .select("id, author, message, created_at, ip", { count: "exact" })
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(from, to);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -50,9 +57,10 @@ export async function GET() {
     ip: maskIp(row.ip),
   }));
 
-  return NextResponse.json(masked, {
-    headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
-  });
+  return NextResponse.json(
+    { data: masked, total: count ?? 0, page, totalPages: Math.ceil((count ?? 0) / PAGE_SIZE) },
+    { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } }
+  );
 }
 
 export async function POST(req: NextRequest) {

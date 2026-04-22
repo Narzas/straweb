@@ -1,9 +1,22 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact",
   description: "StraWeb 운영자에게 문의하세요.",
   alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Contact — StraWeb",
+    description: "StraWeb 운영자에게 문의하세요.",
+    locale: "ko_KR",
+    url: "https://www.stragos.xyz/contact",
+    images: [{ url: "https://www.stragos.xyz/og?title=Contact", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact — StraWeb",
+    description: "StraWeb 운영자에게 문의하세요.",
+    images: ["https://www.stragos.xyz/og?title=Contact"],
+  },
 };
 
 export default function ContactPage() {
@@ -36,7 +49,7 @@ export default function ContactPage() {
               required
               autoComplete="name"
               placeholder="홍길동"
-              className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 transition"
+              className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:focus:ring-cyan-800 transition"
             />
           </div>
 
@@ -51,7 +64,7 @@ export default function ContactPage() {
               required
               autoComplete="email"
               placeholder="hello@example.com"
-              className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 transition"
+              className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:focus:ring-cyan-800 transition"
             />
           </div>
         </div>
@@ -65,7 +78,7 @@ export default function ContactPage() {
             name="subject"
             type="text"
             placeholder="문의 제목을 입력해 주세요"
-            className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 transition"
+            className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:focus:ring-cyan-800 transition"
           />
         </div>
 
@@ -79,7 +92,7 @@ export default function ContactPage() {
             rows={6}
             required
             placeholder="문의 내용을 자세히 작성해 주세요"
-            className="w-full resize-none rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 transition"
+            className="w-full resize-none rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:focus:ring-cyan-800 transition"
           />
         </div>
 
@@ -128,7 +141,7 @@ export default function ContactPage() {
               href={href}
               target={href.startsWith("mailto") ? undefined : "_blank"}
               rel="noopener noreferrer"
-              className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+              className="text-sm font-medium text-teal-600 dark:text-cyan-400 hover:underline"
             >
               {value}
             </a>
@@ -138,3 +151,5 @@ export default function ContactPage() {
     </div>
   );
 }
+
+

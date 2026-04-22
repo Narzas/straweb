@@ -67,10 +67,35 @@ export const metadata: Metadata = {
   },
 };
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteConfig.name,
+  url: siteConfig.url,
+  publisher: {
+    "@type": "Person",
+    name: siteConfig.author,
+    url: siteConfig.url,
+    sameAs: ["https://x.com/0xStragos"],
+  },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${siteConfig.url}/search?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         {/* RSS 자동 발견 */}
         <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} RSS`} href="/rss.xml" />
         {/* Google Fonts preconnect */}
@@ -103,7 +128,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <noscript dangerouslySetInnerHTML={{ __html: '<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-56CDQRKW" height="0" width="0" style="display:none;visibility:hidden"></iframe>' }} />
         <a
           href="#main-content"
-          className="fixed left-4 top-4 z-[99999] -translate-y-20 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-transform focus:translate-y-0"
+          className="fixed left-4 top-4 z-[99999] -translate-y-20 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-transform focus:translate-y-0"
         >
           본문 바로가기
         </a>

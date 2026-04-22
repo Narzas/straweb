@@ -147,10 +147,10 @@ export default function RightSidebar() {
       </div>
 
       {/* 주인장 관심 뉴스 */}
-      <div className="rounded-xl overflow-hidden shadow-sm border border-indigo-100 dark:border-indigo-900/40">
-        <div className="bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2.5 flex items-center gap-2">
+      <div className="rounded-xl overflow-hidden shadow-sm border border-teal-100 dark:border-cyan-900/40">
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 dark:from-slate-800 dark:to-slate-800 dark:border-b dark:border-cyan-500/30 px-4 py-2.5 flex items-center gap-2">
           <span className="text-base leading-none" aria-hidden="true">🔥</span>
-          <span className="text-[11px] font-bold tracking-widest text-white/90 uppercase">
+          <span className="text-[11px] font-bold tracking-widest text-white/90 dark:text-cyan-400 uppercase">
             주인장 관심 뉴스
           </span>
         </div>

@@ -32,8 +32,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${label} 카테고리 — StraWeb`,
       description: `StraWeb의 '${label}' 카테고리 글 목록입니다.`,
       type: "website",
+      locale: "ko_KR",
+      siteName: "StraWeb",
       url: `https://www.stragos.xyz/category/${name}`,
       images: [{ url: `${siteConfig.url}/og?title=${encodeURIComponent(`${label} 카테고리`)}`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${label} 카테고리 — StraWeb`,
+      description: `StraWeb의 '${label}' 카테고리 글 목록입니다.`,
+      images: [`${siteConfig.url}/og?title=${encodeURIComponent(`${label} 카테고리`)}`],
     },
   };
 }
@@ -47,8 +55,19 @@ export default async function CategoryPage({ params }: Props) {
 
   const allCategories = getAllCategories();
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "홈", item: "https://www.stragos.xyz" },
+      { "@type": "ListItem", position: 2, name: "글 목록", item: "https://www.stragos.xyz/posts" },
+      { "@type": "ListItem", position: 3, name: label, item: `https://www.stragos.xyz/category/${name}` },
+    ],
+  };
+
   return (
     <div className="lg:grid lg:grid-cols-[240px_1fr_220px] lg:gap-6 xl:gap-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <aside className="hidden lg:block">
         <Sidebar />
       </aside>
@@ -95,10 +114,10 @@ export default async function CategoryPage({ params }: Props) {
       </div>
 
       {/* Post grid */}
-      <ul className="grid gap-8 sm:grid-cols-2">
+      <ul className="grid gap-5 sm:grid-cols-2">
         {posts.map((post) => (
           <li key={post.slug}>
-            <PostCard post={post} />
+            <PostCard post={post} variant="grid" />
           </li>
         ))}
       </ul>

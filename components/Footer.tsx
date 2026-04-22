@@ -9,13 +9,14 @@ const NAV_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+    <footer className="mt-auto relative bg-white dark:bg-slate-900">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-teal-500/50 dark:via-cyan-400/30 to-transparent" />
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
 
           {/* 브랜드 */}
           <div className="space-y-2">
-            <p className="text-sm font-bold text-gray-900 dark:text-white">StraWeb</p>
+            <p className="text-sm font-bold bg-gradient-to-r from-teal-500 to-teal-600 dark:from-cyan-400 dark:to-teal-400 bg-clip-text text-transparent">StraWeb</p>
             <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400 max-w-xs">
               개발·크립토·게임을 직접 경험하고 기록하는 공간입니다.
             </p>
@@ -32,7 +33,7 @@ export default function Footer() {
                 <Link
                   key={href}
                   href={href}
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline underline-offset-2 transition-colors"
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-cyan-400 hover:underline underline-offset-2 transition-colors"
                 >
                   {label}
                 </Link>
@@ -45,7 +46,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="X (Twitter) @0xStragos"
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="text-gray-400 dark:text-gray-500 hover:text-teal-600 dark:hover:text-cyan-400 transition-colors"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />

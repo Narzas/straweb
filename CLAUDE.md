@@ -58,6 +58,30 @@
 
 ### Sitemap (`app/sitemap.ts`)
 - `/crypto` 포함: `changeFrequency: "daily"`, `priority: 0.9`
+- `lastModified`: `post.updated ?? post.date` (updated 필드 우선)
+
+### 카테고리 표시 스타일 (2026-04-22 확정)
+- 홈(`app/page.tsx`)과 posts 페이지 모두 `flex flex-wrap` pill 스타일 통일
+- 이모지 + 이름 + 카운트 뱃지, `rounded-full border` 스타일
+- grid 카드형 스타일 사용 안 함 (너무 크고 불일치)
+
+### 주요 페이지 디자인 (2026-04-22 개편)
+- **404** (`app/not-found.tsx`): 게임오버 스타일 패널 — 그라디언트 텍스트 404, "GAME OVER" 헤딩, HTTP 상태바
+- **About** (`app/about/page.tsx`): 커버 오버레이 히어로 + 프로필 스트립(포스트 수 표시) + 기술 스택 배지 + 토픽 카드(카테고리 링크)
+- **PostCard** (`components/PostCard.tsx`): `variant` prop 추가 — `"list"` (기본 가로형) / `"grid"` (세로형, category·tag·search 2열 그리드용)
+- **Search** (`app/search/page.tsx`): 빈 상태에 인기 태그 칩 표시 (`getAllTags` 사용)
+
+### SEO (2026-04-22 완료)
+- OG `siteName`, `locale: "ko_KR"`, Twitter card 전 페이지 완료
+- BreadcrumbList JSON-LD: category/tag 페이지
+- Blog/WebSite/Person JSON-LD: `app/layout.tsx`
+- `robots.ts` 동적 생성 (`public/robots.txt` 삭제됨)
+
+### 파일 편집 안전 규칙
+- **PowerShell로 한국어 파일 편집 금지** — 인코딩 깨짐
+- 복잡한 다중 파일 패치: Node.js ESM 스크립트(`.mjs`) 작성 후 실행, 완료 후 삭제
+- 단순 영문 치환: `sed -i` 사용 가능
+- 한국어 포함 파일: Read + Edit 도구 사용
 
 ### CoinGecko 주의사항
 - 무료 티어: 분당 30회 rate limit

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import RightSidebar from "@/components/RightSidebar";
 import AnimatedSection from "@/components/AnimatedSection";
+import CoinScreenerSection from "@/components/CoinScreenerSection";
 
 function SectionSkeleton() {
   return <div className="h-48 animate-pulse rounded-xl bg-gray-100 dark:bg-slate-800" />;
@@ -309,6 +310,22 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           ))}
         </div>
         </div>
+
+        {/* 매수 후보 스크리너 */}
+        <AnimatedSection>
+          <CoinScreenerSection
+            rsiAll={
+              editorial?.rsi_heatmap?.all ??
+              [
+                ...(editorial?.rsi_heatmap?.overbought ?? []),
+                ...(editorial?.rsi_heatmap?.oversold   ?? []),
+              ]
+            }
+            netflows={editorial?.netflows ?? []}
+            coins={market?.coins ?? []}
+            trending={trending ?? []}
+          />
+        </AnimatedSection>
 
         {/* 시장 개요 */}
         {market && (

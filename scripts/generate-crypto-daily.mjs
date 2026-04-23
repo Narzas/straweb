@@ -533,35 +533,60 @@ async function fetchHyperliquidPerps() {
 
 // ── 선물 스캐너 ───────────────────────────────────────────────────────────────
 
-async function fetchFuturesScanner(marketsTop250) {
-  console.log("  [선물 스캐너] 바이낸스 선물 데이터 수집 중...");
+function scoreAndRank(rawResults) {
+  const sorted = [...rawResults].sort((a, b) => b.volume4hUsd - a.volume4hUsd);
+  const total = sorted.length;
+  const scored = sorted.map((coin, idx) => {
+    const volume4hRankPct = (idx + 1) / total;
+    const fundingPct = coin.fundingRate * 100;
+    const fundingSc = fundingPct >= 0 && fundingPct <= 0.01 ? 25
+      : fundingPct > 0.01 && fundingPct <= 0.03 ? 12
+      : fundingPct > 0.03 ? 0
+      : fundingPct < 0 && fundingPct >= -0.03 ? 8 : 5;
+    const priceUp   = coin.priceChange1h > 1;
+    const priceDown = coin.priceChange1h < -1;
+    const oiUp      = coin.oiChangePct > 3;
+    const priceOiSc = (priceDown && oiUp) ? 30 : (priceUp && oiUp) ? 22 : (!priceUp && !priceDown && oiUp) ? 15 : (priceUp && !oiUp) ? 5 : 0;
+    const volumeSc = volume4hRankPct <= 0.10 ? 20 : volume4hRankPct <= 0.25 ? 14 : volume4hRankPct <= 0.50 ? 7 : 0;
+    const sideways = Math.abs(coin.priceChange4h) <= 2;
+    const oiBuild  = coin.oiChangePct6h > 5;
+    const volStart = coin.volumeSpike >= 1.3 && coin.volumeSpike <= 4;
+    const timingSc = (sideways ? 5 : 0) + (oiBuild ? 10 : 0) + (volStart ? 5 : 0) + (sideways && oiBuild && volStart ? 5 : 0);
+    const overheatP = (coin.priceChange1h > 8 ? 20 : 0) + (fundingPct > 0.03 ? 15 : 0) + (coin.volumeSpike > 5 ? 15 : 0);
+    const riskP = !coin.marketCapUsd ? 5 : coin.marketCapUsd < 20_000_000 ? 20 : coin.marketCapUsd < 50_000_000 ? 5 : 0;
+    return { ...coin, volume4hRankPct, score: fundingSc + priceOiSc + volumeSc + timingSc - overheatP - riskP };
+  });
+  return scored.sort((a, b) => b.score - a.score).slice(0, 50);
+}
 
-  let tickerRes, fundingRes;
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    [tickerRes, fundingRes] = await Promise.all([
-      safeFetch("https://fapi.binance.com/fapi/v1/ticker/24hr"),
-      safeFetch("https://fapi.binance.com/fapi/v1/premiumIndex"),
-    ]);
-    if (tickerRes && fundingRes) break;
-    if (attempt < 3) {
-      console.log(`  [선물 스캐너] Binance API 응답 없음, ${attempt}회 재시도 중...`);
-      await new Promise((r) => setTimeout(r, 2000 * attempt));
-    }
-  }
-  if (!tickerRes || !fundingRes) {
-    console.log("  [선물 스캐너] Binance API 응답 없음, 건너뜀");
-    return [];
-  }
+async function fetchFuturesScannerOKX(marketsTop250) {
+  console.log("  [선물 스캐너] OKX 데이터 수집 중...");
 
-  const tickers = await tickerRes.json();
-  const fundings = await fundingRes.json();
+  const tickerRes = await safeFetch("https://www.okx.com/api/v5/market/tickers?instType=SWAP");
+  if (!tickerRes) return null;
+  const tickerJson = await tickerRes.json();
 
+  const allTickers = (tickerJson.data ?? []).filter((t) => t.instId.endsWith("-USDT-SWAP"));
+  if (!allTickers.length) return null;
+
+  // 거래량 상위 150개만 선별 (펀딩비 개별 호출 최소화)
+  const top150 = allTickers
+    .sort((a, b) => parseFloat(b.volCcy24h ?? "0") - parseFloat(a.volCcy24h ?? "0"))
+    .slice(0, 150);
+
+  // 펀딩비 개별 조회 (25개씩 병렬)
   const fundingMap = new Map();
-  const markPriceMap = new Map();
-  for (const f of (Array.isArray(fundings) ? fundings : [])) {
-    if (typeof f.symbol === "string" && f.symbol.endsWith("USDT")) {
-      fundingMap.set(f.symbol, parseFloat(f.lastFundingRate ?? "0"));
-      markPriceMap.set(f.symbol, parseFloat(f.markPrice ?? "0"));
+  const BATCH_FR = 25;
+  for (let i = 0; i < top150.length; i += BATCH_FR) {
+    const batch = top150.slice(i, i + BATCH_FR);
+    const ress = await Promise.all(
+      batch.map((t) => safeFetch(`https://www.okx.com/api/v5/public/funding-rate?instId=${t.instId}`))
+    );
+    for (let j = 0; j < ress.length; j++) {
+      if (!ress[j]) continue;
+      const d = await ress[j].json();
+      const item = d.data?.[0];
+      if (item) fundingMap.set(batch[j].instId, parseFloat(item.fundingRate ?? "0"));
     }
   }
 
@@ -570,78 +595,75 @@ async function fetchFuturesScanner(marketsTop250) {
     if (coin.symbol) capMap.set(coin.symbol.toUpperCase(), coin.market_cap ?? null);
   }
 
-  const candidates = (Array.isArray(tickers) ? tickers : [])
-    .filter((t) => typeof t.symbol === "string" && t.symbol.endsWith("USDT") && (fundingMap.get(t.symbol) ?? 0) > 0)
+  const candidates = top150
+    .filter((t) => (fundingMap.get(t.instId) ?? 0) > 0)
     .map((t) => ({
-      symbol: t.symbol.replace(/USDT$/, ""),
-      binanceSymbol: t.symbol,
-      fundingRate: fundingMap.get(t.symbol) ?? 0,
+      symbol: t.instId.replace(/-USDT-SWAP$/, ""),
+      instId: t.instId,
+      fundingRate: fundingMap.get(t.instId) ?? 0,
+      markPrice: parseFloat(t.last ?? "0"),
     }));
 
-  if (candidates.length === 0) {
-    console.log("  [선물 스캐너] 양수 펀딩비 코인 없음");
-    return [];
-  }
-  console.log(`  [선물 스캐너] 양수 펀딩비 코인 ${candidates.length}개, 4H 데이터 수집 중...`);
+  if (!candidates.length) { console.log("  [선물 스캐너] OKX 양수 펀딩비 없음"); return null; }
+  console.log(`  [선물 스캐너] OKX 양수 펀딩비 ${candidates.length}개, 데이터 수집 중...`);
 
-  const BATCH = 10;
+  const BATCH = 5;
   const rawResults = [];
   for (let i = 0; i < candidates.length; i += BATCH) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 300));
     const batch = candidates.slice(i, i + BATCH);
     const batchData = await Promise.all(
       batch.map(async (coin) => {
         try {
           const [klinesRes, oiRes] = await Promise.all([
-            safeFetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coin.binanceSymbol}&interval=1h&limit=8`),
-            safeFetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${coin.binanceSymbol}&period=1h&limit=7`),
+            safeFetch(`https://www.okx.com/api/v5/market/candles?instId=${coin.instId}&bar=1H&limit=8`),
+            safeFetch(`https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-history?instType=SWAP&instId=${coin.instId}&period=1H&limit=7`),
           ]);
-          if (!klinesRes || !oiRes) return null;
+          if (!klinesRes) return null;
 
-          const klines = await klinesRes.json();
-          const oiData = await oiRes.json();
+          const klinesJson = await klinesRes.json();
+          // OKX: [ts,open,high,low,close,vol,volCcy,volCcyQuote,confirm], newest first → reverse
+          const klines = (klinesJson.data ?? []).reverse();
+          const lastComplete = klines[6];
+          const candle4hAgo  = klines[3];
+          if (!lastComplete) return null;
 
-          // klines[7] = 현재 진행중 캔들, klines[6] = 마지막 완성 1H 캔들
-          const lastComplete = Array.isArray(klines) ? klines[6] : null;
-          const candle4hAgo  = Array.isArray(klines) ? klines[3] : null;
-
-          const priceChange1h = lastComplete?.[1] > 0
+          const priceChange1h = parseFloat(lastComplete[1]) > 0
             ? ((parseFloat(lastComplete[4]) - parseFloat(lastComplete[1])) / parseFloat(lastComplete[1])) * 100
             : 0;
-          const priceChange4h = candle4hAgo?.[1] > 0 && lastComplete?.[4]
+          const priceChange4h = candle4hAgo?.[1] && parseFloat(candle4hAgo[1]) > 0
             ? ((parseFloat(lastComplete[4]) - parseFloat(candle4hAgo[1])) / parseFloat(candle4hAgo[1])) * 100
             : 0;
 
-          // 마지막 완성 1H 거래량 vs 직전 5H 평균 → volumeSpike
-          const vol1h = parseFloat(lastComplete?.[7] ?? "0");
-          const prevVols = (Array.isArray(klines) ? klines.slice(1, 6) : []).map((k) => parseFloat(k[7] ?? "0"));
+          // volCcyQuote (index 7) = USDT 거래량
+          const vol1h = parseFloat(lastComplete[7] ?? "0");
+          const prevVols = klines.slice(1, 6).map((k) => parseFloat(k[7] ?? "0"));
           const avgPrevVol = prevVols.length > 0 ? prevVols.reduce((s, v) => s + v, 0) / prevVols.length : 0;
           const volumeSpike = avgPrevVol > 0 ? vol1h / avgPrevVol : 1;
-
-          // 4H 거래량 = 마지막 완성 4H 캔들 합산
-          const volume4hUsd = (Array.isArray(klines) ? klines.slice(3, 7) : [])
-            .reduce((sum, k) => sum + parseFloat(k?.[7] ?? "0"), 0);
+          const volume4hUsd = klines.slice(3, 7).reduce((sum, k) => sum + parseFloat(k?.[7] ?? "0"), 0);
 
           let oiChangePct = 0;
           let oiChangePct6h = 0;
-          if (Array.isArray(oiData) && oiData.length >= 2) {
-            const curr = parseFloat(oiData[oiData.length - 1]?.sumOpenInterestValue ?? "0");
-            const prev = parseFloat(oiData[oiData.length - 2]?.sumOpenInterestValue ?? "0");
-            if (prev > 0) oiChangePct = ((curr - prev) / prev) * 100;
-            const oldest = parseFloat(oiData[0]?.sumOpenInterestValue ?? "0");
-            if (oldest > 0) oiChangePct6h = ((curr - oldest) / oldest) * 100;
+          if (oiRes) {
+            const oiJson = await oiRes.json();
+            const oiItems = oiJson.data ?? [];
+            if (oiItems.length >= 2) {
+              const curr = parseFloat(oiItems[oiItems.length - 1]?.oiCcy ?? "0");
+              const prev = parseFloat(oiItems[oiItems.length - 2]?.oiCcy ?? "0");
+              if (prev > 0) oiChangePct = ((curr - prev) / prev) * 100;
+              const oldest = parseFloat(oiItems[0]?.oiCcy ?? "0");
+              if (oldest > 0) oiChangePct6h = ((curr - oldest) / oldest) * 100;
+            }
           }
 
           return {
             symbol: coin.symbol,
             fundingRate: coin.fundingRate,
-            priceChange1h,
-            priceChange4h,
-            oiChangePct,
-            oiChangePct6h,
-            volume4hUsd,
-            volumeSpike,
+            priceChange1h, priceChange4h,
+            oiChangePct, oiChangePct6h,
+            volume4hUsd, volumeSpike,
             marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? null,
-            entryPrice: markPriceMap.get(coin.binanceSymbol) ?? 0,
+            entryPrice: coin.markPrice,
           };
         } catch {
           return null;
@@ -651,43 +673,117 @@ async function fetchFuturesScanner(marketsTop250) {
     rawResults.push(...batchData.filter(Boolean));
   }
 
-  const sorted = [...rawResults].sort((a, b) => b.volume4hUsd - a.volume4hUsd);
-  const total = sorted.length;
-
-  const scored = sorted.map((coin, idx) => {
-    const volume4hRankPct = (idx + 1) / total;
-    // 펀딩비 구간화: 0~0.01% best | 0.01~0.03% caution | >0.03% overheated
-    const fundingPct = coin.fundingRate * 100;
-    const fundingSc = fundingPct >= 0 && fundingPct <= 0.01 ? 25
-      : fundingPct > 0.01 && fundingPct <= 0.03 ? 12
-      : fundingPct > 0.03 ? 0
-      : fundingPct < 0 && fundingPct >= -0.03 ? 8 : 5;
-    // 가격+OI 조합
-    const priceUp   = coin.priceChange1h > 1;
-    const priceDown = coin.priceChange1h < -1;
-    const oiUp      = coin.oiChangePct > 3;
-    const priceOiSc = (priceDown && oiUp) ? 30 : (priceUp && oiUp) ? 22 : (!priceUp && !priceDown && oiUp) ? 15 : (priceUp && !oiUp) ? 5 : 0;
-    // 거래량 상대 점수
-    const volumeSc = volume4hRankPct <= 0.10 ? 20 : volume4hRankPct <= 0.25 ? 14 : volume4hRankPct <= 0.50 ? 7 : 0;
-    // 타이밍 점수
-    const sideways = Math.abs(coin.priceChange4h) <= 2;
-    const oiBuild  = coin.oiChangePct6h > 5;
-    const volStart = coin.volumeSpike >= 1.3 && coin.volumeSpike <= 4;
-    const timingSc = (sideways ? 5 : 0) + (oiBuild ? 10 : 0) + (volStart ? 5 : 0) + (sideways && oiBuild && volStart ? 5 : 0);
-    // 과열 패널티
-    const overheatP = (coin.priceChange1h > 8 ? 20 : 0) + (fundingPct > 0.03 ? 15 : 0) + (coin.volumeSpike > 5 ? 15 : 0);
-    // 리스크 패널티
-    const riskP = !coin.marketCapUsd ? 5 : coin.marketCapUsd < 20_000_000 ? 20 : coin.marketCapUsd < 50_000_000 ? 5 : 0;
-    return {
-      ...coin,
-      volume4hRankPct,
-      score: fundingSc + priceOiSc + volumeSc + timingSc - overheatP - riskP,
-    };
-  });
-
-  const top50 = scored.sort((a, b) => b.score - a.score).slice(0, 50);
-  console.log(`  [선물 스캐너] 완료: ${top50.length}개 저장`);
+  if (!rawResults.length) return null;
+  const top50 = scoreAndRank(rawResults);
+  console.log(`  [선물 스캐너] OKX 완료: ${top50.length}개 저장`);
   return top50;
+}
+
+async function fetchFuturesScannerBybit(marketsTop250) {
+  console.log("  [선물 스캐너] Bybit 데이터 수집 중...");
+
+  const tickerRes = await safeFetch("https://api.bybit.com/v5/market/tickers?category=linear");
+  if (!tickerRes) return [];
+  const tickerJson = await tickerRes.json();
+
+  const allTickers = (tickerJson.result?.list ?? []).filter((t) => t.symbol.endsWith("USDT"));
+  if (!allTickers.length) return [];
+
+  const capMap = new Map();
+  for (const coin of (marketsTop250 ?? [])) {
+    if (coin.symbol) capMap.set(coin.symbol.toUpperCase(), coin.market_cap ?? null);
+  }
+
+  // Bybit ticker에 fundingRate 포함 → 한 번에 필터 가능
+  const candidates = allTickers
+    .filter((t) => parseFloat(t.fundingRate ?? "0") > 0)
+    .map((t) => ({
+      symbol: t.symbol.replace(/USDT$/, ""),
+      bybitSymbol: t.symbol,
+      fundingRate: parseFloat(t.fundingRate ?? "0"),
+      markPrice: parseFloat(t.lastPrice ?? "0"),
+    }));
+
+  if (!candidates.length) { console.log("  [선물 스캐너] Bybit 양수 펀딩비 없음"); return []; }
+  console.log(`  [선물 스캐너] Bybit 양수 펀딩비 ${candidates.length}개, 데이터 수집 중...`);
+
+  const BATCH = 10;
+  const rawResults = [];
+  for (let i = 0; i < candidates.length; i += BATCH) {
+    const batch = candidates.slice(i, i + BATCH);
+    const batchData = await Promise.all(
+      batch.map(async (coin) => {
+        try {
+          const [klinesRes, oiRes] = await Promise.all([
+            safeFetch(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${coin.bybitSymbol}&interval=60&limit=8`),
+            safeFetch(`https://api.bybit.com/v5/market/open-interest?category=linear&symbol=${coin.bybitSymbol}&intervalTime=1h&limit=7`),
+          ]);
+          if (!klinesRes) return null;
+
+          const klinesJson = await klinesRes.json();
+          // Bybit: [ts,open,high,low,close,volume,turnover], newest first → reverse
+          const klines = (klinesJson.result?.list ?? []).reverse();
+          const lastComplete = klines[6];
+          const candle4hAgo  = klines[3];
+          if (!lastComplete) return null;
+
+          const priceChange1h = parseFloat(lastComplete[1]) > 0
+            ? ((parseFloat(lastComplete[4]) - parseFloat(lastComplete[1])) / parseFloat(lastComplete[1])) * 100
+            : 0;
+          const priceChange4h = candle4hAgo?.[1] && parseFloat(candle4hAgo[1]) > 0
+            ? ((parseFloat(lastComplete[4]) - parseFloat(candle4hAgo[1])) / parseFloat(candle4hAgo[1])) * 100
+            : 0;
+
+          // turnover (index 6) = USDT 거래량
+          const vol1h = parseFloat(lastComplete[6] ?? "0");
+          const prevVols = klines.slice(1, 6).map((k) => parseFloat(k[6] ?? "0"));
+          const avgPrevVol = prevVols.length > 0 ? prevVols.reduce((s, v) => s + v, 0) / prevVols.length : 0;
+          const volumeSpike = avgPrevVol > 0 ? vol1h / avgPrevVol : 1;
+          const volume4hUsd = klines.slice(3, 7).reduce((sum, k) => sum + parseFloat(k?.[6] ?? "0"), 0);
+
+          let oiChangePct = 0;
+          let oiChangePct6h = 0;
+          if (oiRes) {
+            const oiJson = await oiRes.json();
+            // Bybit OI: { openInterest, timestamp }, newest first → reverse
+            const oiItems = (oiJson.result?.list ?? []).reverse();
+            if (oiItems.length >= 2) {
+              const curr = parseFloat(oiItems[oiItems.length - 1]?.openInterest ?? "0");
+              const prev = parseFloat(oiItems[oiItems.length - 2]?.openInterest ?? "0");
+              if (prev > 0) oiChangePct = ((curr - prev) / prev) * 100;
+              const oldest = parseFloat(oiItems[0]?.openInterest ?? "0");
+              if (oldest > 0) oiChangePct6h = ((curr - oldest) / oldest) * 100;
+            }
+          }
+
+          return {
+            symbol: coin.symbol,
+            fundingRate: coin.fundingRate,
+            priceChange1h, priceChange4h,
+            oiChangePct, oiChangePct6h,
+            volume4hUsd, volumeSpike,
+            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? null,
+            entryPrice: coin.markPrice,
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+    rawResults.push(...batchData.filter(Boolean));
+  }
+
+  if (!rawResults.length) return [];
+  const top50 = scoreAndRank(rawResults);
+  console.log(`  [선물 스캐너] Bybit 완료: ${top50.length}개 저장`);
+  return top50;
+}
+
+async function fetchFuturesScanner(marketsTop250) {
+  const okxResult = await fetchFuturesScannerOKX(marketsTop250);
+  if (okxResult && okxResult.length > 0) return okxResult;
+  console.log("  [선물 스캐너] OKX 실패, Bybit 폴백...");
+  return fetchFuturesScannerBybit(marketsTop250);
 }
 
 // ── 데이터 수집 ───────────────────────────────────────────────────────────────
@@ -1497,16 +1593,29 @@ async function updateFuturesSignalPrices() {
 
     if (!pending || pending.length === 0) return;
 
-    // 현재가 가져오기
-    const res = await safeFetch("https://fapi.binance.com/fapi/v1/premiumIndex");
-    if (!res) return;
-    const fundings = await res.json();
+    // 현재가 가져오기 (OKX → Bybit 폴백)
     const priceMap = new Map();
-    for (const f of (Array.isArray(fundings) ? fundings : [])) {
-      if (typeof f.symbol === "string" && f.symbol.endsWith("USDT")) {
-        priceMap.set(f.symbol.replace(/USDT$/, ""), parseFloat(f.markPrice ?? "0"));
+    const okxRes = await safeFetch("https://www.okx.com/api/v5/market/tickers?instType=SWAP");
+    if (okxRes) {
+      const d = await okxRes.json();
+      for (const t of (d.data ?? [])) {
+        if (t.instId.endsWith("-USDT-SWAP")) {
+          priceMap.set(t.instId.replace(/-USDT-SWAP$/, ""), parseFloat(t.last ?? "0"));
+        }
       }
     }
+    if (!priceMap.size) {
+      const bybitRes = await safeFetch("https://api.bybit.com/v5/market/tickers?category=linear");
+      if (bybitRes) {
+        const d = await bybitRes.json();
+        for (const t of (d.result?.list ?? [])) {
+          if (t.symbol.endsWith("USDT")) {
+            priceMap.set(t.symbol.replace(/USDT$/, ""), parseFloat(t.lastPrice ?? "0"));
+          }
+        }
+      }
+    }
+    if (!priceMap.size) return;
 
     const now = new Date();
     for (const signal of pending) {

@@ -240,39 +240,6 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
             📡 선물 스캐너
           </h2>
-          {/* 스캐너 / 트래킹 탭 */}
-          <div className="flex rounded-full border border-gray-200 dark:border-slate-600 overflow-hidden text-[11px] font-semibold shrink-0">
-            <button
-              onClick={() => setTab("scanner")}
-              className={`px-3 py-1 transition-colors cursor-pointer ${
-                tab === "scanner"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-              }`}
-            >
-              스캐너
-            </button>
-            <button
-              onClick={() => setTab("tracking")}
-              disabled={!hasTracking}
-              className={`px-3 py-1 transition-colors cursor-pointer ${
-                tab === "tracking"
-                  ? "bg-indigo-600 text-white"
-                  : hasTracking
-                    ? "bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-                    : "bg-white dark:bg-slate-800 text-gray-300 dark:text-gray-600 cursor-not-allowed"
-              }`}
-            >
-              트래킹{!hasTracking && " (집계중)"}
-            </button>
-          </div>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {tab === "scanner"
-              ? "가격+OI 조합 · 펀딩비 건강도 · 타이밍 점수 · TOP 10"
-              : "스캐너 TOP 10 · 1H/4H/24H 수익률 추적"}
-          </p>
           {tab === "scanner" && (
             <button
               onClick={() => setShowInfo((v) => !v)}
@@ -286,6 +253,38 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
             </button>
           )}
         </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {tab === "scanner"
+            ? "가격+OI 조합 · 펀딩비 건강도 · 타이밍 점수 · TOP 10"
+            : "스캐너 TOP 10 · 1H/4H/24H 수익률 추적"}
+        </p>
+      </div>
+
+      {/* 큰 탭 */}
+      <div className="flex border-b border-gray-200 dark:border-slate-700">
+        <button
+          onClick={() => setTab("scanner")}
+          className={`px-5 py-2.5 text-sm font-semibold transition-colors cursor-pointer border-b-2 -mb-px ${
+            tab === "scanner"
+              ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+              : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+          }`}
+        >
+          스캐너
+        </button>
+        <button
+          onClick={() => setTab("tracking")}
+          disabled={!hasTracking}
+          className={`px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+            tab === "tracking"
+              ? "border-indigo-500 text-indigo-600 dark:text-indigo-400 cursor-pointer"
+              : hasTracking
+                ? "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+                : "border-transparent text-gray-300 dark:text-gray-600 cursor-not-allowed"
+          }`}
+        >
+          트래킹{!hasTracking && <span className="ml-1 text-[10px] font-normal">(집계중)</span>}
+        </button>
       </div>
 
       {/* 스캐너 탭 */}

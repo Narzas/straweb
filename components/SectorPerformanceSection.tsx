@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 type SectorItem = {
   id: string;
   name: string;
@@ -41,7 +45,34 @@ function SectorCell({ s }: { s: SectorItem }) {
   );
 }
 
+function InfoPanel({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-4 py-3 space-y-3 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+      <div className="flex items-start justify-between gap-2">
+        <p>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">섹터별 24h 성과란?</span><br />
+          DeFi·Layer1·GameFi 등 <strong className="text-slate-700 dark:text-slate-300">코인 카테고리(섹터)</strong>의 시가총액 변화율을 기준으로 지난 24시간 동안 가장 강하고 약한 섹터를 보여줍니다.
+        </p>
+        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none cursor-pointer shrink-0 mt-0.5">✕</button>
+      </div>
+      <div className="space-y-1.5">
+        <p className="font-semibold text-slate-700 dark:text-slate-300">활용 방법</p>
+        <ul className="space-y-1 pl-1">
+          <li><span className="text-emerald-600 dark:text-emerald-400 font-medium">🚀 상승 TOP 5</span> — 현재 자금이 몰리는 테마. 해당 섹터 내 개별 코인 탐색에 활용.</li>
+          <li><span className="text-red-500 font-medium">💥 하락 TOP 5</span> — 자금이 이탈 중인 테마. 반등 기대 또는 회피 판단 참고용.</li>
+          <li><span className="text-slate-600 dark:text-slate-400 font-medium">색상 강도</span> — 진할수록 변화폭이 큼 (±2% / ±5% / ±10% 기준).</li>
+        </ul>
+      </div>
+      <p className="text-[11px] text-slate-500 dark:text-slate-500">
+        데이터 출처: CoinGecko. 투자 권유가 아닙니다.
+      </p>
+    </div>
+  );
+}
+
 export default function SectorPerformanceSection({ sectors }: { sectors: SectorItem[] }) {
+  const [showInfo, setShowInfo] = useState(false);
+
   if (!sectors?.length) return null;
 
   const sorted = [...sectors]
@@ -53,9 +84,20 @@ export default function SectorPerformanceSection({ sectors }: { sectors: SectorI
 
   return (
     <section className="flex flex-col h-full">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 pl-3 border-l-2 border-indigo-500">
-        🏷️ 섹터별 24h 성과
-      </h2>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
+          🏷️ 섹터별 24h 성과
+        </h2>
+        {!showInfo && (
+          <button
+            onClick={() => setShowInfo(true)}
+            className="px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer border border-indigo-300 dark:border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors shrink-0"
+          >
+            이게 뭔가요?
+          </button>
+        )}
+      </div>
+      {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
       <div className="grid gap-3 sm:grid-cols-2 flex-1 sm:items-stretch">
         <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-800 overflow-hidden flex flex-col">
           <div className="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">

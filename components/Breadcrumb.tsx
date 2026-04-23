@@ -1,10 +1,27 @@
 import Link from "next/link";
+import { siteConfig } from "@/lib/site";
 
 type BreadcrumbItem = { label: string; href?: string };
 
 export default function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.label,
+      ...(item.href ? { item: `${siteConfig.url}${item.href}` } : {}),
+    })),
+  };
+
   return (
-    <nav aria-label="breadcrumb" className="mb-6">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <nav aria-label="breadcrumb" className="mb-6">
       <ol className="flex items-center flex-wrap gap-1.5 text-sm text-gray-400 dark:text-gray-500">
         {items.map((item, i) => (
           <li key={i} className="flex items-center gap-1.5">
@@ -28,5 +45,6 @@ export default function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
         ))}
       </ol>
     </nav>
+    </>
   );
 }

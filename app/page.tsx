@@ -116,7 +116,6 @@ export default async function HomePage() {
       <div className="space-y-8">
 
       {/* ── Hero (로컬 개발환경·모바일에서는 숨김) ── */}
-      {process.env.NODE_ENV !== "development" && (
       <section className="hidden md:block overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#1a1f2e] text-white ring-1 ring-white/[0.06]">
 
         {/* 배틀씬 캔버스 영역 */}
@@ -134,8 +133,6 @@ export default async function HomePage() {
           개발하면서 겪은 것들, 관심 가는 것들을 편하게 기록하는 공간입니다.<br />게임, 투자, 일상 등 다양한 주제를 다룹니다.
         </p>
       </section>
-      )}
-
 
       {/* ── 카테고리 바로가기 ── */}
       {categories.length > 0 && (

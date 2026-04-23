@@ -39,6 +39,7 @@ const sections = [
     content: `본 블로그는 다음과 같은 제3자 서비스를 이용합니다.
 
 • Google AdSense — 광고 서비스 제공
+• Google Tag Manager / Google Analytics — 방문자 트래픽 분석
 • Supabase — 방문자 수 집계 및 댓글 데이터 저장
 • 쿠팡 파트너스 — 제휴 마케팅 링크 제공 (수수료 수취 가능)
 • Telegram — 소식 피드 연동

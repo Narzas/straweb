@@ -29,6 +29,8 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+export const revalidate = 86400; // 24시간 — 포스트 수정 시 다음날 자동 반영
+
 export async function generateStaticParams() {
   return getAllSlugs().map((slug) => ({ slug }));
 }
@@ -101,7 +103,7 @@ export default async function PostPage({ params }: Props) {
     description: post.description,
     author: { "@type": "Person", name: siteConfig.author, url: siteConfig.url, sameAs: ["https://x.com/0xStragos"] },
     datePublished: post.date,
-    dateModified: post.date,
+    dateModified: post.updated ?? post.date,
     url: `${siteConfig.url}/posts/${slug}`,
     publisher: {
       "@type": "Organization",

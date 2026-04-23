@@ -76,9 +76,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "업로드에 실패했습니다." }, { status: 500 });
   }
 
-  const { data: { publicUrl } } = supabase.storage
+  const { data: urlData } = supabase.storage
     .from(BUCKET)
     .getPublicUrl(filename);
 
-  return NextResponse.json({ url: publicUrl }, { status: 201 });
+  if (!urlData?.publicUrl) {
+    return NextResponse.json({ error: "URL을 가져올 수 없습니다." }, { status: 500 });
+  }
+
+  return NextResponse.json({ url: urlData.publicUrl }, { status: 201 });
 }

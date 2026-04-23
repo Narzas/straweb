@@ -1,0 +1,45 @@
+name: IndexNow Ping
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "posts/**"
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed post slugs
+        id: changed
+        run: |
+          SLUGS=$(git diff --name-only HEAD~1 HEAD -- 'posts/*.md' \
+            | sed 's|posts/||; s|\.md$||' \
+            | tr '\n' ' ')
+          echo "slugs=$SLUGS" >> "$GITHUB_OUTPUT"
+
+      - name: Submit to IndexNow
+        if: steps.changed.outputs.slugs != ''
+        env:
+          KEY: 4b1f2de8f97246afc4cc552be7323a3d
+          HOST: www.stragos.xyz
+        run: |
+          URLS=""
+          for slug in ${{ steps.changed.outputs.slugs }}; do
+            URLS="$URLS\"https://$HOST/posts/$slug\","
+          done
+          URLS="[${URLS%,}]"
+
+          echo "Submitting URLs: $URLS"
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "https://api.indexnow.org/indexnow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"host\":\"$HOST\",\"key\":\"$KEY\",\"keyLocation\":\"https://$HOST/$KEY.txt\",\"urlList\":$URLS}")
+
+          echo "IndexNow response: $STATUS"
+          [ "$STATUS" = "200" ] || [ "$STATUS" = "202" ] || exit 1

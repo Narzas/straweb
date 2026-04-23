@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 const S = 3; // pixel scale: 1 logical px = 3×3 screen px
-const ATB_H = 48; // ATB panel height at canvas bottom
+const ATB_H = 60; // ATB panel height at canvas bottom
 
 interface Star {
   xFrac: number;
@@ -38,76 +38,251 @@ interface SpellAnim {
 type Pixel = [number, number, string];
 function px(x: number, y: number, c: string): Pixel { return [x, y, c]; }
 
-function drawSprite(
+// 다크 아웃라인 자동 생성 — FF6/Octopath 스타일 핵심
+function drawSpriteWithOutline(
   ctx: CanvasRenderingContext2D,
   pixels: Pixel[],
   ox: number, oy: number,
   scale = S,
 ) {
+  const occupied = new Set<string>(pixels.map(([x, y]) => `${x},${y}`));
+  const dirs: [number, number][] = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+  ctx.fillStyle = "#080810";
+  for (const [x, y] of pixels) {
+    for (const [dx, dy] of dirs) {
+      const nx = x + dx, ny = y + dy;
+      if (!occupied.has(`${nx},${ny}`)) {
+        ctx.fillRect(ox + nx * scale, oy + ny * scale, scale, scale);
+      }
+    }
+  }
   for (const [x, y, color] of pixels) {
     ctx.fillStyle = color;
     ctx.fillRect(ox + x * scale, oy + y * scale, scale, scale);
   }
 }
 
-// Sprite size: 6w × 8h logical pixels
-const sk = "#fde8d0"; // skin
-const ey = "#1a1a1a"; // eye dark
+// Sprite size: 16w × 24h — Pixel Remaster style, side profile facing left
+// x=0 = front (arm/face direction), x=15 = back (hair flows rightward)
+const sk  = "#fde8d0"; // skin highlight
+const skM = "#f5c8a0"; // skin mid
+const skS = "#c8956a"; // skin shadow
+const LIP = "#e07878"; // lip tint (both chars)
 
-// Terra — green hair, purple robe, female
+// Terra — mint hair (6-tone), crimson outfit (5-tone), gold belt, dark boots
+const TGH = "#a7f3d0"; // hair highlight
+const TGA = "#4ade80"; // hair bright
+const TGB = "#22c55e"; // hair mid
+const TGM = "#16a34a"; // hair shadow
+const TGS = "#166534"; // hair deep
+const TGD = "#14532d"; // hair darkest
+const TRH = "#fca5a5"; // outfit highlight
+const TRA = "#f87171"; // outfit mid-light
+const TRB = "#dc2626"; // outfit mid
+const TRM = "#b91c1c"; // outfit shadow
+const TRS = "#7f1d1d"; // outfit deep
+const TBL = "#d97706"; // belt gold
+const TPU = "#9333ea"; // skirt purple trim
+const TBT = "#292524"; // boot dark
+const TBD = "#1c1917"; // boot deepest
+
 const TERRA: Pixel[] = [
-  px(1,0,"#16a34a"), px(2,0,"#16a34a"), px(3,0,"#16a34a"),
-  px(0,1,"#16a34a"), px(1,1,"#16a34a"), px(2,1,"#16a34a"), px(3,1,"#16a34a"), px(4,1,"#16a34a"),
-  px(1,2,sk), px(2,2,sk), px(3,2,sk), px(4,2,sk),
-  px(1,3,sk), px(2,3,ey), px(3,3,sk), px(4,3,ey), px(5,3,sk),
-  px(1,4,sk), px(2,4,sk), px(3,4,sk), px(4,4,sk),
-  px(1,5,"#7e22ce"), px(2,5,"#7e22ce"), px(3,5,"#7e22ce"), px(4,5,"#7e22ce"), px(5,5,"#7e22ce"),
-  px(0,6,"#7e22ce"), px(1,6,"#7e22ce"), px(2,6,"#7e22ce"), px(3,6,"#7e22ce"), px(4,6,"#7e22ce"), px(5,6,"#7e22ce"),
-  px(1,7,"#6b21a8"), px(2,7,"#6b21a8"), px(4,7,"#6b21a8"), px(5,7,"#6b21a8"),
+  // ── Head & hair ──
+  // y=0  hair crown
+  px(3,0,TGA),px(4,0,TGB),px(5,0,TGB),px(6,0,TGM),px(7,0,TGM),px(8,0,TGS),px(9,0,TGS),
+  // y=1  hair upper — volume bump
+  px(2,1,TGH),px(3,1,TGA),px(4,1,TGA),px(5,1,TGB),px(6,1,TGB),px(7,1,TGM),px(8,1,TGS),px(9,1,TGD),px(10,1,TGD),
+  // y=2  bangs (x=2-4) + forehead skin + eyebrow (TGM over eye) + hair stream
+  px(2,2,TGA),px(3,2,TGB),px(4,2,TGM),   // bangs / eyebrow shadow
+  px(5,2,sk), px(6,2,sk),                  // forehead
+  px(7,2,TGA),px(8,2,TGB),px(9,2,TGM),px(10,2,TGS),px(11,2,TGD),
+  // y=3  eye row — TGH iris, skS eyelid shadow, skin cheek
+  px(2,3,TGS),                             // hair framing temple
+  px(3,3,skS),                             // eyelid / brow shadow
+  px(4,3,TGH),                             // eye iris (bright mint)
+  px(5,3,sk), px(6,3,sk),                  // cheek
+  px(7,3,TGA),px(8,3,TGB),px(9,3,TGM),px(10,3,TGS),px(11,3,TGD),
+  // y=4  nose bridge + cheek + hair
+  px(2,4,skS),                             // nose tip shadow (profile)
+  px(3,4,sk), px(4,4,sk), px(5,4,sk), px(6,4,skM),  // cheek / jaw
+  px(7,4,TGB),px(8,4,TGM),px(9,4,TGS),px(10,4,TGD),
+  // y=5  mouth + chin + collar
+  px(3,5,sk),                              // chin
+  px(4,5,LIP),                             // lip hint
+  px(5,5,sk),                              // chin lower
+  px(6,5,TRH),                             // collar
+  px(7,5,TGA),px(8,5,TGB),px(9,5,TGM),px(10,5,TGS),px(11,5,TGD),
+
+  // ── Neck, shoulder, upper body ──
+  // y=6  neck (skin) + shoulder highlight + hair continues long
+  px(4,6,sk), px(5,6,skS),                // neck
+  px(6,6,TRH),px(7,6,TRA),px(8,6,TRB),   // shoulder
+  px(9,6,TGA),px(10,6,TGB),px(11,6,TGM),px(12,6,TGS),px(13,6,TGD),
+  // y=7  upper arm (sleeve) + chest highlight + hair
+  px(0,7,TRH),px(1,7,TRA),               // arm sleeve highlight
+  px(2,7,skM),                             // arm skin gap
+  px(3,7,TRH),px(4,7,TRB),px(5,7,TRM),px(6,7,TRS),  // chest
+  px(7,7,TGB),px(8,7,TGM),px(9,7,TGS),px(10,7,TGD),px(11,7,TGD),
+  // y=8  forearm (skin) + body + hair
+  px(0,8,sk), px(1,8,skS),               // forearm
+  px(2,8,TRH),px(3,8,TRA),px(4,8,TRB),px(5,8,TRM),px(6,8,TRS),
+  px(7,8,TGB),px(8,8,TGM),px(9,8,TGS),px(10,8,TGD),
+  // y=9  wrist + body mid + hair tail
+  px(0,9,sk), px(1,9,skS),
+  px(2,9,TRH),px(3,9,TRA),px(4,9,TRB),px(5,9,TRM),px(6,9,TRS),
+  px(7,9,TGM),px(8,9,TGS),px(9,9,TGD),
+  // y=10 hand / closed fist + body
+  px(0,10,sk), px(1,10,skS),             // fist top
+  px(2,10,TRH),px(3,10,TRA),px(4,10,TRB),px(5,10,TRM),px(6,10,TRS),
+  // y=11 finger hint + belly
+  px(0,11,skS),                           // finger shadow
+  px(2,11,TRH),px(3,11,TRA),px(4,11,TRB),px(5,11,TRM),px(6,11,TRS),
+
+  // ── Belt, hips, skirt ──
+  // y=12 gold belt
+  px(2,12,TBL),px(3,12,TBL),px(4,12,TBL),px(5,12,TBL),px(6,12,TRM),
+  // y=13 hips + purple trim start
+  px(1,13,TRH),px(2,13,TRA),px(3,13,TRB),px(4,13,TRM),px(5,13,TRS),px(6,13,TPU),
+  // y=14 skirt
+  px(1,14,TRH),px(2,14,TRA),px(3,14,TRB),px(4,14,TRM),px(5,14,TPU),
+  // y=15 skirt lower (tapers)
+  px(2,15,TRH),px(3,15,TRA),px(4,15,TRM),px(5,15,TPU),
+
+  // ── Legs — near leg (lower x, lighter) / far leg (higher x, darker) ──
+  // y=16 upper thigh — split legs visible
+  px(2,16,sk), px(3,16,sk),              // near leg
+  px(4,16,skS),                           // leg gap / inner shadow
+  px(5,16,TBT),px(6,16,TBD),             // far leg (boot top)
+  // y=17 knee — slight forward knee bend hint
+  px(2,17,sk), px(3,17,skM),
+  px(4,17,TBT),px(5,17,TBD),
+  // y=18 lower leg
+  px(2,18,sk), px(3,18,skS),
+  px(4,18,TBT),px(5,18,TBD),
+
+  // ── Boots ──
+  // y=19 boot cuff line
+  px(2,19,TBT),px(3,19,TBT),px(4,19,TBT),px(5,19,TBD),
+  // y=20 boot shaft
+  px(2,20,TBT),px(3,20,TBT),px(4,20,TBD),
+  // y=21 boot wider calf
+  px(1,21,TBT),px(2,21,TBT),px(3,21,TBT),px(4,21,TBD),
+  // y=22 boot lower
+  px(1,22,TBT),px(2,22,TBT),px(3,22,TBD),
+  // y=23 sole (flat, wider)
+  px(0,23,TBT),px(1,23,TBT),px(2,23,TBT),px(3,23,TBT),px(4,23,TBD),px(5,23,TBD),
 ];
 
-// Celes — blonde hair, blue eyes, silver armor, female
+// Celes — silver hair (6-tone), white+blue armor (5-tone), gold trim, navy boots
+const CYH = "#f8fafc"; // hair highlight (almost white)
+const CYA = "#e2e8f0"; // hair bright
+const CYB = "#94a3b8"; // hair mid
+const CYM = "#64748b"; // hair shadow
+const CYS = "#475569"; // hair deep
+const CYD = "#1e293b"; // hair darkest
+const CAH = "#ffffff";  // armor highlight
+const CAA = "#dbeafe";  // armor light blue
+const CAB = "#bfdbfe";  // armor mid blue
+const CAM = "#93c5fd";  // armor mid-shadow
+const CAS = "#3b82f6";  // armor shadow
+const CEY = "#1d4ed8";  // eye (deep royal blue)
+const CGD = "#fbbf24";  // gold trim
+const CBT = "#1e3a8a";  // navy boot
+const CBM = "#1d4ed8";  // navy boot mid
+
 const CELES: Pixel[] = [
-  px(1,0,"#fbbf24"), px(2,0,"#fbbf24"), px(3,0,"#fbbf24"), px(4,0,"#fbbf24"),
-  px(0,1,"#fbbf24"), px(1,1,"#fbbf24"), px(2,1,"#fbbf24"), px(3,1,"#fbbf24"), px(4,1,"#fbbf24"),
-  px(1,2,sk), px(2,2,sk), px(3,2,sk), px(4,2,sk),
-  px(1,3,sk), px(2,3,"#1d4ed8"), px(3,3,sk), px(4,3,"#1d4ed8"), px(5,3,sk),
-  px(1,4,sk), px(2,4,sk), px(3,4,sk), px(4,4,sk),
-  px(1,5,"#cbd5e1"), px(2,5,"#cbd5e1"), px(3,5,"#cbd5e1"), px(4,5,"#cbd5e1"), px(5,5,"#cbd5e1"),
-  px(0,6,"#94a3b8"), px(1,6,"#cbd5e1"), px(2,6,"#cbd5e1"), px(3,6,"#cbd5e1"), px(4,6,"#cbd5e1"), px(5,6,"#94a3b8"),
-  px(1,7,"#64748b"), px(2,7,"#64748b"), px(4,7,"#64748b"), px(5,7,"#64748b"),
+  // ── Head & hair ──
+  // y=0  hair crown (tight, neat — Celes is more formal)
+  px(4,0,CYA),px(5,0,CYA),px(6,0,CYB),px(7,0,CYB),px(8,0,CYM),px(9,0,CYS),
+  // y=1  hair upper — subtle highlight center
+  px(3,1,CYH),px(4,1,CYH),px(5,1,CYA),px(6,1,CYA),px(7,1,CYB),px(8,1,CYM),px(9,1,CYS),px(10,1,CYD),
+  // y=2  temple / side hair + forehead + eyebrow (CYM = darker silver) + stream
+  px(3,2,CYB),px(4,2,CYA),              // temple
+  px(5,2,sk), px(6,2,sk),               // forehead
+  px(7,2,CYA),px(8,2,CYA),px(9,2,CYB),px(10,2,CYM),px(11,2,CYS),px(12,2,CYD),
+  // y=3  eye row — CEY iris at x=5, skS eyelid at x=4
+  px(3,3,CYS),                          // hair shadow
+  px(4,3,skS),                          // eyelid shadow
+  px(5,3,CEY),                          // eye (royal blue)
+  px(6,3,sk), px(7,3,sk),               // cheek
+  px(8,3,CYB),px(9,3,CYM),px(10,3,CYS),px(11,3,CYD),
+  // y=4  nose shadow + cheek + hair
+  px(3,4,skS),                          // nose tip
+  px(4,4,sk), px(5,4,sk), px(6,4,sk), px(7,4,skM),  // cheek
+  px(8,4,CYB),px(9,4,CYM),px(10,4,CYS),px(11,4,CYD),
+  // y=5  mouth + chin + armor collar
+  px(4,5,sk),                           // chin
+  px(5,5,LIP),                          // lip hint
+  px(6,5,CAH),px(7,5,CAA),              // collar
+  px(8,5,CYH),px(9,5,CYA),px(10,5,CYB),px(11,5,CYM),
+
+  // ── Neck, pauldron, upper body ──
+  // y=6  neck + shoulder pauldron (wider) + hair
+  px(4,6,sk), px(5,6,skS),             // neck
+  px(6,6,CAH),px(7,6,CAA),px(8,6,CAB),// pauldron
+  px(9,6,CYH),px(10,6,CYA),px(11,6,CYB),px(12,6,CYM),px(13,6,CYS),px(14,6,CYD),
+  // y=7  arm (armored gauntlet) + chest armor + hair stream
+  px(0,7,CAH),px(1,7,CAA),px(2,7,CAB),// gauntlet highlight
+  px(3,7,CAH),px(4,7,CAB),px(5,7,CAM),px(6,7,CAS),  // chest armor
+  px(7,7,CYA),px(8,7,CYB),px(9,7,CYM),px(10,7,CYS),px(11,7,CYD),px(12,7,CYD),
+  // y=8  forearm skin + armor + long hair
+  px(0,8,sk), px(1,8,skS),
+  px(2,8,CAH),px(3,8,CAA),px(4,8,CAB),px(5,8,CAM),px(6,8,CAS),
+  px(7,8,CYA),px(8,8,CYB),px(9,8,CYM),px(10,8,CYS),px(11,8,CYD),
+  // y=9  wrist + armor body + hair tail
+  px(0,9,sk), px(1,9,skS),
+  px(2,9,CAH),px(3,9,CAA),px(4,9,CAB),px(5,9,CAM),px(6,9,CAS),
+  px(7,9,CYB),px(8,9,CYM),px(9,9,CYS),px(10,9,CYD),
+  // y=10 hand / fist + gold accent stripe
+  px(0,10,sk), px(1,10,skS),           // fist
+  px(2,10,CGD),px(3,10,CGD),           // gold trim accent
+  px(4,10,CAA),px(5,10,CAB),px(6,10,CAM),
+  // y=11 finger + lower armor
+  px(0,11,skS),                         // finger shadow
+  px(1,11,CGD),px(2,11,CGD),           // gold row
+  px(3,11,CAA),px(4,11,CAB),px(5,11,CAM),px(6,11,CAS),
+
+  // ── Gold belt, hips, armored skirt ──
+  // y=12 gold belt
+  px(1,12,CGD),px(2,12,CGD),px(3,12,CGD),px(4,12,CGD),px(5,12,CGD),px(6,12,CAM),
+  // y=13 hip armor plates
+  px(1,13,CAH),px(2,13,CAA),px(3,13,CAB),px(4,13,CAM),px(5,13,CAS),px(6,13,CBT),
+  // y=14 armored skirt
+  px(1,14,CAA),px(2,14,CAB),px(3,14,CAM),px(4,14,CAS),px(5,14,CBT),
+  // y=15 skirt lower (narrower)
+  px(2,15,CAB),px(3,15,CAM),px(4,15,CAS),px(5,15,CBT),
+
+  // ── Legs — near (lower x) / far (higher x) ──
+  // y=16 upper thigh split
+  px(2,16,sk), px(3,16,sk),            // near leg
+  px(4,16,skS),                         // shadow gap
+  px(5,16,CBT),px(6,16,CBM),           // far leg (boot)
+  // y=17 knee
+  px(2,17,sk), px(3,17,skM),
+  px(4,17,CBT),px(5,17,CBM),
+  // y=18 lower leg
+  px(2,18,sk), px(3,18,skS),
+  px(4,18,CBT),px(5,18,CBM),
+
+  // ── Boots (navy) ──
+  // y=19 boot cuff
+  px(2,19,CBT),px(3,19,CBT),px(4,19,CBT),px(5,19,CBM),
+  // y=20 boot shaft
+  px(1,20,CBT),px(2,20,CBT),px(3,20,CBM),
+  // y=21 boot
+  px(1,21,CBT),px(2,21,CBT),px(3,21,CBM),
+  // y=22 boot lower
+  px(0,22,CBT),px(1,22,CBT),px(2,22,CBM),
+  // y=23 sole
+  px(0,23,CBT),px(1,23,CBT),px(2,23,CBT),px(3,23,CBM),px(4,23,CBM),px(5,23,CBT),
 ];
 
-// Locke — brown hair, white bandana, blue jacket
-const LOCKE: Pixel[] = [
-  px(1,0,"#92400e"), px(2,0,"#92400e"), px(3,0,"#92400e"),
-  px(0,1,"#f8fafc"), px(1,1,"#f8fafc"), px(2,1,"#f8fafc"), px(3,1,"#f8fafc"), px(4,1,"#f8fafc"),
-  px(1,2,sk), px(2,2,sk), px(3,2,sk), px(4,2,sk),
-  px(1,3,sk), px(2,3,ey), px(3,3,sk), px(4,3,ey), px(5,3,sk),
-  px(1,4,sk), px(2,4,sk), px(3,4,sk), px(4,4,sk),
-  px(1,5,"#1d4ed8"), px(2,5,"#1d4ed8"), px(3,5,"#1d4ed8"), px(4,5,"#1d4ed8"), px(5,5,"#1d4ed8"),
-  px(0,6,"#1d4ed8"), px(1,6,"#1d4ed8"), px(2,6,"#1d4ed8"), px(3,6,"#1d4ed8"), px(4,6,"#1d4ed8"), px(5,6,"#1d4ed8"),
-  px(1,7,"#1e3a8a"), px(2,7,"#1e3a8a"), px(4,7,"#1e3a8a"), px(5,7,"#1e3a8a"),
-];
-
-// Edgar — gold crown, green armor
-const EDGAR: Pixel[] = [
-  px(1,0,"#fbbf24"), px(3,0,"#fbbf24"), px(5,0,"#fbbf24"),
-  px(0,1,"#f59e0b"), px(1,1,"#f59e0b"), px(2,1,"#f59e0b"), px(3,1,"#f59e0b"), px(4,1,"#f59e0b"),
-  px(1,2,sk), px(2,2,sk), px(3,2,sk), px(4,2,sk),
-  px(1,3,sk), px(2,3,ey), px(3,3,sk), px(4,3,ey), px(5,3,sk),
-  px(1,4,sk), px(2,4,sk), px(3,4,sk), px(4,4,sk),
-  px(1,5,"#166534"), px(2,5,"#166534"), px(3,5,"#166534"), px(4,5,"#166534"), px(5,5,"#166534"),
-  px(0,6,"#166534"), px(1,6,"#166534"), px(2,6,"#166534"), px(3,6,"#166534"), px(4,6,"#166534"), px(5,6,"#166534"),
-  px(1,7,"#14532d"), px(2,7,"#14532d"), px(4,7,"#14532d"), px(5,7,"#14532d"),
-];
-
-const PARTY        = [TERRA, CELES, LOCKE, EDGAR];
-const PARTY_NAMES  = ["TERRA", "CELES", "LOCKE", "EDGAR"];
-const PARTY_COLORS = ["#22c55e", "#93c5fd", "#fbbf24", "#4ade80"];
-const SPRITE_W     = 6 * S;
-const SPRITE_H     = 8 * S;
-const MEMBER_GAP   = S * 2;
+const PARTY        = [TERRA, CELES];
+const PARTY_NAMES  = ["TERRA", "CELES"];
+const PARTY_COLORS = ["#22c55e", "#93c5fd"];
+const SPRITE_W     = 16 * S;
+const SPRITE_H     = 24 * S;
+const MEMBER_GAP   = S * 3;
 const TOTAL_PARTY_H = PARTY.length * SPRITE_H + (PARTY.length - 1) * MEMBER_GAP;
 
 export default function HeroBattleScene() {
@@ -136,12 +311,12 @@ export default function HeroBattleScene() {
       size: Math.random() < 0.2 ? 2 : 1,
     }));
 
-    function drawMountains(w: number, groundY: number, ctx: CanvasRenderingContext2D) {
-      const cols: [number, number][] = [
-        [0,    0.73], [0.14, 0.61], [0.28, 0.74], [0.42, 0.63],
-        [0.56, 0.75], [0.70, 0.62], [0.84, 0.76], [1.0,  0.80],
-      ];
-      const palette = ["#0f1520", "#131a28"];
+    function drawMountainLayer(
+      w: number, groundY: number,
+      cols: [number, number][],
+      color: string,
+    ) {
+      ctx.fillStyle = color;
       for (let i = 0; i < cols.length - 1; i++) {
         const [ax, ay] = cols[i];
         const [bx]     = cols[i + 1];
@@ -149,7 +324,6 @@ export default function HeroBattleScene() {
         const leftX = Math.floor(ax * w);
         const rightX= Math.floor(bx * w);
         const peakY = Math.floor(ay * groundY);
-        ctx.fillStyle = palette[i % 2];
         for (let y = peakY; y <= groundY; y += S) {
           const p = (y - peakY) / (groundY - peakY);
           const rl = Math.floor(midX + (leftX  - midX) * p);
@@ -157,6 +331,28 @@ export default function HeroBattleScene() {
           ctx.fillRect(rl, y, rr - rl, S);
         }
       }
+    }
+
+    function drawMountains(w: number, groundY: number) {
+      // 원경: 가장 높고 어두움
+      drawMountainLayer(w, groundY, [
+        [0,0.44],[0.12,0.34],[0.25,0.46],[0.38,0.36],
+        [0.51,0.47],[0.64,0.35],[0.77,0.48],[0.90,0.37],[1.0,0.50],
+      ], "#090d18");
+      // 중경: 기존 산 (약간 밝음)
+      drawMountainLayer(w, groundY, [
+        [0,0.66],[0.14,0.55],[0.28,0.67],[0.42,0.57],
+        [0.56,0.68],[0.70,0.56],[0.84,0.69],[1.0,0.73],
+      ], "#0e1624");
+      // 중경2: 두 번째 색조로 입체감
+      drawMountainLayer(w, groundY, [
+        [0,0.70],[0.18,0.62],[0.35,0.71],[0.52,0.63],
+        [0.69,0.72],[0.86,0.64],[1.0,0.75],
+      ], "#121c30");
+      // 근경: 어둡고 낮은 실루엣
+      drawMountainLayer(w, groundY, [
+        [0,0.82],[0.20,0.76],[0.40,0.83],[0.60,0.77],[0.80,0.84],[1.0,0.79],
+      ], "#0b0f1e");
     }
 
     // Dragon boss: 14w × 28h logical body, drawn at bossX/bossY
@@ -329,6 +525,97 @@ export default function HeroBattleScene() {
       }
     }
 
+    // Sword swing overlay — drawn on top of the attacking character sprite
+    function drawWeaponSwing(sx: number, sy: number, memberIdx: number, frame: number) {
+      if (frame >= 32) return;
+
+      const blade    = memberIdx === 0 ? "#c0a0ff" : "#7ec8f8"; // Terra purple / Celes blue tint
+      const bladeHi  = "#eef4ff";
+      const guardCol = memberIdx === 0 ? "#fde68a" : "#7dd3fc";
+      const handleCol = "#78350f";
+
+      // Hand anchor: front edge (x=0, character faces left), arm level y=7
+      const hx = sx;
+      const hy = sy + S * 7;
+      const bladeLen = 6;
+
+      // Angle sweeps from −90° (up) → −180° (left) during lunge, stays at −180° at peak
+      let angle: number;
+      let alpha = 1.0;
+      if (frame < 14) {
+        angle = -Math.PI / 2 - (frame / 13) * (Math.PI / 2);
+      } else if (frame < 23) {
+        angle = -Math.PI;
+      } else {
+        angle = -Math.PI;
+        alpha = 1 - (frame - 22) / 10;
+      }
+
+      ctx.globalAlpha = alpha;
+
+      // Blade (tip brightest)
+      for (let seg = bladeLen; seg >= 1; seg--) {
+        const bx = Math.round(hx + Math.cos(angle) * seg * S * 1.5);
+        const by = Math.round(hy + Math.sin(angle) * seg * S * 1.5);
+        ctx.fillStyle = seg === bladeLen ? bladeHi : blade;
+        ctx.fillRect(bx, by, S, S);
+      }
+      // Guard (perpendicular to blade)
+      const perpAngle = angle + Math.PI / 2;
+      ctx.fillStyle = guardCol;
+      for (let g = -1; g <= 1; g++) {
+        const gx = Math.round(hx + Math.cos(perpAngle) * g * S * 1.5);
+        const gy = Math.round(hy + Math.sin(perpAngle) * g * S * 1.5);
+        ctx.fillRect(gx, gy, S, S);
+      }
+      // Handle (opposite direction from blade)
+      ctx.fillStyle = handleCol;
+      for (let h = 0; h < 3; h++) {
+        const hbx = Math.round(hx - Math.cos(angle) * h * S);
+        const hby = Math.round(hy - Math.sin(angle) * h * S);
+        ctx.fillRect(hbx, hby, S, S);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Magic charge aura — orbiting particles while casting wind-up
+    function drawMagicCharge(sx: number, sy: number, spellType: "fire" | "blizzard" | "thunder", frame: number) {
+      if (frame > 35) return;
+
+      const color = spellType === "fire"     ? "#fb923c"
+                  : spellType === "blizzard" ? "#67e8f9"
+                  : "#fde047";
+      const inner = spellType === "fire"     ? "#fff7ed"
+                  : spellType === "blizzard" ? "#e0f9ff"
+                  : "#fefce8";
+
+      const cx = sx + SPRITE_W / 2;
+      const cy = sy + SPRITE_H * 0.52;
+
+      const fadeIn  = Math.min(1, frame / 12);
+      const fadeOut = frame > 25 ? 1 - (frame - 25) / 10 : 1;
+      const alpha   = fadeIn * fadeOut;
+
+      // 4 orbiting dots in an ellipse around the character
+      for (let p = 0; p < 4; p++) {
+        const a = t * 0.12 + p * (Math.PI / 2);
+        const r = S * 8;
+        const px2 = cx + Math.round(Math.cos(a) * r);
+        const py2 = cy + Math.round(Math.sin(a) * r * 0.55); // flattened ellipse
+        ctx.globalAlpha = alpha * 0.88;
+        ctx.fillStyle = color;
+        ctx.fillRect(px2 - S, py2 - S, S * 2, S * 2);
+        ctx.fillStyle = inner;
+        ctx.globalAlpha = alpha * 0.65;
+        ctx.fillRect(px2, py2, S, S);
+      }
+      // Hand/arm glow (front of character at arm level)
+      ctx.globalAlpha = alpha * 0.45;
+      ctx.fillStyle = color;
+      ctx.fillRect(sx, sy + S * 7, S * 4, S * 3);
+      ctx.globalAlpha = 1;
+    }
+
     let bahamutGlow = 0; // 0–1, elevated during summon/megaflare
 
     let attackAnim:    AttackAnim | null = null;
@@ -342,16 +629,18 @@ export default function HeroBattleScene() {
     let enemyStaggerTtl = 0;
     let spellAnim:      SpellAnim   | null = null;
 
-    // ATB 시스템 — 개인별 카운터, 게이지가 꽉 찰 때만 행동
-    const ATB_PERIODS = [780, 660, 540, 900]; // Terra 13s / Celes 11s / Locke 9s / Edgar 15s
-    const atbCounters = [0, 0, 0, 0];
-    let summonCooldown = 0; // 소환 재사용 대기
-    let megaFlareCountdown = 0; // 소환 후 MegaFlare 예약
+    // ATB 시스템 — 둘 다 꽉 차야 행동, 순서대로 실행 후 동시 리셋
+    const ATB_PERIODS = [780, 660]; // Terra 13s / Celes 11s
+    const atbCounters = [0, 0];
+    let actionQueue: number[]  = []; // 행동 대기 멤버 인덱스
+    let bothReadyTriggered     = false; // 둘 다 풀 → 한 번만 트리거
+    let summonCooldown = 0;
+    let megaFlareCountdown = 0;
 
     let t = 0;
     let raf: number;
 
-    const SLASH_COLORS = ["#c084fc", "#e2e8f0", "#fbbf24", "#4ade80"];
+    const SLASH_COLORS = ["#c084fc", "#93c5fd"];
     const SPELL_NAMES  = { fire: "FIRE", blizzard: "BLIZZARA", thunder: "THUNDER" };
 
     function spawnNum(x: number, y: number, amount: number, heal = false) {
@@ -416,7 +705,7 @@ export default function HeroBattleScene() {
 
     // ATB 꽉 찼을 때 캐릭터별 행동 결정 — 성공 여부 반환
     function triggerCharacterAction(idx: number): boolean {
-      if (attackAnim || spellAnim) return false; // 다른 애니 진행 중이면 대기
+      if (attackAnim || spellAnim) return false;
       const roll = Math.random();
       if (idx === 0) {
         // Terra: Fire 40% / 소환 25% (쿨다운 없을 때) / 물리 35%
@@ -429,33 +718,43 @@ export default function HeroBattleScene() {
         } else {
           return triggerAttack(0);
         }
-      } else if (idx === 1) {
+      } else {
         // Celes: Blizzara 60% / 물리 40%
         if (roll < 0.6) return triggerSpell(1, "blizzard");
         else return triggerAttack(1);
-      } else if (idx === 2) {
-        // Locke: 물리 100%
-        return triggerAttack(2);
-      } else {
-        // Edgar: Thunder 50% / 물리 50%
-        if (roll < 0.5) return triggerSpell(3, "thunder");
-        else return triggerAttack(3);
       }
     }
 
     const loop = () => {
       t++;
 
-      // ATB 카운터 증가 — 꽉 찬 캐릭터는 행동 성공 시에만 리셋 (행동 중이면 대기)
-      for (let i = 0; i < 4; i++) {
-        if (atbCounters[i] < ATB_PERIODS[i]) {
-          atbCounters[i]++;
-        } else {
-          // ATB 풀 — 행동 시도, 성공하면 리셋
-          const acted = triggerCharacterAction(i);
-          if (acted) atbCounters[i] = 0;
-        }
+      // ── ATB 증가 (각자 채움, 풀이 되면 상한에서 대기) ─────────
+      for (let i = 0; i < 2; i++) {
+        if (atbCounters[i] < ATB_PERIODS[i]) atbCounters[i]++;
       }
+
+      // ── 둘 다 풀 → 행동 큐 구성 (한 번만) ──────────────────────
+      const bothFull = atbCounters[0] >= ATB_PERIODS[0] && atbCounters[1] >= ATB_PERIODS[1];
+      if (bothFull && !bothReadyTriggered) {
+        bothReadyTriggered = true;
+        actionQueue = [0, 1]; // Terra 선공, Celes 후공
+      }
+
+      // ── 큐 처리 — 애니메이션 없을 때 다음 행동 실행 ────────────
+      const isBusy = !!(attackAnim || spellAnim || magicCircle || megaFlare || megaFlareCountdown > 0);
+      if (actionQueue.length > 0 && !isBusy) {
+        const next  = actionQueue[0];
+        const acted = triggerCharacterAction(next);
+        if (acted) actionQueue.shift();
+      }
+
+      // ── 큐 소진 + 애니 끝 → 두 ATB 동시 리셋 ──────────────────
+      if (bothReadyTriggered && actionQueue.length === 0 && !isBusy) {
+        atbCounters[0]     = 0;
+        atbCounters[1]     = 0;
+        bothReadyTriggered = false;
+      }
+
       if (summonCooldown > 0) summonCooldown--;
       if (megaFlareCountdown > 0) {
         megaFlareCountdown--;
@@ -467,6 +766,14 @@ export default function HeroBattleScene() {
       const bxCenter = Math.floor(width / 2);
       ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, width, height);
+
+      // 하늘 그라디언트 — 상단 칠흑 → 지평선 보라빛
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+      skyGrad.addColorStop(0,   "#040710");
+      skyGrad.addColorStop(0.6, "#090d1c");
+      skyGrad.addColorStop(1,   "#0f1430");
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, width, groundY);
 
       // Stars
       for (const star of stars) {
@@ -482,12 +789,16 @@ export default function HeroBattleScene() {
       }
       ctx.globalAlpha = 1;
 
-      // Mountains
-      drawMountains(width, groundY, ctx);
+      // Mountains (3-layer depth)
+      drawMountains(width, groundY);
 
-      // Ground line
-      ctx.fillStyle = "rgba(160,140,220,0.15)";
+      // Ground glow
+      ctx.fillStyle = "rgba(80,60,180,0.10)";
+      ctx.fillRect(0, groundY - S * 2, width, S * 2);
+      ctx.fillStyle = "rgba(120,100,220,0.22)";
       ctx.fillRect(0, groundY, width, S);
+      ctx.fillStyle = "rgba(60,40,140,0.10)";
+      ctx.fillRect(0, groundY + S, width, S);
 
       // Bahamut (center top, floating)
       const bahamutFloat = Math.round(Math.sin(t * 0.035) * S * 3);
@@ -543,7 +854,32 @@ export default function HeroBattleScene() {
           else if (f < 23) lungeX = -S * 18;
           else             lungeX = -Math.floor(((45 - f) / 22) * S * 18);
         }
-        drawSprite(ctx, PARTY[i], partyX + lungeX, memberY);
+        // ATB FULL → pulsing gold border (waiting or about to act)
+        if (atbCounters[i] >= ATB_PERIODS[i]) {
+          const gPulse = 0.45 + 0.55 * Math.abs(Math.sin(t * 0.18));
+          ctx.globalAlpha = gPulse;
+          ctx.fillStyle = "#ffd700";
+          const gx = partyX + lungeX - S;
+          const gy = memberY - S;
+          const gw = SPRITE_W + S * 2;
+          const gh = SPRITE_H + S * 2;
+          ctx.fillRect(gx,          gy,          gw, S);  // top
+          ctx.fillRect(gx,          gy + gh - S, gw, S);  // bottom
+          ctx.fillRect(gx,          gy,          S,  gh);  // left
+          ctx.fillRect(gx + gw - S, gy,          S,  gh);  // right
+          ctx.globalAlpha = 1;
+        }
+
+        drawSpriteWithOutline(ctx, PARTY[i], partyX + lungeX, memberY);
+
+        // Weapon swing overlay during physical attack
+        if (attackAnim && attackAnim.memberIdx === i) {
+          drawWeaponSwing(partyX + lungeX, memberY, i, attackAnim.frame);
+        }
+        // Magic charge aura during spell cast
+        if (spellAnim && spellAnim.memberIdx === i) {
+          drawMagicCharge(partyX + lungeX, memberY, spellAnim.spellType, spellAnim.frame);
+        }
       }
 
       // Advance attack anim — trigger slash/flash at peak frame
@@ -793,48 +1129,122 @@ export default function HeroBattleScene() {
         if (mf.frame >= 84) { megaFlare = null; bahamutGlow = 0; }
       }
 
-      // ATB panel
-      const panelY  = height - ATB_H;
-      ctx.fillStyle = "rgba(2,2,22,0.94)";
+      // ── FF6-style ATB panel ─────────────────────────────────────
+      const panelY = height - ATB_H;
+
+      // Panel background
+      ctx.fillStyle = "#020216";
       ctx.fillRect(0, panelY, width, ATB_H);
-      ctx.fillStyle = "rgba(120,100,220,0.28)";
-      ctx.fillRect(0, panelY, width, 1);
+      // Top accent
+      ctx.fillStyle = "rgba(70,55,200,0.50)";
+      ctx.fillRect(0, panelY, width, 2);
+      ctx.fillStyle = "#253a72";
+      ctx.fillRect(0, panelY + 2, width, 1);
 
-      const slotW    = Math.floor((width - S * 4) / 4);
-      const barW     = Math.floor(slotW * 0.72);
-      const barH     = 4;
-      const HP_FILLS = [0.88, 0.76, 0.93, 0.61];
+      // Layout constants
+      const HP_VALS   = [1760, 1313];
+      const HP_FILLS  = [0.88, 0.76];
+      const slotW     = Math.floor((width - S * 4) / 2);
+      const LBL_W     = 22;  // px reserved for "HP"/"ATB" label
+      const NUM_W     = 38;  // px reserved for hp number on the right
+      const GAP       = 4;
+      const rowBarW   = slotW - LBL_W - NUM_W - GAP * 2; // bar pixel width
+      // Vertical centres for each row inside the panel
+      const NAME_Y    = panelY + 14; // baseline (11px font → top ≈ panelY+4)
+      const HP_CY     = panelY + 29; // bar & label vertically centred here
+      const ATB_CY    = panelY + 48; // bar & label vertically centred here
+      const HP_BAR_H  = 8;
+      const ATB_BAR_H = 10;
 
-      for (let i = 0; i < 4; i++) {
-        const sx    = S * 2 + i * slotW;
-        const nameY = panelY + 13;
-        const hpY   = panelY + 22;
-        const atbY  = panelY + 32;
+      for (let i = 0; i < 2; i++) {
+        const sx     = S * 2 + i * slotW;
+        const barX   = sx + LBL_W;           // bar left edge
+        const numX   = barX + rowBarW + GAP; // number left edge (right-aligned to numX+NUM_W)
+        const isFull = atbCounters[i] >= ATB_PERIODS[i];
 
-        ctx.fillStyle = PARTY_COLORS[i];
-        ctx.font      = `bold ${S * 2}px monospace`;
-        ctx.fillText(PARTY_NAMES[i], sx, nameY);
+        // ── Name ────────────────────────────────────────────────
+        const nameFlash = isFull && (t % 20 < 10);
+        ctx.font         = "bold 11px monospace";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle    = nameFlash ? "#ffffff" : PARTY_COLORS[i];
+        ctx.fillText(PARTY_NAMES[i], sx, NAME_Y);
 
-        // HP bar
-        ctx.fillStyle = "#0f0f1a";
-        ctx.fillRect(sx, hpY, barW, barH);
-        ctx.fillStyle = PARTY_COLORS[i];
-        ctx.fillRect(sx, hpY, Math.floor(barW * HP_FILLS[i]), barH);
+        // ── HP row ──────────────────────────────────────────────
+        const hpBarT  = HP_CY - Math.floor(HP_BAR_H / 2);
+        const hpFill  = HP_FILLS[i];
+        const hpFillW = Math.floor(rowBarW * hpFill);
+        const hpColor = hpFill > 0.5 ? "#22c55e" : hpFill > 0.25 ? "#eab308" : "#ef4444";
 
-        // ATB bar — 실제 카운터 기반, 꽉 차면 흰색으로 강조
-        const atbFill = atbCounters[i] / ATB_PERIODS[i];
-        const isFull  = atbCounters[i] >= ATB_PERIODS[i];
-        ctx.fillStyle = "#0f0f1a";
-        ctx.fillRect(sx, atbY, barW, barH);
-        ctx.fillStyle = isFull ? "#ffffff" : "#ffd700";
-        ctx.fillRect(sx, atbY, Math.floor(barW * atbFill), barH);
+        // "HP" label — centred on HP_CY
+        ctx.font         = "bold 8px monospace";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle    = "#4ade80";
+        ctx.fillText("HP", sx, HP_CY);
+
+        // bar border → bg → fill → shine
+        ctx.fillStyle = "#080820";
+        ctx.fillRect(barX - 1, hpBarT - 1, rowBarW + 2, HP_BAR_H + 2);
+        ctx.fillStyle = "#050512";
+        ctx.fillRect(barX, hpBarT, rowBarW, HP_BAR_H);
+        ctx.fillStyle = hpColor;
+        ctx.fillRect(barX, hpBarT, hpFillW, HP_BAR_H);
+        ctx.fillStyle = "rgba(255,255,255,0.22)";
+        ctx.fillRect(barX, hpBarT, hpFillW, 2);
+
+        // HP number — right-aligned, centred on HP_CY
+        ctx.font         = "bold 9px monospace";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle    = "#e2e8f0";
+        ctx.textAlign    = "right";
+        ctx.fillText(String(HP_VALS[i]), numX + NUM_W, HP_CY);
+        ctx.textAlign    = "left";
+
+        // ── ATB row ─────────────────────────────────────────────
+        const atbFill  = Math.min(1, atbCounters[i] / ATB_PERIODS[i]);
+        const atbBarT  = ATB_CY - Math.floor(ATB_BAR_H / 2);
+        const atbFillW = Math.floor(rowBarW * atbFill);
+        const atbColor = isFull ? (t % 10 < 5 ? "#ffffff" : "#ffd700") : "#ffd700";
+
+        // "ATB" label — centred on ATB_CY
+        ctx.font         = "bold 8px monospace";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle    = isFull ? (t % 20 < 10 ? "#ffffff" : "#ffd700") : "#fbbf24";
+        ctx.fillText("ATB", sx, ATB_CY);
+
+        // bar border → bg → fill → shine
+        ctx.fillStyle = "#080820";
+        ctx.fillRect(barX - 1, atbBarT - 1, rowBarW + 2, ATB_BAR_H + 2);
+        ctx.fillStyle = "#050512";
+        ctx.fillRect(barX, atbBarT, rowBarW, ATB_BAR_H);
+        ctx.fillStyle = atbColor;
+        ctx.fillRect(barX, atbBarT, atbFillW, ATB_BAR_H);
+        ctx.fillStyle = "rgba(255,255,255,0.28)";
+        ctx.fillRect(barX, atbBarT, atbFillW, 2);
+
+        // 4-segment dividers
+        ctx.fillStyle = "rgba(0,0,18,0.65)";
+        for (let seg = 1; seg < 4; seg++) {
+          ctx.fillRect(barX + Math.floor(rowBarW * seg / 4), atbBarT, 1, ATB_BAR_H);
+        }
+
+        // READY! — same row as ATB bar, right of number column
+        if (isFull) {
+          ctx.font         = "bold 8px monospace";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle    = t % 20 < 10 ? "#ffffff" : "#ffd700";
+          ctx.textAlign    = "right";
+          ctx.fillText("READY!", numX + NUM_W, ATB_CY);
+          ctx.textAlign    = "left";
+        }
 
         // Slot divider
-        if (i < 3) {
-          ctx.fillStyle = "rgba(255,255,255,0.06)";
-          ctx.fillRect(sx + slotW - 1, panelY + 8, 1, ATB_H - 16);
+        if (i < 1) {
+          ctx.fillStyle = "rgba(60,50,150,0.30)";
+          ctx.fillRect(sx + slotW - 1, panelY + 5, 1, ATB_H - 10);
         }
       }
+
+      ctx.textBaseline = "alphabetic";
 
       raf = requestAnimationFrame(loop);
     };
@@ -874,8 +1284,10 @@ export default function HeroBattleScene() {
   return (
     <canvas
       ref={canvasRef}
+      role="img"
+      aria-label="FF6 스타일 픽셀 아트 배틀씬 애니메이션"
       className="pixel-canvas pointer-events-none block w-full"
-      style={{ height: "200px", opacity: 0.82 }}
+      style={{ height: "252px", opacity: 0.9 }}
     />
   );
 }

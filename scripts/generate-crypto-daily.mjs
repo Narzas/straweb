@@ -579,8 +579,8 @@ async function fetchFuturesScanner(marketsTop250) {
       batch.map(async (coin) => {
         try {
           const [klinesRes, oiRes] = await Promise.all([
-            safeFetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coin.binanceSymbol}&interval=4h&limit=1`),
-            safeFetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${coin.binanceSymbol}&period=4h&limit=2`),
+            safeFetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coin.binanceSymbol}&interval=1h&limit=1`),
+            safeFetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${coin.binanceSymbol}&period=1h&limit=2`),
           ]);
           if (!klinesRes || !oiRes) return null;
 

@@ -54,8 +54,8 @@ function InfoPanel() {
         <p className="font-semibold text-slate-700 dark:text-slate-300">점수 구성 (100점 만점)</p>
         <ul className="space-y-1 pl-1">
           <li><span className="text-green-600 dark:text-green-400 font-medium">펀딩비</span> — 양수일수록 롱 포지션 수요가 많다는 신호. 높을수록 고점수.</li>
-          <li><span className="text-blue-600 dark:text-blue-400 font-medium">OI 변화 (4H)</span> — 미결제약정 증가 = 신규 자금 유입. 4시간 기준 상승률로 계산.</li>
-          <li><span className="text-yellow-600 dark:text-yellow-400 font-medium">거래량 (4H)</span> — 전체 대상 중 거래량 상위 10%면 만점, 25% 이내 고점수.</li>
+          <li><span className="text-blue-600 dark:text-blue-400 font-medium">OI 변화 (1H)</span> — 미결제약정 증가 = 신규 자금 유입. 1시간 기준 상승률로 계산.</li>
+          <li><span className="text-yellow-600 dark:text-yellow-400 font-medium">거래량 (1H)</span> — 전체 대상 중 거래량 상위 10%면 만점, 25% 이내 고점수.</li>
           <li><span className="text-emerald-600 dark:text-emerald-400 font-medium">시총 보너스</span> — $50M 미만 +20점, $100M 미만 +10점. 저시총일수록 폭발 가능성.</li>
         </ul>
       </div>
@@ -105,7 +105,7 @@ export default function FuturesScannerSection({ data }: Props) {
           </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          Binance USDT Perp · 펀딩비 양수 · OI 증가 · 저시총 기준 · TOP 10
+          Binance USDT Perp · 펀딩비 양수 · OI 증가 (1H) · 저시총 기준 · TOP 10
         </p>
       </div>
 
@@ -146,13 +146,13 @@ export default function FuturesScannerSection({ data }: Props) {
                     <span className="text-green-400 font-medium">+{(coin.fundingRate * 100).toFixed(4)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">OI 변화 (4H)</span>
+                    <span className="text-slate-400">OI 변화 (1H)</span>
                     <span className={coin.oiChangePct > 0 ? "text-blue-400 font-medium" : "text-slate-400"}>
                       {coin.oiChangePct > 0 ? "+" : ""}{coin.oiChangePct.toFixed(2)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">4H 거래량</span>
+                    <span className="text-slate-400">1H 거래량</span>
                     <span className="text-yellow-400 font-medium">{fmtVol(coin.volume4hUsd)} <span className="text-slate-500">(상위 {(coin.volume4hRankPct * 100).toFixed(0)}%)</span></span>
                   </div>
                   {coin.marketCapUsd !== null && (

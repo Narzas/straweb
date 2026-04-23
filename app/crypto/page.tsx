@@ -114,7 +114,7 @@ type FuturesCoinStored = {
   fundingRate: number;
   oiChangePct: number;
   volume4hUsd: number;
-  volume4hRank: number;
+  volume4hRankPct: number;
   marketCapUsd: number | null;
   score: number;
 };

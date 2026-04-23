@@ -27,9 +27,8 @@ function fmtCap(usd: number | null): string {
   return `$${usd.toLocaleString()}`;
 }
 
-function ScoreBar({ score }: { score: number }) {
-  const MAX = 100;
-  const pct = Math.min(100, Math.max(0, (score / MAX) * 100));
+function ScoreBar({ score, max }: { score: number; max: number }) {
+  const pct = Math.min(100, Math.max(0, (score / max) * 100));
   const color =
     pct >= 60 ? "bg-emerald-500" :
     pct >= 35 ? "bg-yellow-400" :
@@ -51,6 +50,11 @@ export default function FuturesScannerSection({ data }: Props) {
     () => getTopFutures(data, FUTURES_PRESETS[preset], 10),
     [data, preset],
   );
+
+  const scoreMax = useMemo(() => {
+    const w = FUTURES_PRESETS[preset];
+    return 30 * w.volume + 20 * w.funding + 30 * w.oi + 20;
+  }, [preset]);
 
   return (
     <section className="space-y-4">
@@ -109,7 +113,7 @@ export default function FuturesScannerSection({ data }: Props) {
               </div>
 
               {/* 2행: 점수 게이지 바 */}
-              <ScoreBar score={coin.score} />
+              <ScoreBar score={coin.score} max={scoreMax} />
 
               {/* 3행: 지표 태그 */}
               <div className="flex flex-wrap gap-1.5">
@@ -122,7 +126,7 @@ export default function FuturesScannerSection({ data }: Props) {
                   </span>
                 )}
                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">
-                  4H 거래량 {fmtVol(coin.volume4hUsd)} (상위 {coin.volume4hRank}위)
+                  4H 거래량 {fmtVol(coin.volume4hUsd)} (상위 {(coin.volume4hRankPct * 100).toFixed(0)}%)
                 </span>
                 {coin.marketCapUsd !== null && (
                   <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${

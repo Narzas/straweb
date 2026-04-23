@@ -615,15 +615,14 @@ async function fetchFuturesScanner(marketsTop250) {
   const total = sorted.length;
 
   const scored = sorted.map((coin, idx) => {
-    const volume4hRank = idx + 1;
-    const pct = volume4hRank / total;
-    const volumeSc = pct <= 0.10 ? 30 : pct <= 0.25 ? 20 : pct <= 0.50 ? 10 : 0;
+    const volume4hRankPct = (idx + 1) / total;
+    const volumeSc = volume4hRankPct <= 0.10 ? 30 : volume4hRankPct <= 0.25 ? 20 : volume4hRankPct <= 0.50 ? 10 : 0;
     const fundingSc = coin.fundingRate > 0.0001 ? 20 : coin.fundingRate > 0.00005 ? 12 : 5;
     const oiSc = coin.oiChangePct > 20 ? 30 : coin.oiChangePct > 10 ? 20 : coin.oiChangePct > 5 ? 10 : coin.oiChangePct > 0 ? 3 : 0;
     const capBonus = !coin.marketCapUsd ? 0 : coin.marketCapUsd < 50_000_000 ? 20 : coin.marketCapUsd < 100_000_000 ? 10 : 0;
     return {
       ...coin,
-      volume4hRank,
+      volume4hRankPct,
       score: volumeSc + fundingSc + oiSc + capBonus,
     };
   });

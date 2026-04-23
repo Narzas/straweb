@@ -25,16 +25,15 @@ export interface FuturesCoin {
   fundingRate: number;
   oiChangePct: number;
   volume4hUsd: number;
-  volume4hRank: number;
+  volume4hRankPct: number;
   marketCapUsd: number | null;
   score: number;
 }
 
-function volumeScore(rank: number, total: number): number {
-  const pct = rank / total;
-  if (pct <= 0.10) return 30;
-  if (pct <= 0.25) return 20;
-  if (pct <= 0.50) return 10;
+function volumeScore(rankPct: number): number {
+  if (rankPct <= 0.10) return 30;
+  if (rankPct <= 0.25) return 20;
+  if (rankPct <= 0.50) return 10;
   return 0;
 }
 
@@ -70,7 +69,7 @@ export function getTopFutures(
     .map((coin) => ({
       ...coin,
       score:
-        volumeScore(coin.volume4hRank, total) * weights.volume +
+        volumeScore(coin.volume4hRankPct) * weights.volume +
         fundingScore(coin.fundingRate) * weights.funding +
         oiScore(coin.oiChangePct) * weights.oi +
         marketCapBonus(coin.marketCapUsd),

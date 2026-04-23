@@ -534,7 +534,9 @@ async function fetchHyperliquidPerps() {
 // ── 선물 스캐너 ───────────────────────────────────────────────────────────────
 
 function scoreAndRank(rawResults) {
-  const sorted = [...rawResults].sort((a, b) => b.volume4hUsd - a.volume4hUsd);
+  // 시총 확인된 코인 중 $20M 미만만 제거 (조작 위험), null은 소형 미확인으로 통과
+  const filtered = rawResults.filter((c) => c.marketCapUsd === null || c.marketCapUsd >= 20_000_000);
+  const sorted = [...filtered].sort((a, b) => b.volume4hUsd - a.volume4hUsd);
   const total = sorted.length;
   const scored = sorted.map((coin, idx) => {
     const volume4hRankPct = (idx + 1) / total;
@@ -553,8 +555,7 @@ function scoreAndRank(rawResults) {
     const volStart = coin.volumeSpike >= 1.3 && coin.volumeSpike <= 4;
     const timingSc = (sideways ? 5 : 0) + (oiBuild ? 10 : 0) + (volStart ? 5 : 0) + (sideways && oiBuild && volStart ? 5 : 0);
     const overheatP = (coin.priceChange1h > 8 ? 20 : 0) + (fundingPct > 0.03 ? 15 : 0) + (coin.volumeSpike > 5 ? 15 : 0);
-    const riskP = !coin.marketCapUsd ? 5 : coin.marketCapUsd < 20_000_000 ? 20 : coin.marketCapUsd < 50_000_000 ? 5 : 0;
-    return { ...coin, volume4hRankPct, score: fundingSc + priceOiSc + volumeSc + timingSc - overheatP - riskP };
+    return { ...coin, volume4hRankPct, score: fundingSc + priceOiSc + volumeSc + timingSc - overheatP };
   });
   return scored.sort((a, b) => b.score - a.score).slice(0, 50);
 }

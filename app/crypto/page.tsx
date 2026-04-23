@@ -249,22 +249,6 @@ async function getData(date?: string): Promise<CryptoDaily | null> {
   }
 }
 
-async function getFuturesSignals() {
-  try {
-    const sb = createServiceClient();
-    const since = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
-    const { data } = await sb
-      .from("futures_signals")
-      .select("id, recorded_at, symbol, rank, entry_price, score, price_1h, price_4h, price_24h")
-      .gte("recorded_at", since)
-      .order("recorded_at", { ascending: false })
-      .limit(500);
-    return data ?? [];
-  } catch {
-    return [];
-  }
-}
-
 async function getAdjacentDates(currentDate: string): Promise<{ prev: string | null; next: string | null }> {
   try {
     const sb = createServiceClient();
@@ -283,10 +267,7 @@ async function getAdjacentDates(currentDate: string): Promise<{ prev: string | n
 
 export default async function CryptoPage({ searchParams }: PageProps) {
   const { date: dateParam } = await searchParams;
-  const [data, futuresSignals] = await Promise.all([
-    getData(dateParam),
-    getFuturesSignals(),
-  ]);
+  const data = await getData(dateParam);
 
   if (!data) {
     return (
@@ -532,7 +513,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         {editorial?.futures_scanner && editorial.futures_scanner.length > 0 && (
           <AnimatedSection delay={0.05}>
             <div id="futures" className="scroll-mt-24">
-              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} signals={futuresSignals} />
+              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} />
             </div>
           </AnimatedSection>
         )}

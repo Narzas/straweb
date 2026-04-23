@@ -1522,7 +1522,6 @@ async function sendTelegramBriefing(date, payload, editorial) {
     editorial.netflow_comment ? `<i>${editorial.netflow_comment}</i>` : null,
     editorial.dex_comment ? `\n🌐 <b>온체인 자금흐름</b>\n<i>${stripDash(editorial.dex_comment)}</i>` : null,
     predLines ? `\n🎯 <b>예측시장</b>\n${predLines}` : null,
-    `\n📡 <b>선물 스캐너</b> 신규 추가 — <a href="https://stragos.xyz/crypto#futures">홈페이지에서 확인</a>`,
     `<a href="https://stragos.xyz/crypto">➡️ 최신 브리핑 전체 보기</a>`,
     `🔄 <i>웹 브리핑 매시간 갱신</i>\n📨 <i>텔레그램 알림 6시간마다 발송</i>`,
   ].filter((l) => l !== null).join("\n");

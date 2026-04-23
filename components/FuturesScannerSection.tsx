@@ -47,7 +47,7 @@ function InfoPanel() {
     <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-4 py-3 space-y-3 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">
       <p>
         <span className="font-semibold text-slate-800 dark:text-slate-200">선물 스캐너란?</span><br />
-        Binance USDT 무기한 선물 시장에서 <strong className="text-slate-700 dark:text-slate-300">지금 뭔가 움직이는 저시총 코인</strong>을 자동으로 걸러냅니다.
+        Binance USDT 무기한 선물 시장에서 <strong className="text-slate-700 dark:text-slate-300">지금 뭔가 움직이는 저시총 코인</strong>을 자동으로 걸러냅니다.<br />
         펀딩비가 양수(롱 우세)이고, 미결제약정(OI)이 늘고 있으며, 거래량까지 터진 코인을 종합 점수로 순위를 매깁니다.
       </p>
       <div className="space-y-1.5">
@@ -61,7 +61,7 @@ function InfoPanel() {
       </div>
       <div className="space-y-1">
         <p className="font-semibold text-slate-700 dark:text-slate-300">프리셋 탭</p>
-        <p>각 탭은 4가지 점수의 가중치를 다르게 적용합니다. <span className="font-medium">고펀딩비</span>는 펀딩비에, <span className="font-medium">OI 급증</span>은 미결제약정에, <span className="font-medium">거래량 폭발</span>은 거래량에 3배 가중치를 줍니다.</p>
+        <p>각 탭은 4가지 점수의 가중치를 다르게 적용합니다.<br /><span className="font-medium">고펀딩비</span>는 펀딩비에, <span className="font-medium">OI 급증</span>은 미결제약정에, <span className="font-medium">거래량 폭발</span>은 거래량에 3배 가중치를 줍니다.</p>
       </div>
       <p className="text-[11px] text-slate-400 dark:text-slate-500">매시간 갱신 · 데이터 출처: Binance Futures 공개 API</p>
     </div>

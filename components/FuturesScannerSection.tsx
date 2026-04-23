@@ -108,7 +108,8 @@ export default function FuturesScannerSection({ data }: Props) {
                   </span>
                 </div>
                 <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
-                  {Math.round(coin.score)}점
+                  {Math.round(coin.score)}
+                  <span className="text-xs font-normal text-gray-400 dark:text-gray-500"> / {Math.round(scoreMax)}점</span>
                 </span>
               </div>
 

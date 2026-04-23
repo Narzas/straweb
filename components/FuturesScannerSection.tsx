@@ -76,14 +76,17 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-function InfoPanel() {
+function InfoPanel({ onClose }: { onClose: () => void }) {
   return (
     <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-4 py-3 space-y-3 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">
-      <p>
-        <span className="font-semibold text-slate-800 dark:text-slate-200">선물 시그널이란?</span><br />
-        단순히 <strong className="text-slate-700 dark:text-slate-300">"움직인 코인"</strong>이 아닌, <strong className="text-slate-700 dark:text-slate-300">"돈이 쌓이는 자리"</strong>를 찾는 도구입니다.
-        펀딩비·가격·미결제약정(OI)·거래량을 조합해 자동 점수화합니다.
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <p>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">선물 시그널이란?</span><br />
+          단순히 <strong className="text-slate-700 dark:text-slate-300">"움직인 코인"</strong>이 아닌, <strong className="text-slate-700 dark:text-slate-300">"돈이 쌓이는 자리"</strong>를 찾는 도구입니다.
+          펀딩비·가격·미결제약정(OI)·거래량을 조합해 자동 점수화합니다.
+        </p>
+        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none cursor-pointer shrink-0 mt-0.5">✕</button>
+      </div>
       <div className="space-y-1.5">
         <p className="font-semibold text-slate-700 dark:text-slate-300">점수 구조 (100점 만점)</p>
         <ul className="space-y-1 pl-1">
@@ -108,14 +111,17 @@ function InfoPanel() {
   );
 }
 
-function TrackingInfoPanel() {
+function TrackingInfoPanel({ onClose }: { onClose: () => void }) {
   return (
     <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-4 py-3 space-y-3 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">
-      <p>
-        <span className="font-semibold text-slate-800 dark:text-slate-200">트래킹이란?</span><br />
-        매시간 정각, 선물 시그널 <strong className="text-slate-700 dark:text-slate-300">TOP 10 코인의 진입가</strong>를 자동 기록하고
-        1시간 · 4시간 · 24시간 후 실제 가격을 추적해 수익률을 계산합니다.
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <p>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">트래킹이란?</span><br />
+          매시간 정각, 선물 시그널 <strong className="text-slate-700 dark:text-slate-300">TOP 10 코인의 진입가</strong>를 자동 기록하고
+          1시간 · 4시간 · 24시간 후 실제 가격을 추적해 수익률을 계산합니다.
+        </p>
+        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none cursor-pointer shrink-0 mt-0.5">✕</button>
+      </div>
       <div className="space-y-1.5">
         <p className="font-semibold text-slate-700 dark:text-slate-300">표시 항목</p>
         <ul className="space-y-1 pl-1">
@@ -263,16 +269,14 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
             📡 선물 시그널
           </h2>
-          <button
-            onClick={() => setShowInfo((v) => !v)}
-            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer border shrink-0 ${
-              showInfo
-                ? "bg-indigo-600 text-white border-indigo-600"
-                : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-600 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-            }`}
-          >
-            {showInfo ? "닫기" : "이게 뭔가요?"}
-          </button>
+          {!showInfo && (
+            <button
+              onClick={() => setShowInfo(true)}
+              className="px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer border border-indigo-300 dark:border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors shrink-0"
+            >
+              이게 뭔가요?
+            </button>
+          )}
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {tab === "scanner"
@@ -311,7 +315,7 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
       {/* 스캐너 탭 */}
       {tab === "scanner" && (
         <>
-          {showInfo && <InfoPanel />}
+          {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
 
           {/* 프리셋 탭 */}
           <div className="flex gap-2 flex-wrap">
@@ -448,7 +452,7 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
       {/* 트래킹 탭 */}
       {tab === "tracking" && hasTracking && (
         <>
-          {showInfo && <TrackingInfoPanel />}
+          {showInfo && <TrackingInfoPanel onClose={() => setShowInfo(false)} />}
           <TrackingTab signals={signals} />
         </>
       )}

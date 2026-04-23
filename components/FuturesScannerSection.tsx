@@ -80,7 +80,7 @@ function InfoPanel() {
   return (
     <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-4 py-3 space-y-3 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">
       <p>
-        <span className="font-semibold text-slate-800 dark:text-slate-200">선물 스캐너란?</span><br />
+        <span className="font-semibold text-slate-800 dark:text-slate-200">선물 시그널이란?</span><br />
         단순히 <strong className="text-slate-700 dark:text-slate-300">"움직인 코인"</strong>이 아닌, <strong className="text-slate-700 dark:text-slate-300">"돈이 쌓이는 자리"</strong>를 찾는 도구입니다.
         펀딩비·가격·미결제약정(OI)·거래량을 조합해 자동 점수화합니다.
       </p>

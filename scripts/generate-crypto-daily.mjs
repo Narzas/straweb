@@ -974,12 +974,12 @@ function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeas
   const summary = `${sentimentDetail}${btcDom != null ? ` BTC 도미넌스는 ${btcDom.toFixed(1)}%를 기록 중입니다.` : ""}`;
 
   return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, netflow_comment: netflowComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, prediction_markets: predictionMarkets ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null,
-    coins_top250: (marketsTop250 ?? []).map(c => ({
+    coins_top250: marketsTop250 ? marketsTop250.map(c => ({
       symbol: (c.symbol ?? "").toUpperCase(),
       name: c.name ?? "",
       price_change_percentage_24h: c.price_change_percentage_24h ?? 0,
       price_change_percentage_7d_in_currency: c.price_change_percentage_7d_in_currency ?? 0,
-    })),
+    })) : null,
     futures_scanner: futuresScanner ?? [],
   };
 }

@@ -90,8 +90,8 @@ export default function FuturesScannerSection({ data }: Props) {
       {/* 헤더 */}
       <div>
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-            선물 스캐너
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
+            📡 선물 스캐너
           </h2>
           <button
             onClick={() => setShowInfo((v) => !v)}

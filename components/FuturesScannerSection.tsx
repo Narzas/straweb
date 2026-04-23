@@ -238,7 +238,7 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
-            📡 선물 스캐너
+            📡 선물 시그널
           </h2>
           {tab === "scanner" && (
             <button
@@ -415,10 +415,12 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
             </div>
           )}
 
-          <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
-            * 투자 추천이 아닙니다. 가격·OI·펀딩비·거래량을 자동 합산한 참고용 점수입니다.
-            투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다.
-          </p>
+          <div className="rounded-lg border border-yellow-200 dark:border-yellow-800/50 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-2">
+            <p className="text-[11px] text-yellow-700 dark:text-yellow-400 leading-relaxed font-medium">
+              ⚠️ 투자 추천이 아닙니다. 가격·OI·펀딩비·거래량을 자동 합산한 참고용 점수입니다.
+              투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다.
+            </p>
+          </div>
         </>
       )}
 

@@ -7,6 +7,7 @@ import {
   FUTURES_PRESETS,
   FUTURES_PRESET_LABELS,
   getTopFutures,
+  getPresetMaxScore,
 } from "@/lib/futuresScanner";
 
 interface Props {
@@ -25,6 +26,25 @@ function fmtCap(usd: number | null): string {
   if (usd >= 1_000_000_000) return `$${(usd / 1_000_000_000).toFixed(1)}B`;
   if (usd >= 1_000_000)     return `$${(usd / 1_000_000).toFixed(0)}M`;
   return `$${usd.toLocaleString()}`;
+}
+
+function fmtPct(v: number): string {
+  return `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+}
+
+function PriceArrow({ v }: { v: number }) {
+  if (v > 1)  return <span className="text-emerald-500 font-bold">↑</span>;
+  if (v < -1) return <span className="text-red-400 font-bold">↓</span>;
+  return <span className="text-gray-400">→</span>;
+}
+
+function PriceTag({ label, v }: { label: string; v: number }) {
+  const color = v > 1 ? "text-emerald-500" : v < -1 ? "text-red-400" : "text-gray-400 dark:text-gray-500";
+  return (
+    <span className={`text-[10px] font-medium ${color}`}>
+      {label} {fmtPct(v)}
+    </span>
+  );
 }
 
 function ScoreBar({ score }: { score: number }) {
@@ -47,21 +67,28 @@ function InfoPanel() {
     <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-4 py-3 space-y-3 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">
       <p>
         <span className="font-semibold text-slate-800 dark:text-slate-200">선물 스캐너란?</span><br />
-        Binance USDT 무기한 선물 시장에서 <strong className="text-slate-700 dark:text-slate-300">지금 뭔가 움직이는 저시총 코인</strong>을 자동으로 걸러냅니다.<br />
-        펀딩비가 양수(롱 우세)이고, 미결제약정(OI)이 늘고 있으며, 거래량까지 터진 코인을 종합 점수로 순위를 매깁니다.
+        단순히 <strong className="text-slate-700 dark:text-slate-300">"움직인 코인"</strong>이 아닌, <strong className="text-slate-700 dark:text-slate-300">"돈이 쌓이는 자리"</strong>를 찾는 도구입니다.
+        펀딩비·가격·미결제약정(OI)·거래량을 조합해 자동 점수화합니다.
       </p>
       <div className="space-y-1.5">
-        <p className="font-semibold text-slate-700 dark:text-slate-300">점수 구성 (100점 만점)</p>
+        <p className="font-semibold text-slate-700 dark:text-slate-300">점수 구조 (100점 만점)</p>
         <ul className="space-y-1 pl-1">
-          <li><span className="text-green-600 dark:text-green-400 font-medium">펀딩비</span> — 양수일수록 롱 포지션 수요가 많다는 신호. 높을수록 고점수.</li>
-          <li><span className="text-blue-600 dark:text-blue-400 font-medium">OI 변화 (1H)</span> — 미결제약정 증가 = 신규 자금 유입. 1시간 기준 상승률로 계산.</li>
-          <li><span className="text-yellow-600 dark:text-yellow-400 font-medium">거래량 (1H)</span> — 전체 대상 중 거래량 상위 10%면 만점, 25% 이내 고점수.</li>
-          <li><span className="text-emerald-600 dark:text-emerald-400 font-medium">시총 보너스</span> — $50M 미만 +20점, $100M 미만 +10점. 저시총일수록 폭발 가능성.</li>
+          <li><span className="text-green-600 dark:text-green-400 font-medium">펀딩비 건강도 (25pt)</span> — 0~0.01% 최고점. 펀딩 과열은 감점 (롱 과열 신호).</li>
+          <li><span className="text-blue-600 dark:text-blue-400 font-medium">가격+OI 조합 (30pt)</span> — 가격↓+OI↑ = 숏 쌓임(롱 기회🔥) / 가격↑+OI↑ = 추세 / 횡보+OI↑ = 포지션 축적.</li>
+          <li><span className="text-yellow-600 dark:text-yellow-400 font-medium">거래량 상대 점수 (20pt)</span> — 전체 대상 중 상위 10% 최고점.</li>
+          <li><span className="text-purple-600 dark:text-purple-400 font-medium">타이밍 점수 (25pt)</span> — 4H 횡보 + OI 6H 증가 + 거래량 증가 시작 → 막 터지기 직전 포착.</li>
         </ul>
+        <p className="text-red-500 dark:text-red-400 font-medium mt-1">패널티: 1H +8% 이상(이미 터짐) / 펀딩 과열 / 거래량 5배 급증 / 시총 $20M 미만(조작 위험)</p>
       </div>
       <div className="space-y-1">
-        <p className="font-semibold text-slate-700 dark:text-slate-300">프리셋 탭</p>
-        <p>각 탭은 4가지 점수의 가중치를 다르게 적용합니다.<br /><span className="font-medium">고펀딩비</span>는 펀딩비에, <span className="font-medium">OI 급증</span>은 미결제약정에, <span className="font-medium">거래량 폭발</span>은 거래량에 3배 가중치를 줍니다.</p>
+        <p className="font-semibold text-slate-700 dark:text-slate-300">프리셋별 특징</p>
+        <ul className="space-y-0.5 pl-1">
+          <li><span className="font-medium">종합</span> — 모든 지표 균등 반영. 기본값.</li>
+          <li><span className="font-medium">초기 유입</span> — 타이밍 점수 2.5배 가중. OI 축적 + 횡보 구간 집중.</li>
+          <li><span className="font-medium">추세 추종</span> — 가격+OI 조합 2배. 이미 방향이 잡힌 코인.</li>
+          <li><span className="font-medium">숏 스퀴즈</span> — 가격↓+OI↑ 콤보 극대화. 반등 후보 탐색.</li>
+          <li><span className="font-medium">과열 구간</span> — 패널티 제거, 현재 과열 중인 코인 탐색 (진입보다 회피 참고용).</li>
+        </ul>
       </div>
     </div>
   );
@@ -71,15 +98,12 @@ export default function FuturesScannerSection({ data }: Props) {
   const [preset, setPreset] = useState<FuturesPresetKey>("overall");
   const [showInfo, setShowInfo] = useState(false);
 
-  const scoreMax = useMemo(() => {
-    const w = FUTURES_PRESETS[preset];
-    return 30 * w.volume + 20 * w.funding + 30 * w.oi + 20;
-  }, [preset]);
+  const scoreMax = useMemo(() => getPresetMaxScore(FUTURES_PRESETS[preset]), [preset]);
 
   const top10 = useMemo(
     () => getTopFutures(data, FUTURES_PRESETS[preset], 10).map((coin) => ({
       ...coin,
-      score: Math.round((coin.score / scoreMax) * 100),
+      score: Math.min(100, Math.max(0, Math.round((coin.score / scoreMax) * 100))),
     })),
     [data, preset, scoreMax],
   );
@@ -104,7 +128,7 @@ export default function FuturesScannerSection({ data }: Props) {
           </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          Binance USDT Perp · 펀딩비 양수 · OI 증가 (1H) · 저시총 기준 · TOP 10
+          가격+OI 조합 · 펀딩비 건강도 · 타이밍 점수 · TOP 10
         </p>
       </div>
 
@@ -118,14 +142,22 @@ export default function FuturesScannerSection({ data }: Props) {
             onClick={() => setPreset(key)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
               preset === key
-                ? "bg-indigo-600 text-white"
+                ? key === "overheat"
+                  ? "bg-red-500 text-white"
+                  : "bg-indigo-600 text-white"
                 : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600"
             }`}
           >
-            {FUTURES_PRESET_LABELS[key]}
+            {key === "overheat" ? "⚠️ " : ""}{FUTURES_PRESET_LABELS[key]}
           </button>
         ))}
       </div>
+
+      {preset === "overheat" && (
+        <p className="text-[11px] text-red-500 dark:text-red-400 font-medium">
+          ⚠️ 경고 모드: 현재 과열 신호가 강한 코인입니다. 진입보다는 회피 참고용으로 사용하세요.
+        </p>
+      )}
 
       {/* 카드 목록 */}
       {top10.length === 0 ? (
@@ -137,28 +169,50 @@ export default function FuturesScannerSection({ data }: Props) {
           {top10.map((coin, idx) => (
             <div key={coin.symbol} className="relative group">
               {/* 툴팁 */}
-              <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 z-50 w-60 rounded-xl bg-slate-900 dark:bg-slate-950 border border-slate-700 shadow-xl px-3 py-2.5 space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-950 border border-slate-700 shadow-xl px-3 py-2.5 space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                 <p className="text-xs font-bold text-white">{coin.symbol} <span className="text-slate-400 font-normal">#{idx + 1}위</span></p>
                 <div className="space-y-1 text-[11px]">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">펀딩비</span>
-                    <span className="text-green-400 font-medium">+{(coin.fundingRate * 100).toFixed(4)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">OI 변화 (1H)</span>
-                    <span className={coin.oiChangePct > 0 ? "text-blue-400 font-medium" : "text-slate-400"}>
-                      {coin.oiChangePct > 0 ? "+" : ""}{coin.oiChangePct.toFixed(2)}%
+                    <span className="text-slate-400">1H 가격</span>
+                    <span className={coin.priceChange1h > 1 ? "text-emerald-400 font-medium" : coin.priceChange1h < -1 ? "text-red-400 font-medium" : "text-slate-400"}>
+                      {fmtPct(coin.priceChange1h)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">1H 거래량</span>
-                    <span className="text-yellow-400 font-medium">{fmtVol(coin.volume4hUsd)} <span className="text-slate-500">(상위 {(coin.volume4hRankPct * 100).toFixed(0)}%)</span></span>
+                    <span className="text-slate-400">4H 가격</span>
+                    <span className={coin.priceChange4h > 2 ? "text-emerald-400 font-medium" : coin.priceChange4h < -2 ? "text-red-400 font-medium" : "text-slate-400"}>
+                      {fmtPct(coin.priceChange4h)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">OI (1H / 6H)</span>
+                    <span className={coin.oiChangePct > 0 ? "text-blue-400 font-medium" : "text-slate-400"}>
+                      {fmtPct(coin.oiChangePct)} / {fmtPct(coin.oiChangePct6h)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">펀딩비</span>
+                    <span className={
+                      coin.fundingRate * 100 > 0.03 ? "text-red-400 font-medium" :
+                      coin.fundingRate * 100 > 0.01 ? "text-yellow-400 font-medium" :
+                      coin.fundingRate >= 0 ? "text-green-400 font-medium" : "text-slate-400"
+                    }>
+                      {fmtPct(coin.fundingRate * 100)}
+                      {coin.fundingRate * 100 > 0.03 ? " 🔴" : coin.fundingRate * 100 > 0.01 ? " 🟡" : coin.fundingRate >= 0 ? " 🟢" : ""}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">거래량 (4H) / 급등</span>
+                    <span className="text-yellow-400 font-medium">
+                      {fmtVol(coin.volume4hUsd)} / {coin.volumeSpike.toFixed(1)}x
+                    </span>
                   </div>
                   {coin.marketCapUsd !== null && (
                     <div className="flex justify-between">
                       <span className="text-slate-400">시가총액</span>
-                      <span className={`font-medium ${coin.marketCapUsd < 50_000_000 ? "text-emerald-400" : "text-slate-300"}`}>
+                      <span className={`font-medium ${coin.marketCapUsd < 20_000_000 ? "text-red-400" : coin.marketCapUsd < 50_000_000 ? "text-yellow-400" : "text-slate-300"}`}>
                         {fmtCap(coin.marketCapUsd)}
+                        {coin.marketCapUsd < 20_000_000 ? " ⚠️" : ""}
                       </span>
                     </div>
                   )}
@@ -170,7 +224,11 @@ export default function FuturesScannerSection({ data }: Props) {
               </div>
 
               {/* 카드 */}
-              <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5">
+              <div className={`rounded-lg border bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5 ${
+                preset === "overheat"
+                  ? "border-red-200 dark:border-red-900/50"
+                  : "border-gray-200 dark:border-slate-700"
+              }`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 w-4 shrink-0">
                     #{idx + 1}
@@ -178,15 +236,24 @@ export default function FuturesScannerSection({ data }: Props) {
                   <span className="text-sm font-bold text-gray-900 dark:text-gray-100 shrink-0 w-16">
                     {coin.symbol}
                   </span>
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate flex-1">
-                    펀딩 +{(coin.fundingRate * 100).toFixed(3)}%
-                    {coin.oiChangePct > 0 && ` · OI +${coin.oiChangePct.toFixed(1)}%`}
-                    {` · ${fmtVol(coin.volume4hUsd)}`}
-                    {coin.marketCapUsd !== null && ` · 시총 ${fmtCap(coin.marketCapUsd)}`}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
+                    <PriceArrow v={coin.priceChange1h} />
+                    <PriceTag label="1H" v={coin.priceChange1h} />
+                    <PriceTag label="4H" v={coin.priceChange4h} />
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">
+                      OI {fmtPct(coin.oiChangePct)}
+                    </span>
+                  </div>
                   <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
                     {coin.score}<span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">/100</span>
                   </span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-gray-500">
+                  <span>펀딩 {fmtPct(coin.fundingRate * 100)}</span>
+                  <span>·</span>
+                  <span>4H거래량 {fmtVol(coin.volume4hUsd)}</span>
+                  {coin.volumeSpike >= 1.5 && <span className="text-yellow-500 font-medium">· {coin.volumeSpike.toFixed(1)}x↑</span>}
+                  {coin.marketCapUsd !== null && <span>· 시총 {fmtCap(coin.marketCapUsd)}</span>}
                 </div>
                 <ScoreBar score={coin.score} />
               </div>
@@ -197,7 +264,7 @@ export default function FuturesScannerSection({ data }: Props) {
 
       {/* 면책 고지 */}
       <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
-        * 투자 추천이 아닙니다. Binance 선물 시장의 펀딩비·OI·거래량을 자동 합산한 참고용 점수입니다.
+        * 투자 추천이 아닙니다. 가격·OI·펀딩비·거래량을 자동 합산한 참고용 점수입니다.
         투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다.
       </p>
     </section>

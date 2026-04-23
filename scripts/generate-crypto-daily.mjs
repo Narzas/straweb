@@ -94,6 +94,9 @@ async function translateBatch(texts) {
     const result = [...texts];
     entries.forEach(({ i }, idx) => { result[i] = translated[idx] ?? texts[i]; });
     return result;
+  } catch (e) {
+    console.warn(`[translateBatch] 번역 실패, 원본 텍스트 유지: ${e.message}`);
+    return texts;
   } finally {
     try { unlinkSync(tmpFile); } catch {}
   }
@@ -546,9 +549,11 @@ async function fetchFuturesScanner(marketsTop250) {
   const fundings = await fundingRes.json();
 
   const fundingMap = new Map();
+  const markPriceMap = new Map();
   for (const f of (Array.isArray(fundings) ? fundings : [])) {
     if (typeof f.symbol === "string" && f.symbol.endsWith("USDT")) {
       fundingMap.set(f.symbol, parseFloat(f.lastFundingRate ?? "0"));
+      markPriceMap.set(f.symbol, parseFloat(f.markPrice ?? "0"));
     }
   }
 
@@ -579,29 +584,56 @@ async function fetchFuturesScanner(marketsTop250) {
       batch.map(async (coin) => {
         try {
           const [klinesRes, oiRes] = await Promise.all([
-            safeFetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coin.binanceSymbol}&interval=1h&limit=1`),
-            safeFetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${coin.binanceSymbol}&period=1h&limit=2`),
+            safeFetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coin.binanceSymbol}&interval=1h&limit=8`),
+            safeFetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${coin.binanceSymbol}&period=1h&limit=7`),
           ]);
           if (!klinesRes || !oiRes) return null;
 
           const klines = await klinesRes.json();
           const oiData = await oiRes.json();
 
-          const volume4hUsd = parseFloat(klines?.[0]?.[7] ?? "0");
+          // klines[7] = 현재 진행중 캔들, klines[6] = 마지막 완성 1H 캔들
+          const lastComplete = Array.isArray(klines) ? klines[6] : null;
+          const candle4hAgo  = Array.isArray(klines) ? klines[3] : null;
+
+          const priceChange1h = lastComplete?.[1] > 0
+            ? ((parseFloat(lastComplete[4]) - parseFloat(lastComplete[1])) / parseFloat(lastComplete[1])) * 100
+            : 0;
+          const priceChange4h = candle4hAgo?.[1] > 0 && lastComplete?.[4]
+            ? ((parseFloat(lastComplete[4]) - parseFloat(candle4hAgo[1])) / parseFloat(candle4hAgo[1])) * 100
+            : 0;
+
+          // 마지막 완성 1H 거래량 vs 직전 5H 평균 → volumeSpike
+          const vol1h = parseFloat(lastComplete?.[7] ?? "0");
+          const prevVols = (Array.isArray(klines) ? klines.slice(1, 6) : []).map((k) => parseFloat(k[7] ?? "0"));
+          const avgPrevVol = prevVols.length > 0 ? prevVols.reduce((s, v) => s + v, 0) / prevVols.length : 0;
+          const volumeSpike = avgPrevVol > 0 ? vol1h / avgPrevVol : 1;
+
+          // 4H 거래량 = 마지막 완성 4H 캔들 합산
+          const volume4hUsd = (Array.isArray(klines) ? klines.slice(3, 7) : [])
+            .reduce((sum, k) => sum + parseFloat(k?.[7] ?? "0"), 0);
 
           let oiChangePct = 0;
+          let oiChangePct6h = 0;
           if (Array.isArray(oiData) && oiData.length >= 2) {
-            const curr = parseFloat(oiData[1]?.sumOpenInterestValue ?? "0");
-            const prev = parseFloat(oiData[0]?.sumOpenInterestValue ?? "0");
+            const curr = parseFloat(oiData[oiData.length - 1]?.sumOpenInterestValue ?? "0");
+            const prev = parseFloat(oiData[oiData.length - 2]?.sumOpenInterestValue ?? "0");
             if (prev > 0) oiChangePct = ((curr - prev) / prev) * 100;
+            const oldest = parseFloat(oiData[0]?.sumOpenInterestValue ?? "0");
+            if (oldest > 0) oiChangePct6h = ((curr - oldest) / oldest) * 100;
           }
 
           return {
             symbol: coin.symbol,
             fundingRate: coin.fundingRate,
+            priceChange1h,
+            priceChange4h,
             oiChangePct,
+            oiChangePct6h,
             volume4hUsd,
+            volumeSpike,
             marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? null,
+            entryPrice: markPriceMap.get(coin.binanceSymbol) ?? 0,
           };
         } catch {
           return null;
@@ -616,14 +648,32 @@ async function fetchFuturesScanner(marketsTop250) {
 
   const scored = sorted.map((coin, idx) => {
     const volume4hRankPct = (idx + 1) / total;
-    const volumeSc = volume4hRankPct <= 0.10 ? 30 : volume4hRankPct <= 0.25 ? 20 : volume4hRankPct <= 0.50 ? 10 : 0;
-    const fundingSc = coin.fundingRate > 0.0001 ? 20 : coin.fundingRate > 0.00005 ? 12 : 5;
-    const oiSc = coin.oiChangePct > 20 ? 30 : coin.oiChangePct > 10 ? 20 : coin.oiChangePct > 5 ? 10 : coin.oiChangePct > 0 ? 3 : 0;
-    const capBonus = !coin.marketCapUsd ? 0 : coin.marketCapUsd < 50_000_000 ? 20 : coin.marketCapUsd < 100_000_000 ? 10 : 0;
+    // 펀딩비 구간화: 0~0.01% best | 0.01~0.03% caution | >0.03% overheated
+    const fundingPct = coin.fundingRate * 100;
+    const fundingSc = fundingPct >= 0 && fundingPct <= 0.01 ? 25
+      : fundingPct > 0.01 && fundingPct <= 0.03 ? 12
+      : fundingPct > 0.03 ? 0
+      : fundingPct < 0 && fundingPct >= -0.03 ? 8 : 5;
+    // 가격+OI 조합
+    const priceUp   = coin.priceChange1h > 1;
+    const priceDown = coin.priceChange1h < -1;
+    const oiUp      = coin.oiChangePct > 3;
+    const priceOiSc = (priceDown && oiUp) ? 30 : (priceUp && oiUp) ? 22 : (!priceUp && !priceDown && oiUp) ? 15 : (priceUp && !oiUp) ? 5 : 0;
+    // 거래량 상대 점수
+    const volumeSc = volume4hRankPct <= 0.10 ? 20 : volume4hRankPct <= 0.25 ? 14 : volume4hRankPct <= 0.50 ? 7 : 0;
+    // 타이밍 점수
+    const sideways = Math.abs(coin.priceChange4h) <= 2;
+    const oiBuild  = coin.oiChangePct6h > 5;
+    const volStart = coin.volumeSpike >= 1.3 && coin.volumeSpike <= 4;
+    const timingSc = (sideways ? 5 : 0) + (oiBuild ? 10 : 0) + (volStart ? 5 : 0) + (sideways && oiBuild && volStart ? 5 : 0);
+    // 과열 패널티
+    const overheatP = (coin.priceChange1h > 8 ? 20 : 0) + (fundingPct > 0.03 ? 15 : 0) + (coin.volumeSpike > 5 ? 15 : 0);
+    // 리스크 패널티
+    const riskP = !coin.marketCapUsd ? 5 : coin.marketCapUsd < 20_000_000 ? 20 : coin.marketCapUsd < 50_000_000 ? 5 : 0;
     return {
       ...coin,
       volume4hRankPct,
-      score: volumeSc + fundingSc + oiSc + capBonus,
+      score: fundingSc + priceOiSc + volumeSc + timingSc - overheatP - riskP,
     };
   });
 
@@ -1422,7 +1472,74 @@ async function main() {
   }
 
   console.log(`✓ 저장 완료: ${date}`);
+
+  // 선물 신호 추적: 이전 신호 현재가 업데이트 + 새 신호 기록
+  await updateFuturesSignalPrices();
+  await insertFuturesSignals(payload.futuresScanner ?? []);
+
   if (!noTelegram) await sendTelegramBriefing(date, payload, editorial);
+}
+
+async function updateFuturesSignalPrices() {
+  try {
+    const { data: pending } = await sb
+      .from("futures_signals")
+      .select("id, symbol, recorded_at, price_1h, price_4h, price_24h")
+      .or("price_1h.is.null,price_4h.is.null,price_24h.is.null");
+
+    if (!pending || pending.length === 0) return;
+
+    // 현재가 가져오기
+    const res = await safeFetch("https://fapi.binance.com/fapi/v1/premiumIndex");
+    if (!res) return;
+    const fundings = await res.json();
+    const priceMap = new Map();
+    for (const f of (Array.isArray(fundings) ? fundings : [])) {
+      if (typeof f.symbol === "string" && f.symbol.endsWith("USDT")) {
+        priceMap.set(f.symbol.replace(/USDT$/, ""), parseFloat(f.markPrice ?? "0"));
+      }
+    }
+
+    const now = new Date();
+    for (const signal of pending) {
+      const elapsed = (now - new Date(signal.recorded_at)) / 60000;
+      const currentPrice = priceMap.get(signal.symbol);
+      if (!currentPrice) continue;
+
+      const update = {};
+      if (!signal.price_1h  && elapsed >= 55)   update.price_1h  = currentPrice;
+      if (!signal.price_4h  && elapsed >= 235)   update.price_4h  = currentPrice;
+      if (!signal.price_24h && elapsed >= 1415)  update.price_24h = currentPrice;
+
+      if (Object.keys(update).length > 0) {
+        update.updated_at = now.toISOString();
+        await sb.from("futures_signals").update(update).eq("id", signal.id);
+      }
+    }
+    console.log("  [신호 추적] 이전 신호 현재가 업데이트 완료");
+  } catch (e) {
+    console.warn("  [신호 추적] 업데이트 실패:", e.message);
+  }
+}
+
+async function insertFuturesSignals(top50) {
+  try {
+    const top10 = top50.slice(0, 10);
+    if (top10.length === 0) return;
+    const now = new Date().toISOString();
+    const rows = top10.map((coin, idx) => ({
+      recorded_at: now,
+      symbol: coin.symbol,
+      rank: idx + 1,
+      entry_price: coin.entryPrice,
+      score: coin.score,
+    }));
+    const { error } = await sb.from("futures_signals").insert(rows);
+    if (error) console.warn("  [신호 추적] INSERT 실패:", error.message);
+    else console.log(`  [신호 추적] TOP 10 신호 기록 완료 (${now.slice(0, 16)})`);
+  } catch (e) {
+    console.warn("  [신호 추적] INSERT 예외:", e.message);
+  }
 }
 
 main().catch((e) => {

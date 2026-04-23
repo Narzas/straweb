@@ -1,4 +1,4 @@
-import { createServiceClient } from "@/lib/supabase";
+﻿import { createServiceClient } from "@/lib/supabase";
 import type { Metadata } from "next";
 import type { FuturesCoin } from "@/lib/futuresScanner";
 import Link from "next/link";
@@ -18,7 +18,8 @@ const RsiHeatmapSection        = dynamic(() => import("@/components/RsiHeatmapSe
 const DexChainsSection         = dynamic(() => import("@/components/DexChainsSection"),         { loading: () => <SectionSkeleton /> });
 const SmartMoneyDashboardSection = dynamic(() => import("@/components/SmartMoneyDashboardSection"), { loading: () => <SectionSkeleton /> });
 const PredictionMarketsSection   = dynamic(() => import("@/components/PredictionMarketsSection"),   { loading: () => <SectionSkeleton /> });
-const FuturesScannerSection = dynamic(() => import("@/components/FuturesScannerSection"), { loading: () => <SectionSkeleton /> });
+const FuturesScannerSection  = dynamic(() => import("@/components/FuturesScannerSection"),  { loading: () => <SectionSkeleton /> });
+const FuturesTrackingSection = dynamic(() => import("@/components/FuturesTrackingSection"), { loading: () => <SectionSkeleton /> });
 
 export const revalidate = 3600;
 
@@ -29,8 +30,19 @@ type PageProps = {
 export const metadata: Metadata = {
   title: "크립토 브리핑",
   description: "매일 업데이트되는 크립토 시장 현황, 트렌딩 코인, DeFi 동향, 주요 뉴스",
-  alternates: {
-    canonical: "/crypto",
+  alternates: { canonical: "/crypto" },
+  openGraph: {
+    title: "크립토 브리핑 — StraWeb",
+    description: "매일 업데이트되는 크립토 시장 현황, 트렌딩 코인, DeFi 동향, 주요 뉴스",
+    locale: "ko_KR",
+    url: "https://www.stragos.xyz/crypto",
+    images: [{ url: "https://www.stragos.xyz/og?title=%ED%81%AC%EB%A6%BD%ED%86%A0+%EB%B8%8C%EB%A6%AC%ED%95%91", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "크립토 브리핑 — StraWeb",
+    description: "매일 업데이트되는 크립토 시장 현황, 트렌딩 코인, DeFi 동향, 주요 뉴스",
+    images: ["https://www.stragos.xyz/og?title=%ED%81%AC%EB%A6%BD%ED%86%A0+%EB%B8%8C%EB%A6%AC%ED%95%91"],
   },
 };
 
@@ -111,9 +123,13 @@ type SectorItem = {
 type FuturesCoinStored = {
   symbol: string;
   fundingRate: number;
+  priceChange1h: number;
+  priceChange4h: number;
   oiChangePct: number;
+  oiChangePct6h: number;
   volume4hUsd: number;
   volume4hRankPct: number;
+  volumeSpike: number;
   marketCapUsd: number | null;
   score: number;
 };
@@ -234,6 +250,22 @@ async function getData(date?: string): Promise<CryptoDaily | null> {
   }
 }
 
+async function getFuturesSignals() {
+  try {
+    const sb = createServiceClient();
+    const since = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
+    const { data } = await sb
+      .from("futures_signals")
+      .select("id, recorded_at, symbol, rank, entry_price, score, price_1h, price_4h, price_24h")
+      .gte("recorded_at", since)
+      .order("recorded_at", { ascending: false })
+      .limit(500);
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 async function getAdjacentDates(currentDate: string): Promise<{ prev: string | null; next: string | null }> {
   try {
     const sb = createServiceClient();
@@ -252,7 +284,10 @@ async function getAdjacentDates(currentDate: string): Promise<{ prev: string | n
 
 export default async function CryptoPage({ searchParams }: PageProps) {
   const { date: dateParam } = await searchParams;
-  const data = await getData(dateParam);
+  const [data, futuresSignals] = await Promise.all([
+    getData(dateParam),
+    getFuturesSignals(),
+  ]);
 
   if (!data) {
     return (
@@ -503,6 +538,11 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           </AnimatedSection>
         )}
 
+        {/* 선물 신호 트래킹 */}
+        <AnimatedSection delay={0.05}>
+          <FuturesTrackingSection signals={futuresSignals} />
+        </AnimatedSection>
+
         <AnimatedSection delay={0.05}>
           <div id="dex" className="scroll-mt-24">
             <DexChainsSection
@@ -551,3 +591,5 @@ export default async function CryptoPage({ searchParams }: PageProps) {
     </div>
   );
 }
+
+

@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase";
 import type { Metadata } from "next";
+import type { FuturesCoin } from "@/lib/futuresScanner";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
@@ -18,6 +19,7 @@ const RsiHeatmapSection        = dynamic(() => import("@/components/RsiHeatmapSe
 const DexChainsSection         = dynamic(() => import("@/components/DexChainsSection"),         { loading: () => <SectionSkeleton /> });
 const SmartMoneyDashboardSection = dynamic(() => import("@/components/SmartMoneyDashboardSection"), { loading: () => <SectionSkeleton /> });
 const PredictionMarketsSection   = dynamic(() => import("@/components/PredictionMarketsSection"),   { loading: () => <SectionSkeleton /> });
+const FuturesScannerSection = dynamic(() => import("@/components/FuturesScannerSection"), { loading: () => <SectionSkeleton /> });
 
 export const revalidate = 3600;
 
@@ -310,6 +312,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           {[
             { id: "overview",    label: "시장개요" },
             { id: "sentiment",   label: "심리지표" },
+            { id: "futures",     label: "선물" },
             { id: "trending",    label: "트렌딩" },
             { id: "gainers",     label: "급등/락" },
             { id: "rsi",         label: "RSI" },
@@ -343,6 +346,15 @@ export default async function CryptoPage({ searchParams }: PageProps) {
             trending={trending ?? []}
           />
         </AnimatedSection>
+
+        {/* 선물 스캐너 */}
+        {editorial?.futures_scanner && editorial.futures_scanner.length > 0 && (
+          <AnimatedSection delay={0.05}>
+            <div id="futures" className="scroll-mt-24">
+              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} />
+            </div>
+          </AnimatedSection>
+        )}
 
         {/* 시장 개요 */}
         {market && (

@@ -569,16 +569,12 @@ async function fetchFuturesScannerOKX(marketsTop250) {
   const allTickers = (tickerJson.data ?? []).filter((t) => t.instId.endsWith("-USDT-SWAP"));
   if (!allTickers.length) return null;
 
-  // 거래량 상위 150개만 선별 (펀딩비 개별 호출 최소화)
-  const top150 = allTickers
-    .sort((a, b) => parseFloat(b.volCcy24h ?? "0") - parseFloat(a.volCcy24h ?? "0"))
-    .slice(0, 150);
-
-  // 펀딩비 개별 조회 (25개씩 병렬)
+  // 펀딩비 개별 조회 — 전체 코인 대상 (소형 코인 포함)
   const fundingMap = new Map();
   const BATCH_FR = 25;
-  for (let i = 0; i < top150.length; i += BATCH_FR) {
-    const batch = top150.slice(i, i + BATCH_FR);
+  for (let i = 0; i < allTickers.length; i += BATCH_FR) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 150));
+    const batch = allTickers.slice(i, i + BATCH_FR);
     const ress = await Promise.all(
       batch.map((t) => safeFetch(`https://www.okx.com/api/v5/public/funding-rate?instId=${t.instId}`))
     );
@@ -595,7 +591,7 @@ async function fetchFuturesScannerOKX(marketsTop250) {
     if (coin.symbol) capMap.set(coin.symbol.toUpperCase(), coin.market_cap ?? null);
   }
 
-  const candidates = top150
+  const candidates = allTickers
     .filter((t) => (fundingMap.get(t.instId) ?? 0) > 0)
     .map((t) => ({
       symbol: t.instId.replace(/-USDT-SWAP$/, ""),

@@ -63,7 +63,6 @@ function InfoPanel() {
         <p className="font-semibold text-slate-700 dark:text-slate-300">프리셋 탭</p>
         <p>각 탭은 4가지 점수의 가중치를 다르게 적용합니다.<br /><span className="font-medium">고펀딩비</span>는 펀딩비에, <span className="font-medium">OI 급증</span>은 미결제약정에, <span className="font-medium">거래량 폭발</span>은 거래량에 3배 가중치를 줍니다.</p>
       </div>
-      <p className="text-[11px] text-slate-400 dark:text-slate-500">매시간 갱신 · 데이터 출처: Binance Futures 공개 API</p>
     </div>
   );
 }

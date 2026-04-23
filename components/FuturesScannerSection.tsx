@@ -89,16 +89,19 @@ export default function FuturesScannerSection({ data }: Props) {
     <section className="space-y-4">
       {/* 헤더 */}
       <div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
             선물 스캐너
           </h2>
           <button
             onClick={() => setShowInfo((v) => !v)}
-            className="w-5 h-5 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center justify-center text-[11px] font-bold cursor-pointer"
-            aria-label="선물 스캐너 설명"
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer border ${
+              showInfo
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-600 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+            }`}
           >
-            ?
+            {showInfo ? "닫기" : "이게 뭔가요?"}
           </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">

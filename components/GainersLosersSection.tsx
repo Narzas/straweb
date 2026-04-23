@@ -81,9 +81,12 @@ export default function GainersLosersSection({ data }: { data: GainersLosersData
   return (
     <section className="flex flex-col h-full">
       <div className="flex items-center justify-between gap-2 mb-3">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
-          📊 수익률 TOP/BOTTOM <span className="text-[11px] font-normal text-gray-400">(시총 250위 내 24h)</span>
-        </h2>
+        <div className="pl-3 border-l-2 border-indigo-500">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            📊 수익률 TOP/BOTTOM
+          </h2>
+          <p className="text-[11px] text-gray-400">(시총 250위 내 24h)</p>
+        </div>
         {!showInfo && (
           <button
             onClick={() => setShowInfo(true)}

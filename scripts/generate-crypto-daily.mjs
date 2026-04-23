@@ -528,6 +528,111 @@ async function fetchHyperliquidPerps() {
 
 
 
+// ── 선물 스캐너 ───────────────────────────────────────────────────────────────
+
+async function fetchFuturesScanner(marketsTop250) {
+  console.log("  [선물 스캐너] 바이낸스 선물 데이터 수집 중...");
+
+  const [tickerRes, fundingRes] = await Promise.all([
+    safeFetch("https://fapi.binance.com/fapi/v1/ticker/24hr"),
+    safeFetch("https://fapi.binance.com/fapi/v1/premiumIndex"),
+  ]);
+  if (!tickerRes || !fundingRes) {
+    console.log("  [선물 스캐너] Binance API 응답 없음, 건너뜀");
+    return [];
+  }
+
+  const tickers = await tickerRes.json();
+  const fundings = await fundingRes.json();
+
+  const fundingMap = new Map();
+  for (const f of (Array.isArray(fundings) ? fundings : [])) {
+    if (typeof f.symbol === "string" && f.symbol.endsWith("USDT")) {
+      fundingMap.set(f.symbol, parseFloat(f.lastFundingRate ?? "0"));
+    }
+  }
+
+  const capMap = new Map();
+  for (const coin of (marketsTop250 ?? [])) {
+    if (coin.symbol) capMap.set(coin.symbol.toUpperCase(), coin.market_cap ?? null);
+  }
+
+  const candidates = (Array.isArray(tickers) ? tickers : [])
+    .filter((t) => typeof t.symbol === "string" && t.symbol.endsWith("USDT") && (fundingMap.get(t.symbol) ?? 0) > 0)
+    .map((t) => ({
+      symbol: t.symbol.replace(/USDT$/, ""),
+      binanceSymbol: t.symbol,
+      fundingRate: fundingMap.get(t.symbol) ?? 0,
+    }));
+
+  if (candidates.length === 0) {
+    console.log("  [선물 스캐너] 양수 펀딩비 코인 없음");
+    return [];
+  }
+  console.log(`  [선물 스캐너] 양수 펀딩비 코인 ${candidates.length}개, 4H 데이터 수집 중...`);
+
+  const BATCH = 10;
+  const rawResults = [];
+  for (let i = 0; i < candidates.length; i += BATCH) {
+    const batch = candidates.slice(i, i + BATCH);
+    const batchData = await Promise.all(
+      batch.map(async (coin) => {
+        try {
+          const [klinesRes, oiRes] = await Promise.all([
+            safeFetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coin.binanceSymbol}&interval=4h&limit=1`),
+            safeFetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${coin.binanceSymbol}&period=4h&limit=2`),
+          ]);
+          if (!klinesRes || !oiRes) return null;
+
+          const klines = await klinesRes.json();
+          const oiData = await oiRes.json();
+
+          const volume4hUsd = parseFloat(klines?.[0]?.[7] ?? "0");
+
+          let oiChangePct = 0;
+          if (Array.isArray(oiData) && oiData.length >= 2) {
+            const curr = parseFloat(oiData[1]?.sumOpenInterestValue ?? "0");
+            const prev = parseFloat(oiData[0]?.sumOpenInterestValue ?? "0");
+            if (prev > 0) oiChangePct = ((curr - prev) / prev) * 100;
+          }
+
+          return {
+            symbol: coin.symbol,
+            fundingRate: coin.fundingRate,
+            oiChangePct,
+            volume4hUsd,
+            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? null,
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+    rawResults.push(...batchData.filter(Boolean));
+  }
+
+  const sorted = [...rawResults].sort((a, b) => b.volume4hUsd - a.volume4hUsd);
+  const total = sorted.length;
+
+  const scored = sorted.map((coin, idx) => {
+    const volume4hRank = idx + 1;
+    const pct = volume4hRank / total;
+    const volumeSc = pct <= 0.10 ? 30 : pct <= 0.25 ? 20 : pct <= 0.50 ? 10 : 0;
+    const fundingSc = coin.fundingRate > 0.0001 ? 20 : coin.fundingRate > 0.00005 ? 12 : 5;
+    const oiSc = coin.oiChangePct > 20 ? 30 : coin.oiChangePct > 10 ? 20 : coin.oiChangePct > 5 ? 10 : coin.oiChangePct > 0 ? 3 : 0;
+    const capBonus = !coin.marketCapUsd ? 0 : coin.marketCapUsd < 50_000_000 ? 20 : coin.marketCapUsd < 100_000_000 ? 10 : 0;
+    return {
+      ...coin,
+      volume4hRank,
+      score: volumeSc + fundingSc + oiSc + capBonus,
+    };
+  });
+
+  const top50 = scored.sort((a, b) => b.score - a.score).slice(0, 50);
+  console.log(`  [선물 스캐너] 완료: ${top50.length}개 저장`);
+  return top50;
+}
+
 // ── 데이터 수집 ───────────────────────────────────────────────────────────────
 
 async function fetchAll() {
@@ -619,6 +724,7 @@ async function fetchAll() {
   ]);
   // RSI는 순차 호출(CoinGecko rate limit)
   const rsiHeatmap = await fetchRsiHeatmap();
+  const futuresScanner = await fetchFuturesScanner(marketsTop250);
 
   // 예측시장 질문 한국어 번역
   if (predictionMarkets?.length) {
@@ -656,7 +762,7 @@ async function fetchAll() {
     };
   });
 
-  return { market, trending: trendingCoins, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers, marketsTop250, futuresScanner: [] };
+  return { market, trending: trendingCoins, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers, marketsTop250, futuresScanner };
 }
 
 // ── 편집 코멘트 생성 (룰 기반) ───────────────────────────────────────────────

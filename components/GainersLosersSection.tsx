@@ -22,8 +22,9 @@ function fmtPrice(n: number) {
 
 function Row({ item, isGainer }: { item: GainerLoserItem; isGainer: boolean }) {
   const pct = item.price_change_percentage_24h;
+  const accent = isGainer ? "text-emerald-500" : "text-red-500";
   return (
-    <div className={`flex flex-1 items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-slate-700/50 last:border-0 transition-colors ${isGainer ? "hover:bg-emerald-500/5" : "hover:bg-red-500/5"}`}>
+    <div className={`relative group/row flex flex-1 items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-slate-700/50 last:border-0 transition-colors cursor-default ${isGainer ? "hover:bg-emerald-500/5" : "hover:bg-red-500/5"}`}>
       <div className="flex items-center gap-1.5 min-w-0">
         {item.image && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -31,19 +32,36 @@ function Row({ item, isGainer }: { item: GainerLoserItem; isGainer: boolean }) {
         )}
         <div className="min-w-0">
           <p className="text-[12px] font-bold text-gray-800 dark:text-gray-100 truncate">{item.symbol}</p>
-          <div className="relative group/tip cursor-default">
-            <p className="text-[10px] text-gray-400 truncate">{item.name}</p>
-            <span className="pointer-events-none absolute left-0 top-full mt-1 z-50 whitespace-nowrap rounded-md bg-gray-800 dark:bg-slate-700 px-2 py-1 text-[11px] text-white opacity-0 group-hover/tip:opacity-100 transition-opacity duration-75 shadow-lg">
-              {item.name}
-            </span>
-          </div>
+          <p className="text-[10px] text-gray-400 truncate">{item.name}</p>
         </div>
       </div>
       <div className="text-right shrink-0 ml-1">
-        <p className={`text-[12px] font-bold tabular-nums ${isGainer ? "text-emerald-500" : "text-red-500"}`}>
+        <p className={`text-[12px] font-bold tabular-nums ${accent}`}>
           {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
         </p>
         <p className="text-[10px] text-gray-400 tabular-nums">{fmtPrice(item.current_price)}</p>
+      </div>
+      {/* 호버 툴팁 */}
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-48 opacity-0 group-hover/row:opacity-100 transition-opacity duration-100">
+        <div className="rounded-xl bg-gray-900 dark:bg-slate-700 shadow-xl px-3 py-2.5 text-[11px] text-white space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            {item.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={item.image} alt={item.symbol} className="w-4 h-4 rounded-full" />
+            )}
+            <span className="font-bold">{item.symbol}</span>
+            <span className="text-gray-400 truncate">{item.name}</span>
+          </div>
+          <div className="flex justify-between gap-2 border-t border-white/10 pt-1.5">
+            <span className="text-gray-400">24h 변동</span>
+            <span className={`font-bold tabular-nums ${accent}`}>{pct >= 0 ? "+" : ""}{pct.toFixed(2)}%</span>
+          </div>
+          <div className="flex justify-between gap-2">
+            <span className="text-gray-400">현재가</span>
+            <span className="font-mono tabular-nums">{fmtPrice(item.current_price)}</span>
+          </div>
+        </div>
+        <div className="w-2 h-2 bg-gray-900 dark:bg-slate-700 rotate-45 mx-auto -mt-1" />
       </div>
     </div>
   );

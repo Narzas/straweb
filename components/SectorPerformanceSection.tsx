@@ -26,21 +26,40 @@ function cellStyle(pct: number): { bg: string; border: string; text: string } {
   }
 }
 
+function fmtVol(v: number | null): string {
+  if (!v) return "—";
+  if (v >= 1_000_000_000) return "$" + (v / 1_000_000_000).toFixed(2) + "B";
+  if (v >= 1_000_000) return "$" + (v / 1_000_000).toFixed(1) + "M";
+  return "$" + v.toLocaleString();
+}
+
 function SectorCell({ s }: { s: SectorItem }) {
   const pct = s.market_cap_change_24h;
   const { bg, border, text } = cellStyle(pct);
 
   return (
-    <div className={`rounded-xl border px-3 py-2 flex flex-col gap-0.5 ${bg} ${border}`}>
-      <div className="relative group/tip cursor-default min-w-0">
-        <span className="text-[11px] text-gray-600 dark:text-gray-300 font-medium leading-tight truncate block">{s.name}</span>
-        <span className="pointer-events-none absolute left-0 top-full mt-1 z-50 whitespace-nowrap rounded-md bg-gray-800 dark:bg-slate-700 px-2 py-1 text-[11px] text-white opacity-0 group-hover/tip:opacity-100 transition-opacity duration-75 shadow-lg">
-          {s.name}
-        </span>
-      </div>
+    <div className={`relative group/cell rounded-xl border px-3 py-2 flex flex-col gap-0.5 cursor-default ${bg} ${border}`}>
+      <span className="text-[11px] text-gray-600 dark:text-gray-300 font-medium leading-tight truncate block">{s.name}</span>
       <span className={`text-[12px] font-black tabular-nums ${text}`}>
         {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
       </span>
+      {/* 호버 툴팁 */}
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-44 opacity-0 group-hover/cell:opacity-100 transition-opacity duration-100">
+        <div className="rounded-xl bg-gray-900 dark:bg-slate-700 shadow-xl px-3 py-2.5 text-[11px] text-white space-y-1.5">
+          <p className="font-bold leading-snug">{s.name}</p>
+          <div className="flex justify-between gap-2 border-t border-white/10 pt-1.5">
+            <span className="text-gray-400">시총 변동 24h</span>
+            <span className={`font-bold tabular-nums ${pct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {pct >= 0 ? "+" : ""}{pct.toFixed(2)}%
+            </span>
+          </div>
+          <div className="flex justify-between gap-2">
+            <span className="text-gray-400">거래량 24h</span>
+            <span className="font-mono tabular-nums">{fmtVol(s.volume_24h)}</span>
+          </div>
+        </div>
+        <div className="w-2 h-2 bg-gray-900 dark:bg-slate-700 rotate-45 mx-auto -mt-1" />
+      </div>
     </div>
   );
 }

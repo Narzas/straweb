@@ -538,10 +538,12 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           </AnimatedSection>
         )}
 
-        {/* 선물 신호 트래킹 */}
-        <AnimatedSection delay={0.05}>
-          <FuturesTrackingSection signals={futuresSignals} />
-        </AnimatedSection>
+        {/* 선물 신호 트래킹 — 1H 결과가 쌓인 뒤부터 표시 */}
+        {futuresSignals.some((s) => s.price_1h !== null) && (
+          <AnimatedSection delay={0.05}>
+            <FuturesTrackingSection signals={futuresSignals} />
+          </AnimatedSection>
+        )}
 
         <AnimatedSection delay={0.05}>
           <div id="dex" className="scroll-mt-24">

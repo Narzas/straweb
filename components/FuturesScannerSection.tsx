@@ -136,31 +136,61 @@ export default function FuturesScannerSection({ data }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {top10.map((coin, idx) => (
-            <div
-              key={coin.symbol}
-              className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5"
-            >
-              {/* 1행: 순위 + 심볼 + 지표 + 점수 */}
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 w-4 shrink-0">
-                  #{idx + 1}
-                </span>
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 shrink-0 w-16">
-                  {coin.symbol}
-                </span>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate flex-1">
-                  펀딩 +{(coin.fundingRate * 100).toFixed(3)}%
-                  {coin.oiChangePct > 0 && ` · OI +${coin.oiChangePct.toFixed(1)}%`}
-                  {` · ${fmtVol(coin.volume4hUsd)}`}
-                  {coin.marketCapUsd !== null && ` · 시총 ${fmtCap(coin.marketCapUsd)}`}
-                </span>
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
-                  {coin.score}<span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">/100</span>
-                </span>
+            <div key={coin.symbol} className="relative group">
+              {/* 툴팁 */}
+              <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 z-50 w-60 rounded-xl bg-slate-900 dark:bg-slate-950 border border-slate-700 shadow-xl px-3 py-2.5 space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                <p className="text-xs font-bold text-white">{coin.symbol} <span className="text-slate-400 font-normal">#{idx + 1}위</span></p>
+                <div className="space-y-1 text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">펀딩비</span>
+                    <span className="text-green-400 font-medium">+{(coin.fundingRate * 100).toFixed(4)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">OI 변화 (4H)</span>
+                    <span className={coin.oiChangePct > 0 ? "text-blue-400 font-medium" : "text-slate-400"}>
+                      {coin.oiChangePct > 0 ? "+" : ""}{coin.oiChangePct.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">4H 거래량</span>
+                    <span className="text-yellow-400 font-medium">{fmtVol(coin.volume4hUsd)} <span className="text-slate-500">(상위 {(coin.volume4hRankPct * 100).toFixed(0)}%)</span></span>
+                  </div>
+                  {coin.marketCapUsd !== null && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">시가총액</span>
+                      <span className={`font-medium ${coin.marketCapUsd < 50_000_000 ? "text-emerald-400" : "text-slate-300"}`}>
+                        {fmtCap(coin.marketCapUsd)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-slate-700 pt-1 mt-0.5">
+                    <span className="text-slate-400">종합 점수</span>
+                    <span className="text-indigo-400 font-bold">{coin.score} / 100</span>
+                  </div>
+                </div>
               </div>
 
-              {/* 2행: 점수 게이지 바 */}
-              <ScoreBar score={coin.score} />
+              {/* 카드 */}
+              <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 w-4 shrink-0">
+                    #{idx + 1}
+                  </span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100 shrink-0 w-16">
+                    {coin.symbol}
+                  </span>
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate flex-1">
+                    펀딩 +{(coin.fundingRate * 100).toFixed(3)}%
+                    {coin.oiChangePct > 0 && ` · OI +${coin.oiChangePct.toFixed(1)}%`}
+                    {` · ${fmtVol(coin.volume4hUsd)}`}
+                    {coin.marketCapUsd !== null && ` · 시총 ${fmtCap(coin.marketCapUsd)}`}
+                  </span>
+                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
+                    {coin.score}<span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">/100</span>
+                  </span>
+                </div>
+                <ScoreBar score={coin.score} />
+              </div>
             </div>
           ))}
         </div>

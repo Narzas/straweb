@@ -93,56 +93,33 @@ export default function FuturesScannerSection({ data }: Props) {
           데이터가 충분하지 않습니다. 다음 갱신 시 표시됩니다.
         </p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-1.5">
           {top10.map((coin, idx) => (
             <li
               key={coin.symbol}
-              className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 px-4 py-3 space-y-2"
+              className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5"
             >
-              {/* 1행: 순위 + 심볼 + 점수 */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs font-bold text-gray-400 dark:text-gray-500 w-5 shrink-0">
-                    #{idx + 1}
-                  </span>
-                  <span className="font-bold text-gray-900 dark:text-gray-100 shrink-0">
-                    {coin.symbol}
-                  </span>
-                </div>
-                <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
-                  {coin.score}
-                  <span className="text-xs font-normal text-gray-400 dark:text-gray-500"> / 100점</span>
+              {/* 1행: 순위 + 심볼 + 지표 + 점수 */}
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 w-4 shrink-0">
+                  #{idx + 1}
+                </span>
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 shrink-0 w-16">
+                  {coin.symbol}
+                </span>
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate flex-1">
+                  펀딩 +{(coin.fundingRate * 100).toFixed(3)}%
+                  {coin.oiChangePct > 0 && ` · OI +${coin.oiChangePct.toFixed(1)}%`}
+                  {` · ${fmtVol(coin.volume4hUsd)}`}
+                  {coin.marketCapUsd !== null && ` · 시총 ${fmtCap(coin.marketCapUsd)}`}
+                </span>
+                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
+                  {coin.score}<span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">/100</span>
                 </span>
               </div>
 
               {/* 2행: 점수 게이지 바 */}
               <ScoreBar score={coin.score} />
-
-              {/* 3행: 지표 태그 */}
-              <div className="flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
-                  펀딩비 +{(coin.fundingRate * 100).toFixed(4)}%
-                </span>
-                {coin.oiChangePct > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
-                    OI +{coin.oiChangePct.toFixed(1)}% (4H)
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">
-                  4H 거래량 {fmtVol(coin.volume4hUsd)} (상위 {(coin.volume4hRankPct * 100).toFixed(0)}%)
-                </span>
-                {coin.marketCapUsd !== null && (
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                    coin.marketCapUsd < 50_000_000
-                      ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                      : coin.marketCapUsd < 100_000_000
-                      ? "bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300"
-                      : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-400"
-                  }`}>
-                    시총 {fmtCap(coin.marketCapUsd)}
-                  </span>
-                )}
-              </div>
             </li>
           ))}
         </ul>

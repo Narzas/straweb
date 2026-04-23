@@ -299,7 +299,7 @@ export default function OwnerNewsFeed() {
   useEffect(() => {
     const t = setInterval(() => {
       setCurrentIdx((i) => (i + 1) % ACCOUNTS.length);
-    }, 10_000);
+    }, 60_000);
     return () => clearInterval(t);
   }, []);
 

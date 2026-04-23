@@ -311,10 +311,10 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           {[
             { id: "overview",    label: "시장개요" },
             { id: "sentiment",   label: "심리지표" },
-            { id: "futures",     label: "선물" },
             { id: "trending",    label: "트렌딩" },
             { id: "gainers",     label: "급등/락" },
             { id: "rsi",         label: "RSI" },
+            { id: "futures",     label: "선물" },
             { id: "dex",         label: "DEX" },
             { id: "smartmoney",  label: "스마트머니" },
             { id: "prediction",  label: "예측시장" },
@@ -329,15 +329,6 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           ))}
         </div>
         </div>
-
-        {/* 선물 스캐너 */}
-        {editorial?.futures_scanner && editorial.futures_scanner.length > 0 && (
-          <AnimatedSection delay={0.05}>
-            <div id="futures" className="scroll-mt-24">
-              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} />
-            </div>
-          </AnimatedSection>
-        )}
 
         {/* 시장 개요 */}
         {market && (
@@ -499,6 +490,15 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           <AnimatedSection delay={0.05}>
             <div id="rsi" className="scroll-mt-24">
               <RsiHeatmapSection data={editorial.rsi_heatmap} />
+            </div>
+          </AnimatedSection>
+        )}
+
+        {/* 선물 스캐너 */}
+        {editorial?.futures_scanner && editorial.futures_scanner.length > 0 && (
+          <AnimatedSection delay={0.05}>
+            <div id="futures" className="scroll-mt-24">
+              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} />
             </div>
           </AnimatedSection>
         )}

@@ -19,7 +19,6 @@ const DexChainsSection         = dynamic(() => import("@/components/DexChainsSec
 const SmartMoneyDashboardSection = dynamic(() => import("@/components/SmartMoneyDashboardSection"), { loading: () => <SectionSkeleton /> });
 const PredictionMarketsSection   = dynamic(() => import("@/components/PredictionMarketsSection"),   { loading: () => <SectionSkeleton /> });
 const FuturesScannerSection  = dynamic(() => import("@/components/FuturesScannerSection"),  { loading: () => <SectionSkeleton /> });
-const FuturesTrackingSection = dynamic(() => import("@/components/FuturesTrackingSection"), { loading: () => <SectionSkeleton /> });
 
 export const revalidate = 3600;
 
@@ -533,15 +532,8 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         {editorial?.futures_scanner && editorial.futures_scanner.length > 0 && (
           <AnimatedSection delay={0.05}>
             <div id="futures" className="scroll-mt-24">
-              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} />
+              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} signals={futuresSignals} />
             </div>
-          </AnimatedSection>
-        )}
-
-        {/* 선물 신호 트래킹 — 1H 결과가 쌓인 뒤부터 표시 */}
-        {futuresSignals.some((s) => s.price_1h !== null) && (
-          <AnimatedSection delay={0.05}>
-            <FuturesTrackingSection signals={futuresSignals} />
           </AnimatedSection>
         )}
 

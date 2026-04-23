@@ -108,6 +108,29 @@ function InfoPanel() {
   );
 }
 
+function TrackingInfoPanel() {
+  return (
+    <div className="rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-4 py-3 space-y-3 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">
+      <p>
+        <span className="font-semibold text-slate-800 dark:text-slate-200">트래킹이란?</span><br />
+        매시간 정각, 선물 시그널 <strong className="text-slate-700 dark:text-slate-300">TOP 10 코인의 진입가</strong>를 자동 기록하고
+        1시간 · 4시간 · 24시간 후 실제 가격을 추적해 수익률을 계산합니다.
+      </p>
+      <div className="space-y-1.5">
+        <p className="font-semibold text-slate-700 dark:text-slate-300">표시 항목</p>
+        <ul className="space-y-1 pl-1">
+          <li><span className="text-indigo-600 dark:text-indigo-400 font-medium">1H / 4H / 24H 수익률</span> — 진입가 대비 각 시점의 등락률. 아직 미집계는 — 표시.</li>
+          <li><span className="text-emerald-600 dark:text-emerald-400 font-medium">평균 수익률</span> — 전체 기록된 신호의 시간대별 평균. 플러스면 초록, 마이너스면 빨강.</li>
+          <li><span className="text-yellow-600 dark:text-yellow-400 font-medium">승률</span> — 수익이 발생한 신호의 비율 (수익 ÷ 전체 건수).</li>
+        </ul>
+      </div>
+      <p className="text-[11px] text-slate-500 dark:text-slate-500">
+        실제 투자가 아닌 시뮬레이션입니다. 슬리피지·수수료는 반영되지 않습니다.
+      </p>
+    </div>
+  );
+}
+
 // ── 트래킹 서브 컴포넌트 ─────────────────────────────────────────────────────
 
 function pnl(entry: number, exit: number | null): number | null {
@@ -240,18 +263,16 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
             📡 선물 시그널
           </h2>
-          {tab === "scanner" && (
-            <button
-              onClick={() => setShowInfo((v) => !v)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer border shrink-0 ${
-                showInfo
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-600 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-              }`}
-            >
-              {showInfo ? "닫기" : "이게 뭔가요?"}
-            </button>
-          )}
+          <button
+            onClick={() => setShowInfo((v) => !v)}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer border shrink-0 ${
+              showInfo
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-600 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+            }`}
+          >
+            {showInfo ? "닫기" : "이게 뭔가요?"}
+          </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {tab === "scanner"
@@ -263,7 +284,7 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
       {/* 큰 탭 */}
       <div className="flex border-b border-gray-200 dark:border-slate-700">
         <button
-          onClick={() => setTab("scanner")}
+          onClick={() => { setTab("scanner"); setShowInfo(false); }}
           className={`px-5 py-2.5 text-sm font-semibold transition-colors cursor-pointer border-b-2 -mb-px ${
             tab === "scanner"
               ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
@@ -273,7 +294,7 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
           스캐너
         </button>
         <button
-          onClick={() => setTab("tracking")}
+          onClick={() => { setTab("tracking"); setShowInfo(false); }}
           disabled={!hasTracking}
           className={`px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
             tab === "tracking"
@@ -426,7 +447,10 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
 
       {/* 트래킹 탭 */}
       {tab === "tracking" && hasTracking && (
-        <TrackingTab signals={signals} />
+        <>
+          {showInfo && <TrackingInfoPanel />}
+          <TrackingTab signals={signals} />
+        </>
       )}
     </section>
   );

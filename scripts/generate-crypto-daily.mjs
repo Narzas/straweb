@@ -536,10 +536,18 @@ async function fetchHyperliquidPerps() {
 async function fetchFuturesScanner(marketsTop250) {
   console.log("  [선물 스캐너] 바이낸스 선물 데이터 수집 중...");
 
-  const [tickerRes, fundingRes] = await Promise.all([
-    safeFetch("https://fapi.binance.com/fapi/v1/ticker/24hr"),
-    safeFetch("https://fapi.binance.com/fapi/v1/premiumIndex"),
-  ]);
+  let tickerRes, fundingRes;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    [tickerRes, fundingRes] = await Promise.all([
+      safeFetch("https://fapi.binance.com/fapi/v1/ticker/24hr"),
+      safeFetch("https://fapi.binance.com/fapi/v1/premiumIndex"),
+    ]);
+    if (tickerRes && fundingRes) break;
+    if (attempt < 3) {
+      console.log(`  [선물 스캐너] Binance API 응답 없음, ${attempt}회 재시도 중...`);
+      await new Promise((r) => setTimeout(r, 2000 * attempt));
+    }
+  }
   if (!tickerRes || !fundingRes) {
     console.log("  [선물 스캐너] Binance API 응답 없음, 건너뜀");
     return [];

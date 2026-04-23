@@ -235,13 +235,13 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
   return (
     <section className="space-y-4">
       {/* 헤더 */}
-      <div>
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
             📡 선물 스캐너
           </h2>
           {/* 스캐너 / 트래킹 탭 */}
-          <div className="flex rounded-full border border-gray-200 dark:border-slate-600 overflow-hidden text-[11px] font-semibold">
+          <div className="flex rounded-full border border-gray-200 dark:border-slate-600 overflow-hidden text-[11px] font-semibold shrink-0">
             <button
               onClick={() => setTab("scanner")}
               className={`px-3 py-1 transition-colors cursor-pointer ${
@@ -266,10 +266,17 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
               트래킹{!hasTracking && " (집계중)"}
             </button>
           </div>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {tab === "scanner"
+              ? "가격+OI 조합 · 펀딩비 건강도 · 타이밍 점수 · TOP 10"
+              : "스캐너 TOP 10 · 1H/4H/24H 수익률 추적"}
+          </p>
           {tab === "scanner" && (
             <button
               onClick={() => setShowInfo((v) => !v)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer border ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer border shrink-0 ${
                 showInfo
                   ? "bg-indigo-600 text-white border-indigo-600"
                   : "bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-600 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400"
@@ -279,11 +286,6 @@ export default function FuturesScannerSection({ data, signals = [] }: Props) {
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          {tab === "scanner"
-            ? "가격+OI 조합 · 펀딩비 건강도 · 타이밍 점수 · TOP 10"
-            : "스캐너 TOP 10 · 1H/4H/24H 수익률 추적"}
-        </p>
       </div>
 
       {/* 스캐너 탭 */}

@@ -118,16 +118,16 @@ export default function SectorPerformanceSection({ sectors }: { sectors: SectorI
       </div>
       {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
       <div className="grid gap-3 sm:grid-cols-2 flex-1 sm:items-stretch">
-        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-800 overflow-hidden flex flex-col">
-          <div className="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">
+        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-800 flex flex-col">
+          <div className="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50 rounded-t-2xl">
             <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400">🚀 상승 TOP 5</span>
           </div>
           <div className="flex flex-col gap-2 p-3">
             {top5.map((s) => <SectorCell key={s.id} s={s} />)}
           </div>
         </div>
-        <div className="rounded-2xl border border-red-200 dark:border-red-900/50 bg-white dark:bg-slate-800 overflow-hidden flex flex-col">
-          <div className="px-3 py-2 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-900/50">
+        <div className="rounded-2xl border border-red-200 dark:border-red-900/50 bg-white dark:bg-slate-800 flex flex-col">
+          <div className="px-3 py-2 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-900/50 rounded-t-2xl">
             <span className="text-[12px] font-bold text-red-500">💥 하락 TOP 5</span>
           </div>
           <div className="flex flex-col gap-2 p-3">

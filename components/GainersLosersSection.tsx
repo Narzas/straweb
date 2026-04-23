@@ -117,8 +117,8 @@ export default function GainersLosersSection({ data }: { data: GainersLosersData
       {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
       <div className="grid gap-3 sm:grid-cols-2 flex-1 sm:items-stretch">
         {data.gainers?.length > 0 && (
-          <div className="rounded-2xl border border-slate-700/50 bg-white dark:bg-slate-800 overflow-hidden flex flex-col">
-            <div className="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">
+          <div className="rounded-2xl border border-slate-700/50 bg-white dark:bg-slate-800 flex flex-col">
+            <div className="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50 rounded-t-2xl">
               <span className="text-[12px] font-bold text-emerald-500">🚀 급등 TOP 5</span>
             </div>
             <div className="flex flex-col flex-1">
@@ -127,8 +127,8 @@ export default function GainersLosersSection({ data }: { data: GainersLosersData
           </div>
         )}
         {data.losers?.length > 0 && (
-          <div className="rounded-2xl border border-slate-700/50 bg-white dark:bg-slate-800 overflow-hidden flex flex-col">
-            <div className="px-3 py-2 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-900/50">
+          <div className="rounded-2xl border border-slate-700/50 bg-white dark:bg-slate-800 flex flex-col">
+            <div className="px-3 py-2 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-900/50 rounded-t-2xl">
               <span className="text-[12px] font-bold text-red-500">💥 급락 TOP 5</span>
             </div>
             <div className="flex flex-col flex-1">

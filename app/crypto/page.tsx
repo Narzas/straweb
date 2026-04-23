@@ -107,6 +107,16 @@ type SectorItem = {
   volume_24h: number | null;
 };
 
+type FuturesCoinStored = {
+  symbol: string;
+  fundingRate: number;
+  oiChangePct: number;
+  volume4hUsd: number;
+  volume4hRank: number;
+  marketCapUsd: number | null;
+  score: number;
+};
+
 type Editorial = {
   sentiment: string;
   summary: string;
@@ -131,6 +141,13 @@ type Editorial = {
     gainers: Array<{ symbol: string; name: string; current_price: number; price_change_percentage_24h: number; image?: string | null }>;
     losers:  Array<{ symbol: string; name: string; current_price: number; price_change_percentage_24h: number; image?: string | null }>;
   } | null;
+  coins_top250?: Array<{
+    symbol: string;
+    name: string;
+    price_change_percentage_24h: number;
+    price_change_percentage_7d_in_currency: number;
+  }> | null;
+  futures_scanner?: FuturesCoinStored[] | null;
 };
 
 type CryptoDaily = {
@@ -322,7 +339,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
               ]
             }
             netflows={editorial?.netflows ?? []}
-            coins={market?.coins ?? []}
+            coins={editorial?.coins_top250 ?? market?.coins ?? []}
             trending={trending ?? []}
           />
         </AnimatedSection>

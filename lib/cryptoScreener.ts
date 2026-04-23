@@ -142,7 +142,11 @@ export function getTopCandidates(
   }
 
   const trendingSet = new Set(trendingSymbols.map(s => s.toUpperCase()));
-  const universe    = new Set([...rsiMap.keys(), ...flowMap.keys()]);
+  const universe    = new Set([
+    ...(coins ?? []).map(c => c.symbol.toUpperCase()),
+    ...rsiMap.keys(),
+    ...flowMap.keys(),
+  ]);
 
   const scored: ScoredCoin[] = [];
   for (const sym of universe) {

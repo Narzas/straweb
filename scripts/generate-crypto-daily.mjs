@@ -656,12 +656,12 @@ async function fetchAll() {
     };
   });
 
-  return { market, trending: trendingCoins, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers };
+  return { market, trending: trendingCoins, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers, marketsTop250, futuresScanner: [] };
 }
 
 // ── 편집 코멘트 생성 (룰 기반) ───────────────────────────────────────────────
 
-function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers }) {
+function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers, marketsTop250, futuresScanner }) {
   const change = market?.market_cap_change_24h;
   const btcDom = market?.btc_dominance;
   const coins = market?.coins ?? [];
@@ -973,7 +973,15 @@ function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeas
 
   const summary = `${sentimentDetail}${btcDom != null ? ` BTC 도미넌스는 ${btcDom.toFixed(1)}%를 기록 중입니다.` : ""}`;
 
-  return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, netflow_comment: netflowComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, prediction_markets: predictionMarkets ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null };
+  return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, netflow_comment: netflowComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, prediction_markets: predictionMarkets ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null,
+    coins_top250: (marketsTop250 ?? []).map(c => ({
+      symbol: (c.symbol ?? "").toUpperCase(),
+      name: c.name ?? "",
+      price_change_percentage_24h: c.price_change_percentage_24h ?? 0,
+      price_change_percentage_7d_in_currency: c.price_change_percentage_7d_in_currency ?? 0,
+    })),
+    futures_scanner: futuresScanner ?? [],
+  };
 }
 
 // ── RSI 차트 ──────────────────────────────────────────────────────────────────
@@ -1290,7 +1298,7 @@ async function main() {
 
   const payload = await fetchAll();
   const editorial = generateEditorial(payload);
-  const { altcoinSeason: _as, longShortRatio: _ls, netflows: _nf, predictionMarkets: _pm, hyperliquidPerps: _hp, coinCategories: _cc, rsiHeatmap: _rsi, gainersLosers: _gl, ...dbPayload } = payload;
+  const { altcoinSeason: _as, longShortRatio: _ls, netflows: _nf, predictionMarkets: _pm, hyperliquidPerps: _hp, coinCategories: _cc, rsiHeatmap: _rsi, gainersLosers: _gl, marketsTop250: _m250, futuresScanner: _fs, ...dbPayload } = payload;
 
   if (isDryRun) {
     console.log("[dry-run] DB 저장 및 텔레그램 전송 생략");

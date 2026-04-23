@@ -131,9 +131,9 @@ export default function FuturesScannerSection({ data }: Props) {
           데이터가 충분하지 않습니다. 다음 갱신 시 표시됩니다.
         </p>
       ) : (
-        <ul className="space-y-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {top10.map((coin, idx) => (
-            <li
+            <div
               key={coin.symbol}
               className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5"
             >
@@ -158,9 +158,9 @@ export default function FuturesScannerSection({ data }: Props) {
 
               {/* 2행: 점수 게이지 바 */}
               <ScoreBar score={coin.score} />
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
 
       {/* 면책 고지 */}

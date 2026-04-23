@@ -296,6 +296,13 @@ export default function OwnerNewsFeed() {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    const t = setInterval(() => {
+      setCurrentIdx((i) => (i + 1) % ACCOUNTS.length);
+    }, 10_000);
+    return () => clearInterval(t);
+  }, []);
+
   const currentPost = feeds[currentIdx]?.post;
   return (
     <div>

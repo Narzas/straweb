@@ -27,17 +27,16 @@ function fmtCap(usd: number | null): string {
   return `$${usd.toLocaleString()}`;
 }
 
-function ScoreBar({ score, max }: { score: number; max: number }) {
-  const pct = Math.min(100, Math.max(0, (score / max) * 100));
+function ScoreBar({ score }: { score: number }) {
   const color =
-    pct >= 60 ? "bg-emerald-500" :
-    pct >= 35 ? "bg-yellow-400" :
-                "bg-red-400";
+    score >= 60 ? "bg-emerald-500" :
+    score >= 35 ? "bg-yellow-400" :
+                  "bg-red-400";
   return (
     <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
       <div
         className={`h-full rounded-full transition-all duration-500 ${color}`}
-        style={{ width: `${pct}%` }}
+        style={{ width: `${score}%` }}
       />
     </div>
   );
@@ -46,15 +45,18 @@ function ScoreBar({ score, max }: { score: number; max: number }) {
 export default function FuturesScannerSection({ data }: Props) {
   const [preset, setPreset] = useState<FuturesPresetKey>("overall");
 
-  const top10 = useMemo(
-    () => getTopFutures(data, FUTURES_PRESETS[preset], 10),
-    [data, preset],
-  );
-
   const scoreMax = useMemo(() => {
     const w = FUTURES_PRESETS[preset];
     return 30 * w.volume + 20 * w.funding + 30 * w.oi + 20;
   }, [preset]);
+
+  const top10 = useMemo(
+    () => getTopFutures(data, FUTURES_PRESETS[preset], 10).map((coin) => ({
+      ...coin,
+      score: Math.round((coin.score / scoreMax) * 100),
+    })),
+    [data, preset, scoreMax],
+  );
 
   return (
     <section className="space-y-4">
@@ -108,13 +110,13 @@ export default function FuturesScannerSection({ data }: Props) {
                   </span>
                 </div>
                 <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
-                  {Math.round(coin.score)}
-                  <span className="text-xs font-normal text-gray-400 dark:text-gray-500"> / {Math.round(scoreMax)}점</span>
+                  {coin.score}
+                  <span className="text-xs font-normal text-gray-400 dark:text-gray-500"> / 100점</span>
                 </span>
               </div>
 
               {/* 2행: 점수 게이지 바 */}
-              <ScoreBar score={coin.score} max={scoreMax} />
+              <ScoreBar score={coin.score} />
 
               {/* 3행: 지표 태그 */}
               <div className="flex flex-wrap gap-1.5">

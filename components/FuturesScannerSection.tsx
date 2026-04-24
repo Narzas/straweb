@@ -133,10 +133,16 @@ export default function FuturesScannerSection({ data, stats }: Props) {
     [data, preset, scoreMax],
   );
 
-  // 프리셋 변경 또는 초기 진입 시 첫 카드 자동 펼침
+  const isMock = stats?.overall.isMock ?? false;
+
+  // 프리셋 변경 또는 초기 진입 시 첫 카드 자동 펼침 (mock 모드에선 펼치지 않음)
   useEffect(() => {
+    if (isMock) {
+      setExpandedSymbol(null);
+      return;
+    }
     if (top10.length > 0) setExpandedSymbol(top10[0].symbol);
-  }, [preset, top10]);
+  }, [preset, top10, isMock]);
 
   return (
     <section className="space-y-4">
@@ -248,12 +254,10 @@ export default function FuturesScannerSection({ data, stats }: Props) {
           ) : (
             <>
             <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-              👆 코인 카드를 탭하면 과거 시그널 통계가 표시됩니다
-              {stats?.overall.isMock && (
-                <span className="block sm:inline text-[12px] font-normal text-gray-500 dark:text-gray-400 sm:ml-1">
-                  (현재 데이터 수집 중 — 시그널 누적 후 활성화)
-                </span>
-              )}
+              {isMock
+                ? <>🔒 코인 카드 통계는 <span className="font-bold">데이터 수집 완료 후 활성화</span>됩니다</>
+                : <>👆 코인 카드를 탭하면 과거 시그널 통계가 표시됩니다</>
+              }
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {top10.map((coin, idx) => {
@@ -336,13 +340,16 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                   {/* 카드 */}
                   <button
                     type="button"
-                    onClick={() => setExpandedSymbol(isExpanded ? null : coin.symbol)}
-                    className={`w-full text-left rounded-lg border bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors ${
-                      isExpanded
-                        ? "border-indigo-400 dark:border-indigo-600 ring-1 ring-indigo-300 dark:ring-indigo-700"
-                        : preset === "overheat"
-                          ? "border-red-200 dark:border-red-900/50"
-                          : "border-gray-200 dark:border-slate-700"
+                    disabled={isMock}
+                    onClick={() => !isMock && setExpandedSymbol(isExpanded ? null : coin.symbol)}
+                    className={`w-full text-left rounded-lg border bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5 transition-colors ${
+                      isMock
+                        ? "cursor-not-allowed border-gray-200 dark:border-slate-700"
+                        : isExpanded
+                          ? "cursor-pointer border-indigo-400 dark:border-indigo-600 ring-1 ring-indigo-300 dark:ring-indigo-700"
+                          : preset === "overheat"
+                            ? "cursor-pointer border-red-200 dark:border-red-900/50 hover:border-indigo-400 dark:hover:border-indigo-600"
+                            : "cursor-pointer border-gray-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-600"
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
@@ -356,9 +363,13 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                       <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
                         {coin.score}<span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">/100</span>
                       </span>
-                      <span className={`text-sm text-gray-500 dark:text-gray-400 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} aria-hidden>
-                        ▼
-                      </span>
+                      {isMock ? (
+                        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0" aria-hidden>🔒</span>
+                      ) : (
+                        <span className={`text-sm text-gray-500 dark:text-gray-400 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} aria-hidden>
+                          ▼
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-gray-500 flex-wrap">
                       <span>펀딩 {fmtPct(coin.fundingRate * 100)}</span>

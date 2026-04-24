@@ -204,7 +204,7 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                   </p>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  실제 시그널 30건 이상 누적되면 적중률·수익률이 표시됩니다
+                  실제 시그널 500건 이상 누적되면 적중률·수익률이 표시됩니다
                 </p>
               </div>
             )}

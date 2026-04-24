@@ -535,6 +535,14 @@ async function fetchHyperliquidPerps() {
 
 const BINANCE_BASE = process.env.BINANCE_PROXY_URL || "https://fapi.binance.com";
 
+// CoinGecko 시총 매칭용 심볼 정규화: 1000PEPE → PEPE, 1MBABYDOGE → BABYDOGE 등
+function normalizeSymbolForCap(symbol) {
+  return symbol
+    .toUpperCase()
+    .replace(/^(\d+M?)/, "")  // 1000, 100, 10, 1M 등 prefix 제거
+    .replace(/^[KM]/, "");    // K, M 단일 prefix 제거
+}
+
 function scoreAndRank(rawResults) {
   // 시총 확인된 코인 중 $20M 미만만 제거 (조작 위험), null은 소형 미확인으로 통과
   const filtered = rawResults.filter((c) => c.marketCapUsd === null || c.marketCapUsd >= 20_000_000);
@@ -653,7 +661,7 @@ async function fetchFuturesScannerBinance(marketsTop250) {
             priceChange1h, priceChange4h,
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
-            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? null,
+            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
             entryPrice: coin.markPrice,
           };
         } catch {
@@ -769,7 +777,7 @@ async function fetchFuturesScannerOKX(marketsTop250) {
             priceChange1h, priceChange4h,
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
-            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? null,
+            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
             entryPrice: coin.markPrice,
           };
         } catch {
@@ -869,7 +877,7 @@ async function fetchFuturesScannerBybit(marketsTop250) {
             priceChange1h, priceChange4h,
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
-            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? null,
+            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
             entryPrice: coin.markPrice,
           };
         } catch {
@@ -1555,15 +1563,32 @@ async function sendTelegramBriefing(date, payload, editorial) {
       return `${dot} <code>${dPad(s.name, 20)}${pct.padStart(7)}</code>`;
     }).join("\n");
 
-  // 급등/급락 TOP 5
+  // 급등/급락 TOP 5 — 좌우 정렬 (monospace pre block)
   const glData = editorial.gainers_losers;
-  const rankBadge2 = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
-  const gainersLosersLines = glData
-    ? `🚀 <b>급등 TOP 5</b>\n` +
-      glData.gainers.map((c, i) => `  ${rankBadge2[i]} <b>${c.symbol}</b> ${c.name}  <b>+${c.price_change_percentage_24h.toFixed(1)}%</b>`).join("\n") +
-      `\n\n💥 <b>급락 TOP 5</b>\n` +
-      glData.losers.map((c, i) => `  ${rankBadge2[i]} <b>${c.symbol}</b> ${c.name}  <b>${c.price_change_percentage_24h.toFixed(1)}%</b>`).join("\n")
-    : null;
+  const padR = (s, n) => (s + " ".repeat(n)).slice(0, n);
+  const padL = (s, n) => (" ".repeat(n) + s).slice(-n);
+  const fmtSide = (c, isGainer) => {
+    if (!c) return " ".repeat(16);
+    const sym = padR(String(c.symbol).toUpperCase(), 9);
+    const v = c.price_change_percentage_24h;
+    const pct = padL((isGainer && v >= 0 ? "+" : "") + v.toFixed(1) + "%", 7);
+    return sym + pct;
+  };
+  let gainersLosersLines = null;
+  if (glData) {
+    const max = Math.max(glData.gainers.length, glData.losers.length);
+    const rows = [];
+    for (let i = 0; i < max; i++) {
+      const left  = fmtSide(glData.gainers[i], true);
+      const right = fmtSide(glData.losers[i], false);
+      rows.push(`${left}   ${right}`);
+    }
+    gainersLosersLines =
+      `<pre>🚀 급등 TOP 5         💥 급락 TOP 5\n` +
+      `─────────────────    ─────────────────\n` +
+      rows.join("\n") +
+      `</pre>`;
+  }
 
   // RSI 히트맵 — 과매수/과매도
   const rsiHm = editorial.rsi_heatmap;

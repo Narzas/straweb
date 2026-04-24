@@ -1,4 +1,5 @@
 ﻿import { createServiceClient } from "@/lib/supabase";
+import { getFuturesStats } from "@/lib/futuresStats";
 import type { Metadata } from "next";
 import type { FuturesCoin } from "@/lib/futuresScanner";
 import Link from "next/link";
@@ -278,7 +279,10 @@ export default async function CryptoPage({ searchParams }: PageProps) {
   }
 
   const { market, trending, fearGreed, dexChains, date, editorial } = data;
-  const adjacent = await getAdjacentDates(date);
+  const [adjacent, futuresStats] = await Promise.all([
+    getAdjacentDates(date),
+    getFuturesStats(),
+  ]);
   const [y, m, d] = date.split("-");
   const dateLabel = `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
   const sentimentStyle = SENTIMENT_STYLE[editorial?.sentiment ?? ""] ?? SENTIMENT_STYLE["보합 상승"];
@@ -513,7 +517,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         {editorial?.futures_scanner && editorial.futures_scanner.length > 0 && (
           <AnimatedSection delay={0.05}>
             <div id="futures" className="scroll-mt-24">
-              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} />
+              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} stats={futuresStats} />
             </div>
           </AnimatedSection>
         )}

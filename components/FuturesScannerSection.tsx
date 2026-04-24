@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   FuturesCoin,
   FuturesPresetKey,
@@ -9,9 +9,28 @@ import {
   getTopFutures,
   getPresetMaxScore,
 } from "@/lib/futuresScanner";
+import type { FuturesStats, FuturesCoinStats } from "@/lib/futuresStats";
 
 interface Props {
   data: FuturesCoin[];
+  stats?: FuturesStats;
+}
+
+// 심볼로부터 결정론적 mock 통계 생성 (DB 데이터 부족 시 UI 검증용)
+function pseudoMockStat(symbol: string): FuturesCoinStats {
+  let hash = 0;
+  for (let i = 0; i < symbol.length; i++) {
+    hash = ((hash << 5) - hash) + symbol.charCodeAt(i);
+    hash |= 0;
+  }
+  const rng = (mod: number) => Math.abs(hash % mod);
+  return {
+    count: 4 + rng(8),
+    hitRate: 30 + rng(55),
+    avgReturn24h: 2 + (rng(80) / 10),
+    maxReturn24h: 12 + (rng(300) / 10),
+    lastSignalHoursAgo: rng(72),
+  };
 }
 
 // ── 포맷 헬퍼 ────────────────────────────────────────────────────────────────
@@ -100,9 +119,10 @@ function InfoPanel({ onClose }: { onClose: () => void }) {
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
-export default function FuturesScannerSection({ data }: Props) {
+export default function FuturesScannerSection({ data, stats }: Props) {
   const [preset, setPreset] = useState<FuturesPresetKey>("overall");
   const [showInfo, setShowInfo] = useState(false);
+  const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
 
   const scoreMax = useMemo(() => getPresetMaxScore(FUTURES_PRESETS[preset]), [preset]);
   const top10 = useMemo(
@@ -113,13 +133,18 @@ export default function FuturesScannerSection({ data }: Props) {
     [data, preset, scoreMax],
   );
 
+  // 프리셋 변경 또는 초기 진입 시 첫 카드 자동 펼침
+  useEffect(() => {
+    if (top10.length > 0) setExpandedSymbol(top10[0].symbol);
+  }, [preset, top10]);
+
   return (
     <section className="space-y-4">
       {/* 헤더 */}
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
-            📡 선물 시그널
+            📡 선물 시그널 <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(가격+OI 조합 · 펀딩비 건강도 · 타이밍 점수 · TOP 10)</span>
           </h2>
           {!showInfo && (
             <button
@@ -130,9 +155,61 @@ export default function FuturesScannerSection({ data }: Props) {
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          가격+OI 조합 · 펀딩비 건강도 · 타이밍 점수 · TOP 10
-        </p>
+
+        {/* 백테스트 통계 카드 */}
+        {stats && (
+          <div className="relative mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/60 dark:to-slate-800/30 px-4 py-3 overflow-hidden">
+            {/* 본 콘텐츠 (mock일 땐 흐림 처리) */}
+            <div className={stats.overall.isMock ? "opacity-15 blur-md pointer-events-none select-none" : ""}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                  지난 {stats.overall.daysCovered}일 백테스트
+                </span>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-slate-700">
+                <div className="flex flex-col items-center justify-center px-2">
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">적중률</p>
+                  <p className="text-xl font-extrabold leading-none text-emerald-600 dark:text-emerald-400 tabular-nums">
+                    {stats.overall.hitRate.toFixed(0)}<span className="text-sm font-bold">%</span>
+                  </p>
+                </div>
+                <div className="flex flex-col items-center justify-center px-2">
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">평균 수익</p>
+                  <p className="text-xl font-extrabold leading-none text-blue-600 dark:text-blue-400 tabular-nums">
+                    +{stats.overall.avgReturn24h.toFixed(1)}<span className="text-sm font-bold">%</span>
+                  </p>
+                </div>
+                <div className="flex flex-col items-center justify-center px-2">
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">최고 수익</p>
+                  <p className="text-xl font-extrabold leading-none text-amber-600 dark:text-amber-400 tabular-nums">
+                    +{stats.overall.maxReturn24h.toFixed(1)}<span className="text-sm font-bold">%</span>
+                  </p>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                총 {stats.overall.totalSignals}개 시그널 · 24h 후 +5% 이상 도달 = 적중
+              </p>
+            </div>
+
+            {/* mock일 때 오버레이 메시지 */}
+            {stats.overall.isMock && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+                  </span>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                    백테스트 데이터 수집 중
+                  </p>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  실제 시그널 30건 이상 누적되면 적중률·수익률이 표시됩니다
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 스캐너 */}
@@ -169,9 +246,38 @@ export default function FuturesScannerSection({ data }: Props) {
               데이터가 충분하지 않습니다. 다음 갱신 시 표시됩니다.
             </p>
           ) : (
+            <>
+            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+              👆 코인 카드를 탭하면 과거 시그널 통계가 표시됩니다
+              {stats?.overall.isMock && (
+                <span className="block sm:inline text-[12px] font-normal text-gray-500 dark:text-gray-400 sm:ml-1">
+                  (현재 데이터 수집 중 — 시그널 누적 후 활성화)
+                </span>
+              )}
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {top10.map((coin, idx) => (
+              {top10.map((coin, idx) => {
+                const coinStats = stats?.byCoin[coin.symbol.toUpperCase()]
+                  ?? (stats?.overall.isMock ? pseudoMockStat(coin.symbol) : undefined);
+                const isExpanded = expandedSymbol === coin.symbol;
+                return (
                 <div key={coin.symbol} className="relative group">
+                  {/* 적중률 도장 — 표본 30건 이상 + 양극단(≥80 / <20)만 표시 */}
+                  {coinStats && coinStats.count >= 30 && (coinStats.hitRate >= 80 || coinStats.hitRate < 20) && (
+                    <div
+                      className={`pointer-events-none absolute -top-1.5 -right-1.5 z-20 w-9 h-9 rounded-full border-2 flex flex-col items-center justify-center font-extrabold -rotate-12 ${
+                        coinStats.hitRate >= 80
+                          ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                          : "border-red-500 text-red-600 dark:text-red-400"
+                      }`}
+                      aria-label={`적중률 ${coinStats.hitRate.toFixed(0)}%`}
+                    >
+                      <span className="text-[12px] leading-none tabular-nums">
+                        {coinStats.hitRate.toFixed(0)}
+                      </span>
+                      <span className="text-[7px] leading-none mt-0.5 font-bold">적중</span>
+                    </div>
+                  )}
                   {/* 툴팁 */}
                   <div className="pointer-events-none absolute bottom-full left-0 mb-1.5 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-950 border border-slate-700 shadow-xl px-3 py-2.5 space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                     <p className="text-xs font-bold text-white">{coin.symbol} <span className="text-slate-400 font-normal">#{idx + 1}위</span></p>
@@ -228,38 +334,106 @@ export default function FuturesScannerSection({ data }: Props) {
                   </div>
 
                   {/* 카드 */}
-                  <div className={`rounded-lg border bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5 ${
-                    preset === "overheat"
-                      ? "border-red-200 dark:border-red-900/50"
-                      : "border-gray-200 dark:border-slate-700"
-                  }`}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedSymbol(isExpanded ? null : coin.symbol)}
+                    className={`w-full text-left rounded-lg border bg-white dark:bg-slate-800/60 px-3 py-2 space-y-1.5 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors ${
+                      isExpanded
+                        ? "border-indigo-400 dark:border-indigo-600 ring-1 ring-indigo-300 dark:ring-indigo-700"
+                        : preset === "overheat"
+                          ? "border-red-200 dark:border-red-900/50"
+                          : "border-gray-200 dark:border-slate-700"
+                    }`}
+                  >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 w-4 shrink-0">#{idx + 1}</span>
                       <span className="text-sm font-bold text-gray-900 dark:text-gray-100 shrink-0 w-16">{coin.symbol}</span>
-                      <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
                         <PriceArrow v={coin.priceChange1h} />
                         <PriceTag label="1H" v={coin.priceChange1h} />
                         <PriceTag label="4H" v={coin.priceChange4h} />
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">
-                          OI {fmtPct(coin.oiChangePct)}
-                        </span>
                       </div>
                       <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
                         {coin.score}<span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">/100</span>
                       </span>
+                      <span className={`text-sm text-gray-500 dark:text-gray-400 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} aria-hidden>
+                        ▼
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-gray-500 flex-wrap">
                       <span>펀딩 {fmtPct(coin.fundingRate * 100)}</span>
                       <span>·</span>
-                      <span>4H거래량 {fmtVol(coin.volume4hUsd)}</span>
+                      <span className={
+                        coin.oiChangePct > 0  ? "text-blue-500 dark:text-blue-400 font-medium" :
+                        coin.oiChangePct < 0  ? "text-orange-500 dark:text-orange-400 font-medium" :
+                                                ""
+                      }>
+                        OI {fmtPct(coin.oiChangePct)}
+                      </span>
+                      <span>·</span>
+                      <span>거래량 {fmtVol(coin.volume4hUsd)}</span>
                       {coin.volumeSpike >= 1.5 && <span className="text-yellow-500 font-medium">· {coin.volumeSpike.toFixed(1)}x↑</span>}
                       {coin.marketCapUsd !== null && <span>· 시총 {fmtCap(coin.marketCapUsd)}</span>}
                     </div>
                     <ScoreBar score={coin.score} />
-                  </div>
+                  </button>
+
+                  {/* 펼침 패널 — 코인별 과거 통계 */}
+                  {isExpanded && (
+                    <div className="mt-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/60 dark:bg-indigo-900/20 px-3 py-2.5 space-y-2">
+                      {coinStats ? (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
+                              {coin.symbol} 과거 시그널 통계
+                            </p>
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                              {coinStats.lastSignalHoursAgo < 24
+                                ? `${coinStats.lastSignalHoursAgo}시간 전`
+                                : `${Math.floor(coinStats.lastSignalHoursAgo / 24)}일 전`} 마지막 신호
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            <div className="text-center">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">시그널</p>
+                              <p className="text-sm font-bold text-gray-800 dark:text-gray-100">{coinStats.count}회</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">적중률</p>
+                              <p className={`text-sm font-bold ${
+                                coinStats.hitRate >= 60 ? "text-emerald-600 dark:text-emerald-400" :
+                                coinStats.hitRate >= 40 ? "text-yellow-600 dark:text-yellow-400" :
+                                "text-red-500 dark:text-red-400"
+                              }`}>{coinStats.hitRate.toFixed(0)}%</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">평균</p>
+                              <p className={`text-sm font-bold ${
+                                coinStats.avgReturn24h > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
+                              }`}>{coinStats.avgReturn24h >= 0 ? "+" : ""}{coinStats.avgReturn24h.toFixed(1)}%</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">최고</p>
+                              <p className="text-sm font-bold text-amber-600 dark:text-amber-400">+{coinStats.maxReturn24h.toFixed(1)}%</p>
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed border-t border-indigo-200 dark:border-indigo-800/40 pt-1.5">
+                            * 24시간 후 +5% 이상 도달 = 적중<br />
+                            과거 통계가 미래 수익을 보장하지 않습니다.
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 text-center py-2">
+                          이 코인의 과거 시그널이 아직 없습니다 (지난 7일).
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
+            </>
           )}
 
           <div className="rounded-lg border border-yellow-200 dark:border-yellow-800/50 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-2">

@@ -1709,7 +1709,8 @@ async function main() {
   const isDryRun = process.argv.includes("--dry-run");
   const kstHour = new Date(Date.now() + 9 * 3600_000).getUTCHours();
   const isTelegramHour = [0, 6, 12, 18].includes(kstHour);
-  const noTelegram = process.argv.includes("--no-telegram") || !isTelegramHour;
+  const forceTelegram = process.argv.includes("--force-telegram");
+  const noTelegram = process.argv.includes("--no-telegram") || (!isTelegramHour && !forceTelegram);
 
   const payload = await fetchAll();
   const editorial = generateEditorial(payload);

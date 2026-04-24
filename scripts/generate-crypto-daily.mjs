@@ -887,12 +887,10 @@ async function fetchFuturesScannerBybit(marketsTop250) {
 }
 
 async function fetchFuturesScanner(marketsTop250) {
-  if (BINANCE_BASE !== "https://fapi.binance.com") {
-    // CF 프록시 설정 시 Binance 우선
-    const binanceResult = await fetchFuturesScannerBinance(marketsTop250);
-    if (binanceResult && binanceResult.length > 0) return binanceResult;
-    console.log("  [선물 스캐너] Binance 프록시 실패, OKX 폴백...");
-  }
+  // 직접 접근이든 프록시든 항상 Binance 우선 시도
+  const binanceResult = await fetchFuturesScannerBinance(marketsTop250);
+  if (binanceResult && binanceResult.length > 0) return binanceResult;
+  console.log("  [선물 스캐너] Binance 실패, OKX 폴백...");
   const okxResult = await fetchFuturesScannerOKX(marketsTop250);
   if (okxResult && okxResult.length > 0) return okxResult;
   console.log("  [선물 스캐너] OKX 실패, Bybit 폴백...");

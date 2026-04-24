@@ -31,3 +31,4 @@ jobs:
           NANSEN_API_KEY: ${{ secrets.NANSEN_API_KEY }}
           DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BINANCE_PROXY_URL: ${{ secrets.BINANCE_PROXY_URL }}

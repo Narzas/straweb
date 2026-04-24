@@ -533,6 +533,8 @@ async function fetchHyperliquidPerps() {
 
 // ── 선물 스캐너 ───────────────────────────────────────────────────────────────
 
+const BINANCE_BASE = process.env.BINANCE_PROXY_URL || "https://fapi.binance.com";
+
 function scoreAndRank(rawResults) {
   // 시총 확인된 코인 중 $20M 미만만 제거 (조작 위험), null은 소형 미확인으로 통과
   const filtered = rawResults.filter((c) => c.marketCapUsd === null || c.marketCapUsd >= 20_000_000);
@@ -558,6 +560,114 @@ function scoreAndRank(rawResults) {
     return { ...coin, volume4hRankPct, score: fundingSc + priceOiSc + volumeSc + timingSc - overheatP };
   });
   return scored.sort((a, b) => b.score - a.score).slice(0, 50);
+}
+
+async function fetchFuturesScannerBinance(marketsTop250) {
+  console.log("  [선물 스캐너] Binance 데이터 수집 중...");
+
+  const [tickerRes, fundingRes] = await Promise.all([
+    safeFetch(`${BINANCE_BASE}/fapi/v1/ticker/24hr`),
+    safeFetch(`${BINANCE_BASE}/fapi/v1/premiumIndex`),
+  ]);
+  if (!tickerRes || !fundingRes) {
+    console.log("  [선물 스캐너] Binance API 응답 없음");
+    return null;
+  }
+
+  const tickers = await tickerRes.json();
+  const fundings = await fundingRes.json();
+  if (!Array.isArray(tickers) || !tickers.length) return null;
+
+  const fundingMap = new Map();
+  for (const f of (Array.isArray(fundings) ? fundings : [])) {
+    if (typeof f.symbol === "string" && f.symbol.endsWith("USDT")) {
+      fundingMap.set(f.symbol, parseFloat(f.lastFundingRate ?? "0"));
+    }
+  }
+
+  const capMap = new Map();
+  for (const coin of (marketsTop250 ?? [])) {
+    if (coin.symbol) capMap.set(coin.symbol.toUpperCase(), coin.market_cap ?? null);
+  }
+
+  const candidates = tickers
+    .filter((t) => typeof t.symbol === "string" && t.symbol.endsWith("USDT") && (fundingMap.get(t.symbol) ?? 0) > 0)
+    .map((t) => ({
+      symbol: t.symbol.replace(/USDT$/, ""),
+      binanceSymbol: t.symbol,
+      fundingRate: fundingMap.get(t.symbol) ?? 0,
+      markPrice: parseFloat(t.lastPrice ?? "0"),
+    }));
+
+  if (!candidates.length) { console.log("  [선물 스캐너] Binance 양수 펀딩비 없음"); return null; }
+  console.log(`  [선물 스캐너] Binance 양수 펀딩비 ${candidates.length}개, 데이터 수집 중...`);
+
+  const BATCH = 10;
+  const rawResults = [];
+  for (let i = 0; i < candidates.length; i += BATCH) {
+    const batch = candidates.slice(i, i + BATCH);
+    const batchData = await Promise.all(
+      batch.map(async (coin) => {
+        try {
+          const [klinesRes, oiRes] = await Promise.all([
+            safeFetch(`${BINANCE_BASE}/fapi/v1/klines?symbol=${coin.binanceSymbol}&interval=1h&limit=8`),
+            safeFetch(`${BINANCE_BASE}/futures/data/openInterestHist?symbol=${coin.binanceSymbol}&period=1h&limit=7`),
+          ]);
+          if (!klinesRes) return null;
+
+          const klines = (await klinesRes.json()).reverse?.() ?? [];
+          const lastComplete = klines[6];
+          const candle4hAgo  = klines[3];
+          if (!lastComplete) return null;
+
+          const priceChange1h = parseFloat(lastComplete[1]) > 0
+            ? ((parseFloat(lastComplete[4]) - parseFloat(lastComplete[1])) / parseFloat(lastComplete[1])) * 100
+            : 0;
+          const priceChange4h = candle4hAgo?.[1] && parseFloat(candle4hAgo[1]) > 0
+            ? ((parseFloat(lastComplete[4]) - parseFloat(candle4hAgo[1])) / parseFloat(candle4hAgo[1])) * 100
+            : 0;
+
+          // quoteAssetVolume (index 7) = USDT 거래량
+          const vol1h = parseFloat(lastComplete[7] ?? "0");
+          const prevVols = klines.slice(1, 6).map((k) => parseFloat(k[7] ?? "0"));
+          const avgPrevVol = prevVols.length > 0 ? prevVols.reduce((s, v) => s + v, 0) / prevVols.length : 0;
+          const volumeSpike = avgPrevVol > 0 ? vol1h / avgPrevVol : 1;
+          const volume4hUsd = klines.slice(3, 7).reduce((sum, k) => sum + parseFloat(k?.[7] ?? "0"), 0);
+
+          let oiChangePct = 0;
+          let oiChangePct6h = 0;
+          if (oiRes) {
+            const oiItems = (await oiRes.json()).filter?.(Boolean) ?? [];
+            if (oiItems.length >= 2) {
+              const curr = parseFloat(oiItems[oiItems.length - 1]?.sumOpenInterestValue ?? "0");
+              const prev = parseFloat(oiItems[oiItems.length - 2]?.sumOpenInterestValue ?? "0");
+              if (prev > 0) oiChangePct = ((curr - prev) / prev) * 100;
+              const oldest = parseFloat(oiItems[0]?.sumOpenInterestValue ?? "0");
+              if (oldest > 0) oiChangePct6h = ((curr - oldest) / oldest) * 100;
+            }
+          }
+
+          return {
+            symbol: coin.symbol,
+            fundingRate: coin.fundingRate,
+            priceChange1h, priceChange4h,
+            oiChangePct, oiChangePct6h,
+            volume4hUsd, volumeSpike,
+            marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? null,
+            entryPrice: coin.markPrice,
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+    rawResults.push(...batchData.filter(Boolean));
+  }
+
+  if (!rawResults.length) return null;
+  const top50 = scoreAndRank(rawResults);
+  console.log(`  [선물 스캐너] Binance 완료: ${top50.length}개 저장`);
+  return top50;
 }
 
 async function fetchFuturesScannerOKX(marketsTop250) {
@@ -777,6 +887,12 @@ async function fetchFuturesScannerBybit(marketsTop250) {
 }
 
 async function fetchFuturesScanner(marketsTop250) {
+  if (BINANCE_BASE !== "https://fapi.binance.com") {
+    // CF 프록시 설정 시 Binance 우선
+    const binanceResult = await fetchFuturesScannerBinance(marketsTop250);
+    if (binanceResult && binanceResult.length > 0) return binanceResult;
+    console.log("  [선물 스캐너] Binance 프록시 실패, OKX 폴백...");
+  }
   const okxResult = await fetchFuturesScannerOKX(marketsTop250);
   if (okxResult && okxResult.length > 0) return okxResult;
   console.log("  [선물 스캐너] OKX 실패, Bybit 폴백...");

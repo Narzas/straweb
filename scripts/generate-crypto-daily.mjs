@@ -10,6 +10,13 @@ import { readFileSync, writeFileSync, unlinkSync } from "fs";
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { tmpdir } from "os";
+import net from "net";
+import dns from "dns";
+
+// Oracle Cloud처럼 IPv6 egress가 없는 환경에서 Happy Eyeballs가 IPv6을 시도해 ETIMEDOUT
+// 발생하는 문제 회피. IPv4 전용으로 고정.
+dns.setDefaultResultOrder("ipv4first");
+net.setDefaultAutoSelectFamily(false);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

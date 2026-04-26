@@ -567,8 +567,10 @@ function scoreAndRank(rawResults) {
     const oiUp      = coin.oiChangePct > 3;
     const lScoreBonus = (coin.lScore !== null && coin.lScore !== undefined && coin.lScore < 0.1) ? 5 : 0;
     const priceOiSc = ((priceDown && oiUp) ? 30 : (priceUp && oiUp) ? 22 : (!priceUp && !priceDown && oiUp) ? 15 : (priceUp && !oiUp) ? 5 : 0) + lScoreBonus;
-    const rvolBonus = coin.volumeSpike >= 3 ? 5 : 0;
-    const volumeSc = (volume4hRankPct <= 0.10 ? 20 : volume4hRankPct <= 0.25 ? 14 : volume4hRankPct <= 0.50 ? 7 : 0) + rvolBonus;
+    const isPump = coin.volumeSpike > 5 && coin.priceChange1h > 0;
+    const rvolBonus = (coin.volumeSpike >= 3 && !isPump) ? 5 : 0;
+    const rankBase = volume4hRankPct <= 0.10 ? 20 : volume4hRankPct <= 0.25 ? 14 : volume4hRankPct <= 0.50 ? 7 : 0;
+    const volumeSc = (isPump ? 0 : rankBase) + rvolBonus;
     const sideways = Math.abs(coin.priceChange4h) <= 2;
     const oiBuild  = coin.oiChangePct6h > 5;
     const volStart = coin.volumeSpike >= 1.3 && coin.volumeSpike <= 4;

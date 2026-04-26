@@ -565,8 +565,10 @@ function scoreAndRank(rawResults) {
     const priceUp   = coin.priceChange1h > 1;
     const priceDown = coin.priceChange1h < -1;
     const oiUp      = coin.oiChangePct > 3;
-    const priceOiSc = (priceDown && oiUp) ? 30 : (priceUp && oiUp) ? 22 : (!priceUp && !priceDown && oiUp) ? 15 : (priceUp && !oiUp) ? 5 : 0;
-    const volumeSc = volume4hRankPct <= 0.10 ? 20 : volume4hRankPct <= 0.25 ? 14 : volume4hRankPct <= 0.50 ? 7 : 0;
+    const lScoreBonus = (coin.lScore !== null && coin.lScore !== undefined && coin.lScore < 0.1) ? 5 : 0;
+    const priceOiSc = ((priceDown && oiUp) ? 30 : (priceUp && oiUp) ? 22 : (!priceUp && !priceDown && oiUp) ? 15 : (priceUp && !oiUp) ? 5 : 0) + lScoreBonus;
+    const rvolBonus = coin.volumeSpike >= 3 ? 5 : 0;
+    const volumeSc = (volume4hRankPct <= 0.10 ? 20 : volume4hRankPct <= 0.25 ? 14 : volume4hRankPct <= 0.50 ? 7 : 0) + rvolBonus;
     const sideways = Math.abs(coin.priceChange4h) <= 2;
     const oiBuild  = coin.oiChangePct6h > 5;
     const volStart = coin.volumeSpike >= 1.3 && coin.volumeSpike <= 4;
@@ -612,6 +614,8 @@ async function fetchFuturesScannerBinance(marketsTop250) {
       binanceSymbol: t.symbol,
       fundingRate: fundingMap.get(t.symbol) ?? 0,
       markPrice: parseFloat(t.lastPrice ?? "0"),
+      high24h: parseFloat(t.highPrice ?? "0"),
+      low24h: parseFloat(t.lowPrice ?? "0"),
     }));
 
   if (!candidates.length) { console.log("  [선물 스캐너] Binance 양수 펀딩비 없음"); return null; }
@@ -662,6 +666,12 @@ async function fetchFuturesScannerBinance(marketsTop250) {
             }
           }
 
+          // L-Score: (현재가 - 24h저점) / (24h고점 - 24h저점)
+          const entryClose = parseFloat(lastComplete[4]);
+          const lScore = (coin.high24h - coin.low24h) > 0
+            ? parseFloat(((entryClose - coin.low24h) / (coin.high24h - coin.low24h)).toFixed(4))
+            : null;
+
           // takerSellRatio: taker 매도 비율 (청산 proxy) — Binance 전용
           const takerBuyQuote = parseFloat(lastComplete[10] ?? "0");
           const quoteVol1h = parseFloat(lastComplete[7] ?? "0");
@@ -683,9 +693,10 @@ async function fetchFuturesScannerBinance(marketsTop250) {
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
             marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
-            entryPrice: parseFloat(lastComplete[4]),
+            entryPrice: entryClose,
             takerSellRatio,
             cvd6h,
+            lScore,
           };
         } catch {
           return null;
@@ -740,6 +751,8 @@ async function fetchFuturesScannerOKX(marketsTop250) {
       instId: t.instId,
       fundingRate: fundingMap.get(t.instId) ?? 0,
       markPrice: parseFloat(t.last ?? "0"),
+      high24h: parseFloat(t.high24h ?? "0"),
+      low24h: parseFloat(t.low24h ?? "0"),
     }));
 
   if (!candidates.length) { console.log("  [선물 스캐너] OKX 양수 펀딩비 없음"); return null; }
@@ -794,6 +807,11 @@ async function fetchFuturesScannerOKX(marketsTop250) {
             }
           }
 
+          const entryClose = parseFloat(lastComplete[4]);
+          const lScore = (coin.high24h - coin.low24h) > 0
+            ? parseFloat(((entryClose - coin.low24h) / (coin.high24h - coin.low24h)).toFixed(4))
+            : null;
+
           return {
             symbol: coin.symbol,
             fundingRate: coin.fundingRate,
@@ -801,9 +819,10 @@ async function fetchFuturesScannerOKX(marketsTop250) {
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
             marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
-            entryPrice: parseFloat(lastComplete[4]),
+            entryPrice: entryClose,
             takerSellRatio: null,
             cvd6h: null,
+            lScore,
           };
         } catch {
           return null;
@@ -842,6 +861,8 @@ async function fetchFuturesScannerBybit(marketsTop250) {
       bybitSymbol: t.symbol,
       fundingRate: parseFloat(t.fundingRate ?? "0"),
       markPrice: parseFloat(t.lastPrice ?? "0"),
+      high24h: parseFloat(t.highPrice24h ?? "0"),
+      low24h: parseFloat(t.lowPrice24h ?? "0"),
     }));
 
   if (!candidates.length) { console.log("  [선물 스캐너] Bybit 양수 펀딩비 없음"); return []; }
@@ -896,6 +917,11 @@ async function fetchFuturesScannerBybit(marketsTop250) {
             }
           }
 
+          const entryClose = parseFloat(lastComplete[4]);
+          const lScore = (coin.high24h - coin.low24h) > 0
+            ? parseFloat(((entryClose - coin.low24h) / (coin.high24h - coin.low24h)).toFixed(4))
+            : null;
+
           return {
             symbol: coin.symbol,
             fundingRate: coin.fundingRate,
@@ -903,9 +929,10 @@ async function fetchFuturesScannerBybit(marketsTop250) {
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
             marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
-            entryPrice: parseFloat(lastComplete[4]),
+            entryPrice: entryClose,
             takerSellRatio: null,
             cvd6h: null,
+            lScore,
           };
         } catch {
           return null;
@@ -1852,8 +1879,8 @@ async function insertFuturesSignals(top50, btcChange1h = null) {
   try {
     const top10 = top50.slice(0, 10);
     if (top10.length === 0) return;
-    if (btcChange1h !== null && btcChange1h < -2) {
-      console.log(`  [신호 추적] BTC 1h ${btcChange1h}% — 하락 필터 적용, 신호 기록 건너뜀`);
+    if (btcChange1h !== null && Math.abs(btcChange1h) > 3) {
+      console.log(`  [신호 추적] BTC 1h ${btcChange1h}% — 변동성 필터(±3%) 적용, 신호 기록 건너뜀`);
       return;
     }
     const now = new Date().toISOString();
@@ -1869,6 +1896,7 @@ async function insertFuturesSignals(top50, btcChange1h = null) {
       rel_volume: coin.volumeSpike ?? null,
       taker_sell_ratio: coin.takerSellRatio ?? null,
       cvd_6h: coin.cvd6h ?? null,
+      l_score: coin.lScore ?? null,
       btc_change_1h: btcChange1h,
     }));
     const { error } = await sb.from("futures_signals").insert(rows);

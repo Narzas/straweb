@@ -1630,7 +1630,6 @@ async function sendTelegramBriefing(date, payload, editorial) {
     }
     gainersLosersLines =
       `<pre>🚀 급등 TOP 5       💥 급락 TOP 5\n` +
-      `─────────────────  ─────────────────\n` +
       rows.join("\n") +
       `</pre>`;
   }
@@ -1654,7 +1653,6 @@ async function sendTelegramBriefing(date, payload, editorial) {
     }
     rsiBar =
       `<pre>🔴 과매수 (RSI 4H)  🟢 과매도 (RSI 4H)\n` +
-      `─────────────────  ─────────────────\n` +
       rows.join("\n") +
       `</pre>`;
   }

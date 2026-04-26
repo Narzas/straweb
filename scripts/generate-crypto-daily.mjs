@@ -662,6 +662,20 @@ async function fetchFuturesScannerBinance(marketsTop250) {
             }
           }
 
+          // takerSellRatio: taker 매도 비율 (청산 proxy) — Binance 전용
+          const takerBuyQuote = parseFloat(lastComplete[10] ?? "0");
+          const quoteVol1h = parseFloat(lastComplete[7] ?? "0");
+          const takerSellRatio = quoteVol1h > 0
+            ? parseFloat(((quoteVol1h - takerBuyQuote) / quoteVol1h).toFixed(4))
+            : null;
+
+          // CVD 6h: 최근 6개 완성 캔들 누적 매수-매도 압력
+          const cvd6h = klines.slice(1, 7).reduce((sum, k) => {
+            const qv = parseFloat(k[7] ?? "0");
+            const tbq = parseFloat(k[10] ?? "0");
+            return sum + (2 * tbq - qv);
+          }, 0);
+
           return {
             symbol: coin.symbol,
             fundingRate: coin.fundingRate,
@@ -669,7 +683,9 @@ async function fetchFuturesScannerBinance(marketsTop250) {
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
             marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
-            entryPrice: coin.markPrice,
+            entryPrice: parseFloat(lastComplete[4]),
+            takerSellRatio,
+            cvd6h,
           };
         } catch {
           return null;
@@ -785,7 +801,9 @@ async function fetchFuturesScannerOKX(marketsTop250) {
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
             marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
-            entryPrice: coin.markPrice,
+            entryPrice: parseFloat(lastComplete[4]),
+            takerSellRatio: null,
+            cvd6h: null,
           };
         } catch {
           return null;
@@ -885,7 +903,9 @@ async function fetchFuturesScannerBybit(marketsTop250) {
             oiChangePct, oiChangePct6h,
             volume4hUsd, volumeSpike,
             marketCapUsd: capMap.get(coin.symbol.toUpperCase()) ?? capMap.get(normalizeSymbolForCap(coin.symbol)) ?? null,
-            entryPrice: coin.markPrice,
+            entryPrice: parseFloat(lastComplete[4]),
+            takerSellRatio: null,
+            cvd6h: null,
           };
         } catch {
           return null;
@@ -1735,7 +1755,8 @@ async function main() {
 
   // 선물 신호 추적: 이전 신호 현재가 업데이트 + 새 신호 기록
   await updateFuturesSignalPrices();
-  await insertFuturesSignals(payload.futuresScanner ?? []);
+  const btcChange1h = await fetchBtcChange1h();
+  await insertFuturesSignals(payload.futuresScanner ?? [], btcChange1h);
 
   if (!noTelegram) await sendTelegramBriefing(date, payload, editorial);
 }
@@ -1749,17 +1770,34 @@ async function updateFuturesSignalPrices() {
 
     if (!pending || pending.length === 0) return;
 
-    // 현재가 가져오기 (OKX → Bybit 폴백)
+    // 현재가 가져오기 (Binance 프록시 → OKX → Bybit 폴백)
     const priceMap = new Map();
-    const okxRes = await safeFetch("https://www.okx.com/api/v5/market/tickers?instType=SWAP");
-    if (okxRes) {
-      const d = await okxRes.json();
-      for (const t of (d.data ?? [])) {
-        if (t.instId.endsWith("-USDT-SWAP")) {
-          priceMap.set(t.instId.replace(/-USDT-SWAP$/, ""), parseFloat(t.last ?? "0"));
+
+    // 1순위: Binance 프록시 (GitHub Actions에서 가장 안정적)
+    const binanceRes = await safeFetch(`${BINANCE_BASE}/fapi/v1/ticker/price`);
+    if (binanceRes) {
+      const d = await binanceRes.json();
+      for (const t of (Array.isArray(d) ? d : [])) {
+        if (t.symbol?.endsWith("USDT")) {
+          priceMap.set(t.symbol.replace(/USDT$/, ""), parseFloat(t.price ?? "0"));
         }
       }
     }
+
+    // 2순위: OKX SWAP
+    if (!priceMap.size) {
+      const okxRes = await safeFetch("https://www.okx.com/api/v5/market/tickers?instType=SWAP");
+      if (okxRes) {
+        const d = await okxRes.json();
+        for (const t of (d.data ?? [])) {
+          if (t.instId.endsWith("-USDT-SWAP")) {
+            priceMap.set(t.instId.replace(/-USDT-SWAP$/, ""), parseFloat(t.last ?? "0"));
+          }
+        }
+      }
+    }
+
+    // 3순위: Bybit
     if (!priceMap.size) {
       const bybitRes = await safeFetch("https://api.bybit.com/v5/market/tickers?category=linear");
       if (bybitRes) {
@@ -1771,6 +1809,7 @@ async function updateFuturesSignalPrices() {
         }
       }
     }
+
     if (!priceMap.size) return;
 
     const now = new Date();
@@ -1795,10 +1834,28 @@ async function updateFuturesSignalPrices() {
   }
 }
 
-async function insertFuturesSignals(top50) {
+async function fetchBtcChange1h() {
+  try {
+    const res = await safeFetch(`${BINANCE_BASE}/fapi/v1/klines?symbol=BTCUSDT&interval=1h&limit=2`);
+    if (!res) return null;
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length < 2) return null;
+    const prev = parseFloat(data[0][1]);
+    const curr = parseFloat(data[1][4]);
+    return prev > 0 ? parseFloat(((curr - prev) / prev * 100).toFixed(3)) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function insertFuturesSignals(top50, btcChange1h = null) {
   try {
     const top10 = top50.slice(0, 10);
     if (top10.length === 0) return;
+    if (btcChange1h !== null && btcChange1h < -2) {
+      console.log(`  [신호 추적] BTC 1h ${btcChange1h}% — 하락 필터 적용, 신호 기록 건너뜀`);
+      return;
+    }
     const now = new Date().toISOString();
     const rows = top10.map((coin, idx) => ({
       recorded_at: now,
@@ -1806,10 +1863,17 @@ async function insertFuturesSignals(top50) {
       rank: idx + 1,
       entry_price: coin.entryPrice,
       score: coin.score,
+      funding_rate: coin.fundingRate ?? null,
+      price_change_1h: coin.priceChange1h ?? null,
+      oi_change_pct: coin.oiChangePct ?? null,
+      rel_volume: coin.volumeSpike ?? null,
+      taker_sell_ratio: coin.takerSellRatio ?? null,
+      cvd_6h: coin.cvd6h ?? null,
+      btc_change_1h: btcChange1h,
     }));
     const { error } = await sb.from("futures_signals").insert(rows);
     if (error) console.warn("  [신호 추적] INSERT 실패:", error.message);
-    else console.log(`  [신호 추적] TOP 10 신호 기록 완료 (${now.slice(0, 16)})`);
+    else console.log(`  [신호 추적] TOP 10 신호 기록 완료 (${now.slice(0, 16)}) BTC 1h: ${btcChange1h}%`);
   } catch (e) {
     console.warn("  [신호 추적] INSERT 예외:", e.message);
   }

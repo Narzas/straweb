@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import RightSidebar from "@/components/RightSidebar";
 import AnimatedSection from "@/components/AnimatedSection";
+import HashScrollHandler from "@/components/HashScrollHandler";
 
 function SectionSkeleton() {
   return <div className="h-48 animate-pulse rounded-xl bg-gray-100 dark:bg-slate-800" />;
@@ -293,6 +294,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         <Sidebar />
       </aside>
       <main className="min-w-0 space-y-8">
+        <HashScrollHandler />
 
         {/* 헤더 */}
         <div>

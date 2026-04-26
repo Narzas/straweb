@@ -1700,7 +1700,6 @@ async function sendTelegramBriefing(date, payload, editorial) {
     }
     netflowLines =
       `<pre>🟢 매집              🔴 이탈\n` +
-      `──────────────────  ──────────────────\n` +
       rows.join("\n") +
       `</pre>`;
   }

@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="360" viewBox="0 0 700 360">
+  <defs>
+    <linearGradient id="stkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="stkCard1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981"/>
+      <stop offset="100%" style="stop-color:#047857"/>
+    </linearGradient>
+    <linearGradient id="stkCard2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#1e40af"/>
+    </linearGradient>
+    <linearGradient id="stkCard3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7"/>
+      <stop offset="100%" style="stop-color:#6b21a8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="700" height="360" fill="url(#stkBg)" rx="16"/>
+
+  <!-- Title -->
+  <text x="350" y="34" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="white" font-weight="bold">스테이킹 → 리퀴드 스테이킹 → 리스테이킹</text>
+  <text x="350" y="52" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#a5b4fc">한 ETH로 이자를 점점 여러 번 쌓는 구조</text>
+
+  <!-- Step 1: Staking -->
+  <g>
+    <rect x="30" y="80" width="200" height="240" rx="12" fill="url(#stkCard1)" stroke="#34d399" stroke-width="1.5"/>
+    <rect x="30" y="80" width="200" height="40" rx="12" fill="#059669"/>
+    <rect x="30" y="108" width="200" height="12" fill="#059669"/>
+    <text x="130" y="106" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">1. 스테이킹</text>
+
+    <text x="130" y="155" text-anchor="middle" font-size="32">🔒</text>
+
+    <text x="130" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#d1fae5">ETH를 락업해서</text>
+    <text x="130" y="206" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#d1fae5">검증자 활동에 동참</text>
+
+    <line x1="50" y1="222" x2="210" y2="222" stroke="#065f46" stroke-width="1"/>
+
+    <text x="130" y="244" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#a7f3d0">받는 보상</text>
+    <rect x="50" y="252" width="160" height="26" rx="6" fill="#064e3b"/>
+    <text x="130" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#34d399">연 3~5%</text>
+
+    <text x="130" y="298" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#a7f3d0">단점: 그동안 ETH</text>
+    <text x="130" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#a7f3d0">묶여서 못 씀</text>
+  </g>
+
+  <!-- Arrow 1 → 2 -->
+  <g stroke="#fbbf24" stroke-width="2" fill="#fbbf24">
+    <line x1="232" y1="200" x2="252" y2="200"/>
+    <polygon points="252,194 264,200 252,206"/>
+  </g>
+
+  <!-- Step 2: Liquid Staking -->
+  <g>
+    <rect x="266" y="80" width="200" height="240" rx="12" fill="url(#stkCard2)" stroke="#60a5fa" stroke-width="1.5"/>
+    <rect x="266" y="80" width="200" height="40" rx="12" fill="#2563eb"/>
+    <rect x="266" y="108" width="200" height="12" fill="#2563eb"/>
+    <text x="366" y="106" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">2. 리퀴드 스테이킹</text>
+
+    <text x="366" y="155" text-anchor="middle" font-size="32">💧</text>
+
+    <text x="366" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#dbeafe">스테이킹된 ETH를 거래</text>
+    <text x="366" y="206" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#dbeafe">가능한 토큰으로 받음</text>
+
+    <line x1="286" y1="222" x2="446" y2="222" stroke="#1e3a8a" stroke-width="1"/>
+
+    <text x="366" y="244" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#bfdbfe">예) Lido</text>
+    <rect x="286" y="252" width="160" height="26" rx="6" fill="#1e3a8a"/>
+    <text x="366" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#60a5fa">ETH → stETH</text>
+
+    <text x="366" y="298" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#bfdbfe">stETH는 자유롭게</text>
+    <text x="366" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#bfdbfe">DeFi에 다시 사용 가능</text>
+  </g>
+
+  <!-- Arrow 2 → 3 -->
+  <g stroke="#fbbf24" stroke-width="2" fill="#fbbf24">
+    <line x1="468" y1="200" x2="488" y2="200"/>
+    <polygon points="488,194 500,200 488,206"/>
+  </g>
+
+  <!-- Step 3: Restaking -->
+  <g>
+    <rect x="502" y="80" width="180" height="240" rx="12" fill="url(#stkCard3)" stroke="#c084fc" stroke-width="1.5"/>
+    <rect x="502" y="80" width="180" height="40" rx="12" fill="#9333ea"/>
+    <rect x="502" y="108" width="180" height="12" fill="#9333ea"/>
+    <text x="592" y="106" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">3. 리스테이킹</text>
+
+    <text x="592" y="155" text-anchor="middle" font-size="32">🔁</text>
+
+    <text x="592" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#f3e8ff">stETH를 또 다른</text>
+    <text x="592" y="206" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#f3e8ff">프로토콜에 빌려줌</text>
+
+    <line x1="522" y1="222" x2="662" y2="222" stroke="#581c87" stroke-width="1"/>
+
+    <text x="592" y="244" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#e9d5ff">예) EigenLayer</text>
+    <rect x="522" y="252" width="140" height="26" rx="6" fill="#581c87"/>
+    <text x="592" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#c084fc">LRT (ezETH 등)</text>
+
+    <text x="592" y="298" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#e9d5ff">이중·삼중 이자</text>
+    <text x="592" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#e9d5ff">but 리스크도 누적</text>
+  </g>
+
+  <!-- Bottom note -->
+  <text x="350" y="346" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748b">* 2024년부터 본격화 — 리스테이킹은 수익 매력 ↑ 동시에 슬래싱 리스크도 누적되니 주의</text>
+</svg>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
@@ -14,6 +15,7 @@ export default function HeaderClient({ categories }: { categories: Category[] })
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewBadge, setShowNewBadge] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -44,6 +46,8 @@ export default function HeaderClient({ categories }: { categories: Category[] })
   useEffect(() => {
     setShowNewBadge(!localStorage.getItem("crypto-new-seen"));
   }, []);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // 헤더 스크롤 슬림화 (히스테리시스: 64px 넘으면 slim, 48px 미만이면 복귀)
   useEffect(() => {
@@ -222,20 +226,20 @@ export default function HeaderClient({ categories }: { categories: Category[] })
         </button>
       </div>
 
-      {/* ── 모바일 메뉴 오버레이 ── */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
-          onClick={closeAll}
-        />
-      )}
-
-      {/* ── 모바일 메뉴 패널 ── */}
-      <div
-        className={`fixed top-0 right-0 z-50 h-full w-72 bg-white dark:bg-slate-900 shadow-2xl transition-transform duration-300 md:hidden ${
-          mobileOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
+      {/* ── 모바일 메뉴 오버레이 + 패널 (portal: 헤더 backdrop-blur 스태킹 컨텍스트 우회) ── */}
+      {mounted && createPortal(
+        <>
+          {mobileOpen && (
+            <div
+              className="fixed inset-0 z-40 bg-black/40 md:hidden"
+              onClick={closeAll}
+            />
+          )}
+          <div
+            className={`fixed top-0 right-0 z-50 h-full w-72 bg-white dark:bg-slate-900 shadow-2xl transition-transform duration-300 md:hidden ${
+              mobileOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
         {/* 패널 헤더 */}
         <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-700 px-5 py-4">
           <span className="text-lg font-bold text-gray-900 dark:text-white">메뉴</span>
@@ -335,6 +339,9 @@ export default function HeaderClient({ categories }: { categories: Category[] })
           </div>
         </nav>
       </div>
+        </>,
+        document.body
+      )}
     </>
   );
 }

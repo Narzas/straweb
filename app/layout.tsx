@@ -103,6 +103,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* DNS prefetch for external services */}
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+        {/* Google AdSense — SSR HTML에 실제 <script> 태그를 박아 AdSense 봇이 검증 가능하게 함 */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088845697780578"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="flex min-h-screen flex-col bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 antialiased">
         {/* 다크 모드 FOUC 방지 — hydration 전에 실행 */}
@@ -116,13 +122,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           id="gtm"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-56CDQRKW');` }}
-        />
-        {/* Google AdSense — beforeInteractive: SSR HTML에 실제 <script> 태그를 박아 AdSense 봇이 검증 가능하게 함 */}
-        <Script
-          id="adsense"
-          strategy="beforeInteractive"
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2088845697780578"
-          crossOrigin="anonymous"
         />
         {/* Google Tag Manager (noscript) */}
         <noscript dangerouslySetInnerHTML={{ __html: '<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-56CDQRKW" height="0" width="0" style="display:none;visibility:hidden"></iframe>' }} />

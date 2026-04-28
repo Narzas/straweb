@@ -18,7 +18,14 @@ export default function VisitorCounter() {
         .catch(() => {});
     } else {
       sessionStorage.setItem("visited", "1");
-      fetch("/api/visitors", { method: "POST" })
+      fetch("/api/visitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          referrer: document.referrer || null,
+          path: window.location.pathname,
+        }),
+      })
         .then((r) => r.json())
         .then((d) => setStats({ total: d.total ?? 0, today: d.today ?? 0 }))
         .catch(() => {});

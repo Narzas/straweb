@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { logVisitor, getCountry } from "@/lib/visitor-tracking";
 
 export async function GET(
   _req: Request,
@@ -37,5 +38,23 @@ export async function POST(
   });
 
   if (error) return NextResponse.json({ count: 0 }, { status: 500 });
+
+  // visitor_logs 적재 (best-effort)
+  let referrer: string | null = null;
+  try {
+    const body = await req.json();
+    referrer = typeof body?.referrer === "string" ? body.referrer : null;
+  } catch {
+    referrer = req.headers.get("referer");
+  }
+  void logVisitor(supabase, {
+    ip,
+    ua: req.headers.get("user-agent") ?? "",
+    referrer,
+    slug,
+    path: `/posts/${slug}`,
+    country: getCountry(req),
+  });
+
   return NextResponse.json({ count: data ?? 0 });
 }

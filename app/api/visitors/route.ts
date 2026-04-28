@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { logVisitor, getCountry } from "@/lib/visitor-tracking";
 
 export async function GET() {
   const supabase = createServiceClient();
@@ -34,6 +35,25 @@ export async function POST(req: Request) {
   const { data, error } = await supabase.rpc("increment_visitors");
 
   if (error) return NextResponse.json({ count: 0, total: 0, today: 0 }, { status: 500 });
+
+  // visitor_logs 적재 (best-effort) — 첫 진입 1회만 기록되므로 유입 경로 추적용
+  let referrer: string | null = null;
+  let path: string | null = null;
+  try {
+    const body = await req.json();
+    referrer = typeof body?.referrer === "string" ? body.referrer : null;
+    path = typeof body?.path === "string" ? body.path : null;
+  } catch {
+    referrer = req.headers.get("referer");
+  }
+  void logVisitor(supabase, {
+    ip,
+    ua: req.headers.get("user-agent") ?? "",
+    referrer,
+    slug: null,
+    path,
+    country: getCountry(req),
+  });
 
   const [statsRes, dailyRes] = await Promise.all([
     supabase.from("site_stats").select("visitor_count").eq("id", 1).single(),

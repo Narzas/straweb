@@ -39,7 +39,11 @@ export default function ViewCount({
     const key = `viewed:${slug}`;
     if (sessionStorage.getItem(key)) return;
 
-    fetch(`/api/views/${slug}`, { method: "POST" })
+    fetch(`/api/views/${slug}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ referrer: document.referrer || null }),
+    })
       .then((r) => r.json())
       .then((d) => {
         if (d.count) setCount(d.count); // POST 응답으로 갱신된 카운트 표시

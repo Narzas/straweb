@@ -166,7 +166,11 @@ export default async function PostPage({ params }: Props) {
                 </>
               ) : post.title}
             </h1>
-            <p className="text-lg leading-relaxed text-gray-500 dark:text-gray-400">{post.description}</p>
+            <p className="text-lg leading-relaxed text-gray-500 dark:text-gray-400">
+              {post.description.split(/(?<=[^.][.!?])\s+/).map((sentence, i) => (
+                <span key={i} className="block">{sentence}</span>
+              ))}
+            </p>
             <div className="flex items-center gap-3">
               <time className="text-sm text-gray-400">{post.date}</time>
               <ViewCount slug={post.slug} track={true} />

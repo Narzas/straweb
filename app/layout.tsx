@@ -92,10 +92,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
-        />
         {/* RSS 자동 발견 */}
         <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} RSS`} href="/rss.xml" />
         {/* Google Fonts preconnect */}
@@ -111,6 +107,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="flex min-h-screen flex-col bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 antialiased">
+        {/* WebSite JSON-LD — body에 두면 React 19의 head async script hoisting과 충돌 안 함 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         {/* 다크 모드 FOUC 방지 — hydration 전에 실행 */}
         <Script
           id="theme-init"

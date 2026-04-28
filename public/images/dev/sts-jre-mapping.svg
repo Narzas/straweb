@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600">
+  <defs>
+    <linearGradient id="jrebg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#020617"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="600" fill="url(#jrebg)"/>
+
+  <!-- Title -->
+  <text x="500" y="50" font-family="'Segoe UI', Arial" font-size="22" font-weight="800" fill="white" text-anchor="middle">Installed JREs — JDK 17 매핑하기</text>
+
+  <!-- Window mockup -->
+  <g transform="translate(80, 90)">
+    <rect width="840" height="460" rx="10" fill="#1e293b" stroke="white" stroke-opacity="0.12" stroke-width="1"/>
+
+    <!-- Title bar -->
+    <rect width="840" height="36" rx="10" fill="#0f172a"/>
+    <rect y="26" width="840" height="10" fill="#0f172a"/>
+    <circle cx="22" cy="18" r="5" fill="#ef4444" fill-opacity="0.7"/>
+    <circle cx="40" cy="18" r="5" fill="#f59e0b" fill-opacity="0.7"/>
+    <circle cx="58" cy="18" r="5" fill="#22c55e" fill-opacity="0.7"/>
+    <text x="420" y="22" font-family="'Segoe UI', Arial" font-size="12" font-weight="600" fill="white" fill-opacity="0.6" text-anchor="middle">Preferences</text>
+
+    <!-- Left navigation -->
+    <rect y="36" width="220" height="424" fill="#0b1220"/>
+    <text x="20" y="68" font-family="'Segoe UI', Arial" font-size="12" fill="white" fill-opacity="0.4">▸ General</text>
+    <text x="20" y="92" font-family="'Segoe UI', Arial" font-size="12" fill="white" fill-opacity="0.4">▸ Web</text>
+    <text x="20" y="116" font-family="'Segoe UI', Arial" font-size="12" fill="white" fill-opacity="0.85">▾ Java</text>
+    <rect x="32" y="124" width="180" height="22" rx="4" fill="#4ade80" fill-opacity="0.18"/>
+    <text x="44" y="140" font-family="'Segoe UI', Arial" font-size="12" fill="#4ade80" font-weight="700">Installed JREs</text>
+    <text x="44" y="164" font-family="'Segoe UI', Arial" font-size="12" fill="white" fill-opacity="0.4">Compiler</text>
+    <text x="44" y="186" font-family="'Segoe UI', Arial" font-size="12" fill="white" fill-opacity="0.4">Build Path</text>
+    <text x="20" y="214" font-family="'Segoe UI', Arial" font-size="12" fill="white" fill-opacity="0.4">▸ Maven</text>
+    <text x="20" y="236" font-family="'Segoe UI', Arial" font-size="12" fill="white" fill-opacity="0.4">▸ Spring</text>
+
+    <!-- Right content -->
+    <g transform="translate(240, 56)">
+      <text x="0" y="14" font-family="'Segoe UI', Arial" font-size="13" font-weight="700" fill="white">Installed JREs</text>
+      <text x="0" y="34" font-family="'Segoe UI', Arial" font-size="11" fill="white" fill-opacity="0.5">Add, remove or edit JRE definitions.</text>
+      <text x="0" y="50" font-family="'Segoe UI', Arial" font-size="11" fill="white" fill-opacity="0.5">By default the checked JRE is used to launch new Java projects.</text>
+
+      <!-- Table header -->
+      <rect y="68" width="500" height="28" fill="#0b1220" stroke="white" stroke-opacity="0.1" stroke-width="1"/>
+      <text x="14" y="86" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="white" fill-opacity="0.7">Name</text>
+      <text x="220" y="86" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="white" fill-opacity="0.7">Location</text>
+      <text x="430" y="86" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="white" fill-opacity="0.7">Type</text>
+
+      <!-- Row 1: JDK 8 -->
+      <rect y="96" width="500" height="36" fill="#1e293b"/>
+      <rect x="6" y="106" width="14" height="14" rx="2" fill="none" stroke="white" stroke-opacity="0.4" stroke-width="1.5"/>
+      <text x="32" y="118" font-family="'Segoe UI', Arial" font-size="12" fill="white" fill-opacity="0.85">jdk1.8.0_311</text>
+      <text x="220" y="118" font-family="'Consolas', monospace" font-size="10" fill="white" fill-opacity="0.5">C:\Program Files\Java\jdk1.8</text>
+      <text x="430" y="118" font-family="'Segoe UI', Arial" font-size="11" fill="white" fill-opacity="0.5">Standard VM</text>
+
+      <!-- Row 2: JDK 17 (checked + highlighted) -->
+      <rect y="132" width="500" height="36" fill="#4ade80" fill-opacity="0.14" stroke="#4ade80" stroke-opacity="0.5" stroke-width="1"/>
+      <rect x="6" y="142" width="14" height="14" rx="2" fill="#4ade80"/>
+      <path d="M 9 149 L 12 152 L 17 146" stroke="#0b1220" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="32" y="154" font-family="'Segoe UI', Arial" font-size="12" font-weight="700" fill="white">jdk-17.0.10</text>
+      <text x="220" y="154" font-family="'Consolas', monospace" font-size="10" fill="#4ade80">C:\Program Files\Java\jdk-17</text>
+      <text x="430" y="154" font-family="'Segoe UI', Arial" font-size="11" fill="#4ade80">Standard VM</text>
+
+      <!-- Right side buttons -->
+      <g transform="translate(516, 96)">
+        <rect width="64" height="26" rx="3" fill="#22c55e" fill-opacity="0.85"/>
+        <text x="32" y="17" font-family="'Segoe UI', Arial" font-size="11" font-weight="700" fill="#0a1628" text-anchor="middle">Add...</text>
+
+        <rect y="32" width="64" height="26" rx="3" fill="white" fill-opacity="0.08" stroke="white" stroke-opacity="0.15" stroke-width="1"/>
+        <text x="32" y="49" font-family="'Segoe UI', Arial" font-size="11" fill="white" fill-opacity="0.7" text-anchor="middle">Edit...</text>
+
+        <rect y="64" width="64" height="26" rx="3" fill="white" fill-opacity="0.08" stroke="white" stroke-opacity="0.15" stroke-width="1"/>
+        <text x="32" y="81" font-family="'Segoe UI', Arial" font-size="11" fill="white" fill-opacity="0.7" text-anchor="middle">Remove</text>
+      </g>
+
+      <!-- Annotations -->
+      <g transform="translate(0, 220)">
+        <circle cx="14" cy="14" r="11" fill="#4ade80" fill-opacity="0.2" stroke="#4ade80" stroke-opacity="0.6"/>
+        <text x="14" y="18" font-family="'Segoe UI', Arial" font-size="11" font-weight="800" fill="#4ade80" text-anchor="middle">1</text>
+        <text x="36" y="18" font-family="'Segoe UI', Arial" font-size="13" fill="white" fill-opacity="0.85">Add → Standard VM 으로 JDK 17 폴더 잡기</text>
+
+        <circle cx="14" cy="46" r="11" fill="#4ade80" fill-opacity="0.2" stroke="#4ade80" stroke-opacity="0.6"/>
+        <text x="14" y="50" font-family="'Segoe UI', Arial" font-size="11" font-weight="800" fill="#4ade80" text-anchor="middle">2</text>
+        <text x="36" y="50" font-family="'Segoe UI', Arial" font-size="13" fill="white" fill-opacity="0.85">JDK 17 옆 체크박스 ✓ → Default 지정</text>
+
+        <circle cx="14" cy="78" r="11" fill="#4ade80" fill-opacity="0.2" stroke="#4ade80" stroke-opacity="0.6"/>
+        <text x="14" y="82" font-family="'Segoe UI', Arial" font-size="11" font-weight="800" fill="#4ade80" text-anchor="middle">3</text>
+        <text x="36" y="82" font-family="'Segoe UI', Arial" font-size="13" fill="white" fill-opacity="0.85">Apply and Close</text>
+      </g>
+    </g>
+  </g>
+</svg>

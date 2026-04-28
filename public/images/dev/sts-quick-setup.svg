@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0a1628"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80"/>
+      <stop offset="100%" style="stop-color:#22c55e"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <circle cx="680" cy="-30" r="250" fill="white" fill-opacity="0.02"/>
+  <circle cx="750" cy="460" r="180" fill="white" fill-opacity="0.02"/>
+
+  <!-- Right panel: STS window mockup -->
+  <g transform="translate(400, 60)">
+    <rect width="360" height="330" rx="14" fill="white" fill-opacity="0.04" stroke="white" stroke-opacity="0.08" stroke-width="1"/>
+
+    <!-- Window header dots -->
+    <circle cx="28" cy="24" r="5" fill="#ef4444" fill-opacity="0.7"/>
+    <circle cx="44" cy="24" r="5" fill="#f59e0b" fill-opacity="0.7"/>
+    <circle cx="60" cy="24" r="5" fill="#22c55e" fill-opacity="0.7"/>
+    <text x="180" y="28" font-family="'Segoe UI', Arial" font-size="11" font-weight="600" fill="white" fill-opacity="0.4" text-anchor="middle">Spring Tool Suite 4</text>
+
+    <line x1="0" y1="44" x2="360" y2="44" stroke="white" stroke-opacity="0.08"/>
+
+    <!-- Checklist rows -->
+    <g transform="translate(24, 64)">
+      <rect width="312" height="38" rx="6" fill="white" fill-opacity="0.06"/>
+      <circle cx="20" cy="19" r="9" fill="#22c55e" fill-opacity="0.25" stroke="#4ade80" stroke-width="1.5"/>
+      <path d="M 16 19 L 19 22 L 24 16" stroke="#4ade80" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="40" y="24" font-family="'Segoe UI', Arial" font-size="13" font-weight="600" fill="white">JDK 17 매핑</text>
+    </g>
+    <g transform="translate(24, 112)">
+      <rect width="312" height="38" rx="6" fill="white" fill-opacity="0.06"/>
+      <circle cx="20" cy="19" r="9" fill="#22c55e" fill-opacity="0.25" stroke="#4ade80" stroke-width="1.5"/>
+      <path d="M 16 19 L 19 22 L 24 16" stroke="#4ade80" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="40" y="24" font-family="'Segoe UI', Arial" font-size="13" font-weight="600" fill="white">UTF-8 4군데 박기</text>
+    </g>
+    <g transform="translate(24, 160)">
+      <rect width="312" height="38" rx="6" fill="white" fill-opacity="0.06"/>
+      <circle cx="20" cy="19" r="9" fill="#22c55e" fill-opacity="0.25" stroke="#4ade80" stroke-width="1.5"/>
+      <path d="M 16 19 L 19 22 L 24 16" stroke="#4ade80" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="40" y="24" font-family="'Segoe UI', Arial" font-size="13" font-weight="600" fill="white">Lombok 설치</text>
+    </g>
+    <g transform="translate(24, 208)">
+      <rect width="312" height="38" rx="6" fill="white" fill-opacity="0.06"/>
+      <circle cx="20" cy="19" r="9" fill="#22c55e" fill-opacity="0.25" stroke="#4ade80" stroke-width="1.5"/>
+      <path d="M 16 19 L 19 22 L 24 16" stroke="#4ade80" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="40" y="24" font-family="'Segoe UI', Arial" font-size="13" font-weight="600" fill="white">Boot Dashboard 켜기</text>
+    </g>
+
+    <!-- Timer badge -->
+    <rect x="24" y="266" width="92" height="30" rx="15" fill="#4ade80" fill-opacity="0.18" stroke="#4ade80" stroke-opacity="0.4" stroke-width="1"/>
+    <circle cx="40" cy="281" r="6" fill="none" stroke="#4ade80" stroke-width="1.6"/>
+    <line x1="40" y1="281" x2="40" y2="277" stroke="#4ade80" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="40" y1="281" x2="43" y2="281" stroke="#4ade80" stroke-width="1.6" stroke-linecap="round"/>
+    <text x="56" y="285" font-family="'Segoe UI', Arial" font-size="12" font-weight="700" fill="#4ade80">5분 컷</text>
+  </g>
+
+  <!-- Spring leaf icon -->
+  <g transform="translate(46, 52)">
+    <ellipse cx="44" cy="44" rx="40" ry="22" fill="#4ade80" fill-opacity="0.18" transform="rotate(-30, 44, 44)"/>
+    <ellipse cx="44" cy="44" rx="40" ry="22" fill="#4ade80" fill-opacity="0.12" transform="rotate(30, 44, 44)"/>
+    <circle cx="44" cy="44" r="7" fill="#4ade80" fill-opacity="0.45"/>
+  </g>
+
+  <!-- Title text -->
+  <text x="50" y="185" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#4ade80" fill-opacity="0.9" letter-spacing="2">STS4 QUICK SETUP</text>
+  <text x="50" y="228" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="800" fill="white">첫 출근 첫날</text>
+  <text x="50" y="272" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="800" fill="#4ade80">5분 셋팅</text>
+  <text x="50" y="315" font-family="'Segoe UI', Arial, sans-serif" font-size="16" fill="white" fill-opacity="0.55">JDK · UTF-8 · Lombok · Dashboard</text>
+
+  <rect x="50" y="345" width="72" height="26" rx="13" fill="white" fill-opacity="0.1"/>
+  <text x="86" y="363" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">개발</text>
+</svg>

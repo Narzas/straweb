@@ -20,7 +20,7 @@ tags: [MetaMask, 출금, 이더리움, 네트워크, 업비트, 초보자, USDT,
 ## 준비물
 
 - 업비트 또는 빗썸 계정 (KYC 인증 완료)
-- MetaMask 지갑 (없다면 [MetaMask 지갑 만들기 가이드](/blog/metamask-wallet-setup-guide) 참고)
+- MetaMask 지갑 (없다면 [MetaMask 지갑 만들기 가이드](/posts/metamask-wallet-setup-guide) 참고)
 - 출금할 코인 (이 글에서는 ETH 기준)
 
 ---

@@ -409,7 +409,7 @@ AI 붐과 맞물려 GPU 계열 DePIN이 특히 주목받고 있다.
 | **ATH / ATL** | All-Time High / Low — 사상 최고가 / 최저가 |
 | **고래(Whale)** | 한 번에 수십–수백억 단위로 움직이는 큰 손 |
 | **에이프 인(Ape in)** | 분석 없이 바로 매수. "원숭이처럼 들어간다" |
-| **디제너(Degen)** | Degenerate. 위험 무시하고 도박처럼 노는 트레이더. 보통 자조적으로 씀. |
+| **디제너(Degen)** | Degenerate. 위험 무시하고 도박처럼 노는 트레이더. 보통 자기를 놀리듯 씀. |
 | **샤딩(Sharding)** | (기술 용어) 블록체인을 여러 조각으로 나눠 처리량 증가 |
 | **WAGMI / NGMI** | We're All Gonna Make It / Not Gonna Make It |
 | **GM / GN** | Good Morning / Good Night. 코인 트위터의 인사 |

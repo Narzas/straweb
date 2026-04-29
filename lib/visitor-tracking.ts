@@ -117,7 +117,10 @@ export async function logVisitor(
       country: payload.country,
       ip_hash: hashIp(payload.ip),
     });
-    if (error) console.warn("[visitor_logs] insert error:", error.message);
+    // 23505 = unique_violation (visitor_logs_hourly_dedup_idx) — 같은 IP가 시간당 재방문 시 무시
+    if (error && error.code !== "23505") {
+      console.warn("[visitor_logs] insert error:", error.message);
+    }
   } catch (e) {
     console.warn("[visitor_logs] unexpected error:", e);
   }

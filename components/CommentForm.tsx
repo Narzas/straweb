@@ -55,7 +55,7 @@ export default function CommentForm({ postSlug, onSubmit }: Props) {
     }
   }
 
-  const inputClass = "w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800";
+  const inputClass = "w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:focus:ring-cyan-800";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -115,7 +115,7 @@ export default function CommentForm({ postSlug, onSubmit }: Props) {
             type="checkbox"
             checked={isSecret}
             onChange={(e) => setIsSecret(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 dark:border-slate-600 accent-indigo-600"
+            className="h-4 w-4 rounded border-gray-300 dark:border-slate-600 accent-teal-600"
           />
           <span aria-hidden="true">🔒</span> 비밀글
         </label>
@@ -123,7 +123,7 @@ export default function CommentForm({ postSlug, onSubmit }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="rounded-lg bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50 transition-colors"
         >
           {loading ? "등록 중…" : "댓글 등록"}
         </button>

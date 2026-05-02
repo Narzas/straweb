@@ -112,7 +112,7 @@ export default function ClockWeatherWidget() {
         {parts ? (
           <>
             <span className="text-[11px] text-gray-400 dark:text-gray-500">
-              {parts.date} <span className="font-semibold text-indigo-400">{parts.day}</span>
+              {parts.date} <span className="font-semibold text-teal-400">{parts.day}</span>
             </span>
             <p
               className="text-xl font-extrabold tracking-tight"
@@ -167,10 +167,10 @@ export default function ClockWeatherWidget() {
               <button
                 key={c.name}
                 onClick={() => goToCity(i)}
-                className="relative flex h-4 w-4 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
+                className="relative flex h-4 w-4 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-500"
                 aria-label={c.name}
               >
-                <span className={`h-1.5 w-1.5 rounded-full transition-colors ${i === index ? "bg-indigo-500" : "bg-gray-200 dark:bg-slate-600"}`} />
+                <span className={`h-1.5 w-1.5 rounded-full transition-colors ${i === index ? "bg-teal-500" : "bg-gray-200 dark:bg-slate-600"}`} />
               </button>
             ))}
           </div>

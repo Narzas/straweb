@@ -54,18 +54,18 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
 
 function FeedPlaceholder() {
   return (
-    <div className="rounded-lg border-l-2 border-indigo-300 dark:border-indigo-700 bg-indigo-50/60 dark:bg-indigo-950/20 px-3 py-3 space-y-2 overflow-hidden">
+    <div className="rounded-lg border-l-2 border-teal-300 dark:border-cyan-700 bg-teal-50/60 dark:bg-cyan-950/20 px-3 py-3 space-y-2 overflow-hidden">
       {/* shimmer 라인들 */}
-      <div className="relative h-3 rounded-full bg-indigo-100 dark:bg-indigo-900/40 overflow-hidden">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-indigo-200/60 dark:via-indigo-700/40 to-transparent" />
+      <div className="relative h-3 rounded-full bg-teal-100 dark:bg-cyan-900/40 overflow-hidden">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-teal-200/60 dark:via-cyan-700/40 to-transparent" />
       </div>
-      <div className="relative h-3 rounded-full bg-indigo-100 dark:bg-indigo-900/40 overflow-hidden w-5/6">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_0.2s_infinite] bg-gradient-to-r from-transparent via-indigo-200/60 dark:via-indigo-700/40 to-transparent" />
+      <div className="relative h-3 rounded-full bg-teal-100 dark:bg-cyan-900/40 overflow-hidden w-5/6">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_0.2s_infinite] bg-gradient-to-r from-transparent via-teal-200/60 dark:via-cyan-700/40 to-transparent" />
       </div>
-      <div className="relative h-3 rounded-full bg-indigo-100 dark:bg-indigo-900/40 overflow-hidden w-3/4">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_0.4s_infinite] bg-gradient-to-r from-transparent via-indigo-200/60 dark:via-indigo-700/40 to-transparent" />
+      <div className="relative h-3 rounded-full bg-teal-100 dark:bg-cyan-900/40 overflow-hidden w-3/4">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_0.4s_infinite] bg-gradient-to-r from-transparent via-teal-200/60 dark:via-cyan-700/40 to-transparent" />
       </div>
-      <p className="text-[10px] text-indigo-300 dark:text-indigo-700 pt-1 animate-pulse">
+      <p className="text-[10px] text-teal-300 dark:text-cyan-700 pt-1 animate-pulse">
         업데이트 대기 중…
       </p>
     </div>
@@ -112,7 +112,7 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
       {lightboxSrc && (
         <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
       )}
-      <div className="rounded-lg border-l-2 border-indigo-400 dark:border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/20 overflow-hidden select-none">
+      <div className="rounded-lg border-l-2 border-teal-400 dark:border-cyan-500 bg-teal-50/60 dark:bg-cyan-950/20 overflow-hidden select-none">
         {photos.length > 0 && (
           <div className="relative flex-shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -161,7 +161,7 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
                   {isLong && (
                     <button
                       onClick={() => setExpanded((v) => !v)}
-                      className="mt-1 text-[11px] font-semibold text-indigo-400 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      className="mt-1 text-[11px] font-semibold text-teal-400 hover:text-teal-500 dark:text-cyan-400 dark:hover:text-cyan-300"
                     >
                       {expanded ? "접기 ▲" : "더보기 ▼"}
                     </button>
@@ -174,7 +174,7 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
         <div className="px-3 py-2 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             {post.time && (
-              <p className="text-[10px] text-indigo-400">
+              <p className="text-[10px] text-teal-400">
                 {timeAgo(post.time)}
               </p>
             )}
@@ -183,7 +183,7 @@ function PostCard({ post, noTranslate }: { post: TelegramPost; noTranslate?: boo
             <button
               onClick={handleTranslate}
               disabled={translating}
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/60 disabled:opacity-50 transition-colors"
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-100 dark:bg-cyan-900/50 text-teal-600 dark:text-cyan-300 hover:bg-teal-200 dark:hover:bg-cyan-800/60 disabled:opacity-50 transition-colors"
             >
               {translating ? "번역 중…" : "🌐 번역"}
             </button>
@@ -328,7 +328,7 @@ export default function OwnerNewsFeed() {
         <button
           onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
           disabled={currentIdx === 0}
-          className="w-6 h-6 rounded-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/60 disabled:opacity-25 transition-all text-sm leading-none"
+          className="w-6 h-6 rounded-full flex items-center justify-center bg-teal-100 dark:bg-cyan-900/40 text-teal-500 dark:text-cyan-400 hover:bg-teal-200 dark:hover:bg-cyan-800/60 disabled:opacity-25 transition-all text-sm leading-none"
           aria-label="이전"
         >
           ‹
@@ -341,8 +341,8 @@ export default function OwnerNewsFeed() {
               onClick={() => setCurrentIdx(i)}
               className={`rounded-full transition-all duration-300 ${
                 currentIdx === i
-                  ? "w-4 h-1.5 bg-indigo-400 dark:bg-indigo-500"
-                  : "w-1.5 h-1.5 bg-indigo-200 dark:bg-indigo-800 hover:bg-indigo-300 dark:hover:bg-indigo-700"
+                  ? "w-4 h-1.5 bg-teal-400 dark:bg-cyan-500"
+                  : "w-1.5 h-1.5 bg-teal-200 dark:bg-cyan-800 hover:bg-teal-300 dark:hover:bg-cyan-700"
               }`}
               aria-label={`슬라이드 ${i + 1}`}
             />
@@ -352,7 +352,7 @@ export default function OwnerNewsFeed() {
         <button
           onClick={() => setCurrentIdx((i) => Math.min(ACCOUNTS.length - 1, i + 1))}
           disabled={currentIdx === ACCOUNTS.length - 1}
-          className="w-6 h-6 rounded-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/60 disabled:opacity-25 transition-all text-sm leading-none"
+          className="w-6 h-6 rounded-full flex items-center justify-center bg-teal-100 dark:bg-cyan-900/40 text-teal-500 dark:text-cyan-400 hover:bg-teal-200 dark:hover:bg-cyan-800/60 disabled:opacity-25 transition-all text-sm leading-none"
           aria-label="다음"
         >
           ›

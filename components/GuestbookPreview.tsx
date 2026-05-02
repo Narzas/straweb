@@ -31,7 +31,7 @@ export default function GuestbookPreview() {
         <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">방명록</p>
         <Link
           href="/guestbook"
-          className="text-[11px] text-indigo-400 hover:text-indigo-600 transition-colors"
+          className="text-[11px] text-teal-400 hover:text-teal-600 transition-colors"
         >
           더보기 →
         </Link>
@@ -49,7 +49,7 @@ export default function GuestbookPreview() {
       ) : entries.length === 0 ? (
         <Link
           href="/guestbook"
-          className="block text-xs text-gray-400 hover:text-indigo-500 transition-colors"
+          className="block text-xs text-gray-400 hover:text-teal-500 transition-colors"
         >
           첫 번째 방명록을 남겨보세요!
         </Link>
@@ -71,7 +71,7 @@ export default function GuestbookPreview() {
 
       <Link
         href="/guestbook"
-        className="mt-3 block w-full rounded-lg border border-indigo-100 dark:border-indigo-800/40 bg-indigo-50 dark:bg-indigo-900/20 py-1.5 text-center text-xs font-medium text-indigo-500 dark:text-indigo-400 transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
+        className="mt-3 block w-full rounded-lg border border-teal-100 dark:border-cyan-800/40 bg-teal-50 dark:bg-cyan-900/20 py-1.5 text-center text-xs font-medium text-teal-600 dark:text-cyan-400 transition-colors hover:bg-teal-100 dark:hover:bg-cyan-900/30"
       >
         ✍️ 방명록 남기기
       </Link>

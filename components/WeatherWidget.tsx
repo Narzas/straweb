@@ -110,12 +110,12 @@ export default function WeatherWidget() {
               <button
                 key={c.name}
                 onClick={() => goToCity(i)}
-                className="relative flex h-4 w-4 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
+                className="relative flex h-4 w-4 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-500"
                 aria-label={c.name}
               >
                 <span
                   className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                    i === index ? "bg-indigo-500" : "bg-gray-200"
+                    i === index ? "bg-teal-500" : "bg-gray-200"
                   }`}
                 />
               </button>

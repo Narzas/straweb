@@ -4,6 +4,7 @@ import { siteConfig } from "@/lib/site";
 export const metadata: Metadata = {
   title: "방명록",
   description: "StraWeb 방명록입니다. 방문 인사나 짧은 메시지를 남겨주세요.",
+  robots: { index: false, follow: false },
   alternates: { canonical: "/guestbook" },
   openGraph: {
     title: "방명록 — StraWeb",

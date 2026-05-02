@@ -46,7 +46,7 @@ function CommentItem({ comment }: CommentItemProps) {
     <div className="space-y-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-100 dark:bg-cyan-900/40 text-xs font-bold text-teal-600 dark:text-cyan-400">
             {comment.author.charAt(0).toUpperCase()}
           </span>
           <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{comment.author}</span>
@@ -65,7 +65,7 @@ function CommentItem({ comment }: CommentItemProps) {
           {!showInput ? (
             <button
               onClick={() => setShowInput(true)}
-              className="text-xs text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800 dark:hover:text-indigo-300"
+              className="text-xs text-teal-600 dark:text-cyan-400 underline hover:text-teal-800 dark:hover:text-cyan-300"
             >
               비밀번호로 확인
             </button>
@@ -76,12 +76,12 @@ function CommentItem({ comment }: CommentItemProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="비밀번호"
-                className="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800"
+                className="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:focus:ring-cyan-800"
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-700 disabled:opacity-50"
               >
                 {loading ? "확인 중…" : "확인"}
               </button>

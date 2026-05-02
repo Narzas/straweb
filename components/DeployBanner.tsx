@@ -41,14 +41,14 @@ export default function DeployBanner() {
         "fixed bottom-6 right-6 z-[200] flex flex-col gap-1.5 rounded-2xl px-5 py-4 shadow-2xl backdrop-blur-md transition-all",
         "border",
         status === "building"
-          ? "bg-slate-900/80 border-indigo-500/40 text-white"
+          ? "bg-slate-900/80 border-teal-500/40 text-white"
           : "bg-slate-900/80 border-emerald-500/40 text-white",
       ].join(" ")}
       style={{ minWidth: "220px" }}
     >
       {status === "building" ? (
         <>
-          <div className="flex items-center gap-2 text-sm font-semibold text-indigo-300">
+          <div className="flex items-center gap-2 text-sm font-semibold text-teal-300">
             <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />

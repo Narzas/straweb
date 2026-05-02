@@ -53,7 +53,7 @@ export default function ClockWidget() {
       {/* 날짜 */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-gray-400 font-medium">{parts.date}</span>
-        <span className="text-xs font-semibold text-indigo-400">{parts.day}</span>
+        <span className="text-xs font-semibold text-teal-400">{parts.day}</span>
       </div>
 
       {/* 시간 */}

@@ -26,7 +26,7 @@ export default function CommentSection({ postSlug }: { postSlug: string }) {
   return (
     <section className="space-y-8 border-t border-gray-200 dark:border-slate-700 pt-10 mt-10">
       <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-        댓글 {comments.length > 0 && <span className="text-indigo-600 dark:text-indigo-400">{comments.length}</span>}
+        댓글 {comments.length > 0 && <span className="text-teal-600 dark:text-cyan-400">{comments.length}</span>}
       </h2>
 
       {loading ? (

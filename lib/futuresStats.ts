@@ -2,17 +2,22 @@ import { createServiceClient } from "@/lib/supabase";
 
 export interface FuturesOverallStats {
   totalSignals: number;
-  hitRate: number;       // 24h 기준 +5% 이상 도달 비율 (%)
-  avgReturn24h: number;  // 평균 24h 수익률 (%)
-  maxReturn24h: number;  // 최고 24h 수익률 (%)
-  daysCovered: number;   // 데이터 수집 기간 (일)
+  hitRate: number;          // 24h 종가 +5% 이상 (%)
+  hitRateMaxIntraday: number; // 24h 안에 한 번이라도 +5% 도달 (%)
+  avgReturn24h: number;     // 24h 종가 평균 (%)
+  avgMaxReturn: number;     // 24h 내 최고가 평균 (%)
+  maxReturn24h: number;
+  hitRate3d: number | null; // 최근 3일 24h 종가 적중률 (추세용)
+  daysCovered: number;
   isMock: boolean;
 }
 
 export interface FuturesCoinStats {
   count: number;
   hitRate: number;
+  hitRateMaxIntraday: number;
   avgReturn24h: number;
+  avgMaxReturn: number;
   maxReturn24h: number;
   lastSignalHoursAgo: number;
 }
@@ -22,9 +27,10 @@ export interface FuturesStats {
   byCoin: Record<string, FuturesCoinStats>;
 }
 
-const HIT_THRESHOLD = 5; // % 이상 = 적중
+const HIT_THRESHOLD = 5;
 const LOOKBACK_DAYS = 7;
-const MIN_REAL_SIGNALS = 500; // 미만이면 mock (통계 오차 ±4% 수준)
+const RECENT_DAYS = 3;
+const MIN_REAL_SIGNALS = 500;
 
 function pct(curr: number, entry: number): number {
   if (!entry) return 0;
@@ -38,7 +44,9 @@ function makeMock(): FuturesStats {
     byCoin[s] = {
       count: 4 + Math.floor(Math.random() * 8),
       hitRate: 50 + Math.floor(Math.random() * 30),
+      hitRateMaxIntraday: 60 + Math.floor(Math.random() * 35),
       avgReturn24h: 4 + Math.random() * 10,
+      avgMaxReturn: 8 + Math.random() * 14,
       maxReturn24h: 15 + Math.random() * 35,
       lastSignalHoursAgo: Math.floor(Math.random() * 72),
     };
@@ -47,80 +55,116 @@ function makeMock(): FuturesStats {
     overall: {
       totalSignals: 128,
       hitRate: 64,
+      hitRateMaxIntraday: 78,
       avgReturn24h: 8.2,
+      avgMaxReturn: 14.7,
       maxReturn24h: 47.3,
-      daysCovered: 7,
+      hitRate3d: 67,
+      daysCovered: LOOKBACK_DAYS,
       isMock: true,
     },
     byCoin,
   };
 }
 
+type SignalRow = {
+  symbol: string;
+  recorded_at: string;
+  entry_price: number;
+  price_1h: number | null;
+  price_4h: number | null;
+  price_24h: number | null;
+};
+
+function intradayMax(r: SignalRow): number {
+  // entry 대비 1h/4h/24h 가격 중 가장 높은 수익률
+  const candidates: number[] = [];
+  if (r.price_1h != null) candidates.push(pct(r.price_1h, r.entry_price));
+  if (r.price_4h != null) candidates.push(pct(r.price_4h, r.entry_price));
+  if (r.price_24h != null) candidates.push(pct(r.price_24h, r.entry_price));
+  return candidates.length ? Math.max(...candidates) : 0;
+}
+
 export async function getFuturesStats(): Promise<FuturesStats> {
   try {
     const sb = createServiceClient();
-    const since = new Date(Date.now() - LOOKBACK_DAYS * 86400_000).toISOString();
+    const since7d = new Date(Date.now() - LOOKBACK_DAYS * 86400_000).toISOString();
+    const since3d = new Date(Date.now() - RECENT_DAYS * 86400_000).toISOString();
+
     const { data, error } = await sb
       .from("futures_signals")
-      .select("symbol, recorded_at, entry_price, price_24h")
-      .gte("recorded_at", since)
-      .not("price_24h", "is", null);
+      .select("symbol, recorded_at, entry_price, price_1h, price_4h, price_24h")
+      .gte("recorded_at", since7d)
+      .not("price_24h", "is", null)
+      .range(0, 9999);
 
     if (error || !data || data.length < MIN_REAL_SIGNALS) {
       return makeMock();
     }
 
-    // 전체 통계
-    const returns = data
-      .map((r: { entry_price: number; price_24h: number }) => pct(r.price_24h, r.entry_price))
-      .filter((v: number) => Number.isFinite(v));
-    const hits = returns.filter((r: number) => r >= HIT_THRESHOLD).length;
-    const avg = returns.reduce((a: number, b: number) => a + b, 0) / (returns.length || 1);
-    const max = Math.max(...returns, 0);
+    const rows = data as SignalRow[];
 
-    // 코인별 통계
-    const bySymbol = new Map<
-      string,
-      { rets: number[]; lastAt: number }
-    >();
+    // 전체 통계 (24h 종가)
+    const ret24 = rows.map((r) => pct(r.price_24h!, r.entry_price)).filter(Number.isFinite);
+    const retMax = rows.map(intradayMax).filter(Number.isFinite);
+    const hits24 = ret24.filter((r) => r >= HIT_THRESHOLD).length;
+    const hitsMax = retMax.filter((r) => r >= HIT_THRESHOLD).length;
+    const avg24 = ret24.reduce((a, b) => a + b, 0) / (ret24.length || 1);
+    const avgMx = retMax.reduce((a, b) => a + b, 0) / (retMax.length || 1);
+    const max24 = Math.max(...ret24, 0);
+
+    // 최근 3일 적중률 (추세)
+    const recent = rows.filter((r) => r.recorded_at >= since3d);
+    const recentRets = recent.map((r) => pct(r.price_24h!, r.entry_price)).filter(Number.isFinite);
+    const recentHits = recentRets.filter((r) => r >= HIT_THRESHOLD).length;
+    const hitRate3d = recentRets.length >= 50
+      ? (recentHits / recentRets.length) * 100
+      : null;
+
+    // 코인별
+    type CoinAgg = { rets24: number[]; retsMax: number[]; lastAt: number };
+    const bySymbol = new Map<string, CoinAgg>();
     const now = Date.now();
-    for (const row of data as Array<{
-      symbol: string;
-      recorded_at: string;
-      entry_price: number;
-      price_24h: number;
-    }>) {
-      const r = pct(row.price_24h, row.entry_price);
-      if (!Number.isFinite(r)) continue;
+    for (const row of rows) {
+      const r24 = pct(row.price_24h!, row.entry_price);
+      const rMax = intradayMax(row);
+      if (!Number.isFinite(r24)) continue;
       const s = row.symbol.toUpperCase();
-      const prev = bySymbol.get(s);
       const ts = new Date(row.recorded_at).getTime();
+      const prev = bySymbol.get(s);
       if (prev) {
-        prev.rets.push(r);
+        prev.rets24.push(r24);
+        prev.retsMax.push(rMax);
         if (ts > prev.lastAt) prev.lastAt = ts;
       } else {
-        bySymbol.set(s, { rets: [r], lastAt: ts });
+        bySymbol.set(s, { rets24: [r24], retsMax: [rMax], lastAt: ts });
       }
     }
 
     const byCoin: Record<string, FuturesCoinStats> = {};
-    for (const [sym, { rets, lastAt }] of bySymbol) {
-      const hitsC = rets.filter((r) => r >= HIT_THRESHOLD).length;
+    for (const [sym, { rets24, retsMax, lastAt }] of bySymbol) {
+      const hits24c = rets24.filter((r) => r >= HIT_THRESHOLD).length;
+      const hitsMaxc = retsMax.filter((r) => r >= HIT_THRESHOLD).length;
       byCoin[sym] = {
-        count: rets.length,
-        hitRate: (hitsC / rets.length) * 100,
-        avgReturn24h: rets.reduce((a, b) => a + b, 0) / rets.length,
-        maxReturn24h: Math.max(...rets),
+        count: rets24.length,
+        hitRate: (hits24c / rets24.length) * 100,
+        hitRateMaxIntraday: (hitsMaxc / retsMax.length) * 100,
+        avgReturn24h: rets24.reduce((a, b) => a + b, 0) / rets24.length,
+        avgMaxReturn: retsMax.reduce((a, b) => a + b, 0) / retsMax.length,
+        maxReturn24h: Math.max(...rets24),
         lastSignalHoursAgo: Math.round((now - lastAt) / 3600_000),
       };
     }
 
     return {
       overall: {
-        totalSignals: data.length,
-        hitRate: (hits / returns.length) * 100,
-        avgReturn24h: avg,
-        maxReturn24h: max,
+        totalSignals: rows.length,
+        hitRate: (hits24 / ret24.length) * 100,
+        hitRateMaxIntraday: (hitsMax / retMax.length) * 100,
+        avgReturn24h: avg24,
+        avgMaxReturn: avgMx,
+        maxReturn24h: max24,
+        hitRate3d,
         daysCovered: LOOKBACK_DAYS,
         isMock: false,
       },

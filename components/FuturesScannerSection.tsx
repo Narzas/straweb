@@ -14,6 +14,8 @@ import type { FuturesStats, FuturesCoinStats } from "@/lib/futuresStats";
 interface Props {
   data: FuturesCoin[];
   stats?: FuturesStats;
+  livePrices?: Record<string, number>;
+  scannedAt?: string | null;
 }
 
 // 심볼로부터 결정론적 mock 통계 생성 (DB 데이터 부족 시 UI 검증용)
@@ -27,10 +29,22 @@ function pseudoMockStat(symbol: string): FuturesCoinStats {
   return {
     count: 4 + rng(8),
     hitRate: 30 + rng(55),
+    hitRateMaxIntraday: 50 + rng(45),
     avgReturn24h: 2 + (rng(80) / 10),
+    avgMaxReturn: 5 + (rng(120) / 10),
     maxReturn24h: 12 + (rng(300) / 10),
     lastSignalHoursAgo: rng(72),
   };
+}
+
+function relTime(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  const min = Math.round(diff / 60000);
+  if (min < 1) return "방금 전";
+  if (min < 60) return `${min}분 전`;
+  const hr = Math.floor(min / 60);
+  return `${hr}시간 ${min % 60}분 전`;
 }
 
 // ── 포맷 헬퍼 ────────────────────────────────────────────────────────────────
@@ -119,7 +133,7 @@ function InfoPanel({ onClose }: { onClose: () => void }) {
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 
-export default function FuturesScannerSection({ data, stats }: Props) {
+export default function FuturesScannerSection({ data, stats, livePrices, scannedAt }: Props) {
   const [preset, setPreset] = useState<FuturesPresetKey>("overall");
   const [showInfo, setShowInfo] = useState(false);
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
@@ -149,9 +163,16 @@ export default function FuturesScannerSection({ data, stats }: Props) {
       {/* 헤더 */}
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
-            📡 선물 시그널 <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(가격+OI 조합 · 펀딩비 건강도 · 타이밍 점수 · TOP 10)</span>
-          </h2>
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-3 border-l-2 border-indigo-500">
+              📡 선물 시그널 <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(가격+OI · 펀딩비 · 타이밍 · TOP 10)</span>
+            </h2>
+            {scannedAt && (
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 pl-3 mt-0.5">
+                ⏱ 스캔 {relTime(scannedAt)}
+              </p>
+            )}
+          </div>
           {!showInfo && (
             <button
               onClick={() => setShowInfo(true)}
@@ -171,29 +192,45 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                 <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   지난 {stats.overall.daysCovered}일 백테스트
                 </span>
+                {stats.overall.hitRate3d != null && (() => {
+                  const diff = stats.overall.hitRate3d - stats.overall.hitRate;
+                  const trendIcon = diff >= 2 ? "▲" : diff <= -2 ? "▼" : "→";
+                  const trendCls = diff >= 2 ? "text-emerald-600 dark:text-emerald-400" : diff <= -2 ? "text-red-500 dark:text-red-400" : "text-slate-400";
+                  return (
+                    <span className={`text-[10px] font-bold tabular-nums ${trendCls}`}>
+                      {trendIcon} 3일 {stats.overall.hitRate3d.toFixed(0)}%
+                    </span>
+                  );
+                })()}
               </div>
-              <div className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-slate-700">
+              <div className="grid grid-cols-4 divide-x divide-slate-200 dark:divide-slate-700">
                 <div className="flex flex-col items-center justify-center px-2">
-                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">적중률</p>
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">24h 종가</p>
                   <p className="text-xl font-extrabold leading-none text-emerald-600 dark:text-emerald-400 tabular-nums">
                     {stats.overall.hitRate.toFixed(0)}<span className="text-sm font-bold">%</span>
                   </p>
                 </div>
                 <div className="flex flex-col items-center justify-center px-2">
-                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">평균 수익</p>
-                  <p className="text-xl font-extrabold leading-none text-blue-600 dark:text-blue-400 tabular-nums">
-                    +{stats.overall.avgReturn24h.toFixed(1)}<span className="text-sm font-bold">%</span>
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">고가 적중</p>
+                  <p className="text-xl font-extrabold leading-none text-rose-600 dark:text-rose-400 tabular-nums">
+                    {stats.overall.hitRateMaxIntraday.toFixed(0)}<span className="text-sm font-bold">%</span>
                   </p>
                 </div>
                 <div className="flex flex-col items-center justify-center px-2">
-                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">최고 수익</p>
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">평균 수익</p>
+                  <p className="text-xl font-extrabold leading-none text-blue-600 dark:text-blue-400 tabular-nums">
+                    {stats.overall.avgReturn24h >= 0 ? "+" : ""}{stats.overall.avgReturn24h.toFixed(1)}<span className="text-sm font-bold">%</span>
+                  </p>
+                </div>
+                <div className="flex flex-col items-center justify-center px-2">
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">평균 고가</p>
                   <p className="text-xl font-extrabold leading-none text-amber-600 dark:text-amber-400 tabular-nums">
-                    +{stats.overall.maxReturn24h.toFixed(1)}<span className="text-sm font-bold">%</span>
+                    +{stats.overall.avgMaxReturn.toFixed(1)}<span className="text-sm font-bold">%</span>
                   </p>
                 </div>
               </div>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                총 {stats.overall.totalSignals}개 시그널 · 24h 후 +5% 이상 도달 = 적중
+                총 {stats.overall.totalSignals}개 시그널 · 종가 = 24h 후 가격 / 고가 = 24h 내 최고가 도달 (≥ +5%)
               </p>
             </div>
 
@@ -264,6 +301,12 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                 const coinStats = stats?.byCoin[coin.symbol.toUpperCase()]
                   ?? (stats?.overall.isMock ? pseudoMockStat(coin.symbol) : undefined);
                 const isExpanded = expandedSymbol === coin.symbol;
+                // 스캔 후 변동률 = 라이브 현재가 vs entryPrice
+                const live = livePrices?.[coin.symbol.toUpperCase()];
+                const entry = (coin as FuturesCoin & { entryPrice?: number }).entryPrice;
+                const sinceScan = live && entry && entry > 0 ? ((live - entry) / entry) * 100 : null;
+                const isOverheated = coin.priceChange1h > 8;
+                const lowSample = !!coinStats && !stats?.overall.isMock && coinStats.count > 0 && coinStats.count < 10;
                 return (
                 <div key={coin.symbol} className="relative group">
                   {/* 적중률 도장 — 표본 30건 이상 + 양극단(≥80 / <20)만 표시 */}
@@ -355,10 +398,25 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 w-4 shrink-0">#{idx + 1}</span>
                       <span className="text-sm font-bold text-gray-900 dark:text-gray-100 shrink-0 w-16">{coin.symbol}</span>
-                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
                         <PriceArrow v={coin.priceChange1h} />
                         <PriceTag label="1H" v={coin.priceChange1h} />
                         <PriceTag label="4H" v={coin.priceChange4h} />
+                        {isOverheated && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-900">
+                            🔥 이미 뜸
+                          </span>
+                        )}
+                        {sinceScan != null && (
+                          <span className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full border ${
+                            sinceScan >= 3 ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/60" :
+                            sinceScan >= 0.5 ? "bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900/50" :
+                            sinceScan >= -0.5 ? "bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700" :
+                            "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60"
+                          }`}>
+                            스캔후 {sinceScan >= 0 ? "+" : ""}{sinceScan.toFixed(1)}%
+                          </span>
+                        )}
                       </div>
                       <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
                         {coin.score}<span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">/100</span>
@@ -385,6 +443,7 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                       <span>거래량 {fmtVol(coin.volume4hUsd)}</span>
                       {coin.volumeSpike >= 1.5 && <span className="text-yellow-500 font-medium">· {coin.volumeSpike.toFixed(1)}x↑</span>}
                       {coin.marketCapUsd !== null && <span>· 시총 {fmtCap(coin.marketCapUsd)}</span>}
+                      {lowSample && <span className="text-[9px] text-gray-400 dark:text-gray-500 italic">· 샘플 부족 ({coinStats!.count}회)</span>}
                     </div>
                     <ScoreBar score={coin.score} />
                   </button>
@@ -404,18 +463,22 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                                 : `${Math.floor(coinStats.lastSignalHoursAgo / 24)}일 전`} 마지막 신호
                             </span>
                           </div>
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-5 gap-1">
                             <div className="text-center">
                               <p className="text-[10px] text-gray-500 dark:text-gray-400">시그널</p>
                               <p className="text-sm font-bold text-gray-800 dark:text-gray-100">{coinStats.count}회</p>
                             </div>
                             <div className="text-center">
-                              <p className="text-[10px] text-gray-500 dark:text-gray-400">적중률</p>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">종가 적중</p>
                               <p className={`text-sm font-bold ${
                                 coinStats.hitRate >= 60 ? "text-emerald-600 dark:text-emerald-400" :
                                 coinStats.hitRate >= 40 ? "text-yellow-600 dark:text-yellow-400" :
                                 "text-red-500 dark:text-red-400"
                               }`}>{coinStats.hitRate.toFixed(0)}%</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">고가 적중</p>
+                              <p className="text-sm font-bold text-rose-600 dark:text-rose-400">{coinStats.hitRateMaxIntraday.toFixed(0)}%</p>
                             </div>
                             <div className="text-center">
                               <p className="text-[10px] text-gray-500 dark:text-gray-400">평균</p>
@@ -424,12 +487,12 @@ export default function FuturesScannerSection({ data, stats }: Props) {
                               }`}>{coinStats.avgReturn24h >= 0 ? "+" : ""}{coinStats.avgReturn24h.toFixed(1)}%</p>
                             </div>
                             <div className="text-center">
-                              <p className="text-[10px] text-gray-500 dark:text-gray-400">최고</p>
-                              <p className="text-sm font-bold text-amber-600 dark:text-amber-400">+{coinStats.maxReturn24h.toFixed(1)}%</p>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400">평균 고가</p>
+                              <p className="text-sm font-bold text-amber-600 dark:text-amber-400">+{coinStats.avgMaxReturn.toFixed(1)}%</p>
                             </div>
                           </div>
                           <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed border-t border-indigo-200 dark:border-indigo-800/40 pt-1.5">
-                            * 24시간 후 +5% 이상 도달 = 적중<br />
+                            * 종가 = 24h 후 가격 / 고가 = 24h 내 최고가 도달 (≥ +5% = 적중)<br />
                             과거 통계가 미래 수익을 보장하지 않습니다.
                           </p>
                         </>

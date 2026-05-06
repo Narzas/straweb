@@ -19,10 +19,10 @@ const SectorPerformanceSection = dynamic(() => import("@/components/SectorPerfor
 const RsiHeatmapSection        = dynamic(() => import("@/components/RsiHeatmapSection"),        { loading: () => <SectionSkeleton /> });
 const DexChainsSection         = dynamic(() => import("@/components/DexChainsSection"),         { loading: () => <SectionSkeleton /> });
 const SmartMoneyDashboardSection = dynamic(() => import("@/components/SmartMoneyDashboardSection"), { loading: () => <SectionSkeleton /> });
-const PredictionMarketsSection   = dynamic(() => import("@/components/PredictionMarketsSection"),   { loading: () => <SectionSkeleton /> });
+const KimchiPremiumSection       = dynamic(() => import("@/components/KimchiPremiumSection"),       { loading: () => <SectionSkeleton /> });
 const FuturesScannerSection  = dynamic(() => import("@/components/FuturesScannerSection"),  { loading: () => <SectionSkeleton /> });
 
-export const revalidate = 3600;
+export const revalidate = 600;
 
 type PageProps = {
   searchParams: Promise<{ date?: string }>;
@@ -91,15 +91,28 @@ type NetflowItem = {
   smart_money_outflow_24h: number | null;
 };
 
-type PredictionMarketItem = {
-  market_id: string;
-  question: string;
-  yes_price: number | null;
-  volume_24hr: number;
-  total_volume: number;
-  end_date: string | null;
-  platform: string;
-  market_url?: string | null;
+type KimchiCoin = {
+  symbol: string;
+  upbit_krw: number | null;
+  upbit_volume_24h_krw: number | null;
+  bithumb_krw: number | null;
+  bithumb_volume_24h_krw: number | null;
+  combined_krw: number;
+  binance_usdt: number;
+  premium_pct: number;
+  total_volume_24h_krw: number;
+  change_24h_pct: number;
+  bithumb_dw_status: "OK" | "DEPOSIT_ONLY" | "WITHDRAW_ONLY" | "SUSPENDED" | null;
+  upbit_warning: boolean;
+  upbit_kimchi_caution: boolean;
+};
+
+type KimchiPremium = {
+  usd_krw: number;
+  avg_premium_pct: number | null;
+  fixed: KimchiCoin[];
+  outliers: KimchiCoin[];
+  reverse: KimchiCoin[];
 };
 
 type HyperliquidPerpItem = {
@@ -133,6 +146,7 @@ type FuturesCoinStored = {
   volumeSpike: number;
   marketCapUsd: number | null;
   score: number;
+  entryPrice?: number;
 };
 
 type Editorial = {
@@ -147,7 +161,7 @@ type Editorial = {
   altcoin_season?: number | null;
   long_short_ratio?: number | null;
   netflows?: NetflowItem[] | null;
-  prediction_markets?: PredictionMarketItem[] | null;
+  kimchi_premium?: KimchiPremium | null;
   hyperliquid_perps?: HyperliquidPerpItem[] | null;
   coin_categories?: SectorItem[] | null;
   rsi_heatmap?: {
@@ -166,6 +180,7 @@ type Editorial = {
     price_change_percentage_7d_in_currency: number;
   }> | null;
   futures_scanner?: FuturesCoinStored[] | null;
+  futures_scanner_at?: string | null;
 };
 
 type CryptoDaily = {
@@ -251,6 +266,28 @@ async function getData(date?: string): Promise<CryptoDaily | null> {
   }
 }
 
+async function fetchLiveFuturesPrices(symbols: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (symbols.length === 0) return out;
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 8_000);
+    const res = await fetch("https://fapi.binance.com/fapi/v1/ticker/price", { signal: ctrl.signal, cache: "no-store" });
+    clearTimeout(tid);
+    if (!res.ok) return out;
+    const arr: Array<{ symbol: string; price: string }> = await res.json();
+    const wanted = new Set(symbols.map((s) => s.toUpperCase()));
+    for (const t of arr) {
+      if (!t.symbol.endsWith("USDT")) continue;
+      const sym = t.symbol.slice(0, -4);
+      if (wanted.has(sym)) out.set(sym, parseFloat(t.price));
+    }
+  } catch {
+    /* 라이브 가격 미수신 시 since-scan 계산 생략 */
+  }
+  return out;
+}
+
 async function getAdjacentDates(currentDate: string): Promise<{ prev: string | null; next: string | null }> {
   try {
     const sb = createServiceClient();
@@ -280,9 +317,11 @@ export default async function CryptoPage({ searchParams }: PageProps) {
   }
 
   const { market, trending, fearGreed, dexChains, date, editorial } = data;
-  const [adjacent, futuresStats] = await Promise.all([
+  const futuresSymbols = (editorial?.futures_scanner ?? []).slice(0, 10).map((c) => c.symbol);
+  const [adjacent, futuresStats, livePrices] = await Promise.all([
     getAdjacentDates(date),
     getFuturesStats(),
+    fetchLiveFuturesPrices(futuresSymbols),
   ]);
   const [y, m, d] = date.split("-");
   const dateLabel = `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
@@ -338,7 +377,7 @@ export default async function CryptoPage({ searchParams }: PageProps) {
             { id: "futures",     label: "선물" },
             { id: "dex",         label: "DEX" },
             { id: "smartmoney",  label: "스마트머니" },
-            { id: "prediction",  label: "예측시장" },
+            { id: "kimchi",      label: "김치프리미엄" },
           ].map(({ id, label }) => (
             <a
               key={id}
@@ -519,7 +558,12 @@ export default async function CryptoPage({ searchParams }: PageProps) {
         {editorial?.futures_scanner && editorial.futures_scanner.length > 0 && (
           <AnimatedSection delay={0.05}>
             <div id="futures" className="scroll-mt-24">
-              <FuturesScannerSection data={editorial.futures_scanner as FuturesCoin[]} stats={futuresStats} />
+              <FuturesScannerSection
+                data={editorial.futures_scanner as FuturesCoin[]}
+                stats={futuresStats}
+                livePrices={Object.fromEntries(livePrices)}
+                scannedAt={editorial.futures_scanner_at ?? null}
+              />
             </div>
           </AnimatedSection>
         )}
@@ -544,10 +588,10 @@ export default async function CryptoPage({ searchParams }: PageProps) {
           </AnimatedSection>
         )}
 
-        {editorial?.prediction_markets?.length && (
+        {editorial?.kimchi_premium && (
           <AnimatedSection delay={0.05}>
-            <div id="prediction" className="scroll-mt-24">
-              <PredictionMarketsSection items={editorial.prediction_markets} />
+            <div id="kimchi" className="scroll-mt-24">
+              <KimchiPremiumSection data={editorial.kimchi_premium} />
             </div>
           </AnimatedSection>
         )}

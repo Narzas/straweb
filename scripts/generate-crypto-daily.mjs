@@ -444,47 +444,188 @@ async function fetchCoinCategories() {
   }
 }
 
-async function fetchPredictionMarkets() {
-  const apiKey = process.env.NANSEN_API_KEY;
-  if (!apiKey) return null;
+async function fetchKimchiPremium() {
+  const FIXED_SYMBOLS = ["BTC", "ETH", "XRP", "SOL"];
+  const STABLECOINS = new Set(["USDT", "USDC", "DAI", "BUSD", "TUSD", "FDUSD", "USD1", "PYUSD", "USDD"]);
+  const MIN_VOLUME_KRW = 5e8;     // 5억원 이상 거래대금(업비트+빗썸 합산)만 outlier 후보
+  const OUTLIER_PCT = 5;          // 김프 5% 이상 = 펌핑
+  const REVERSE_PCT = -1;         // 김프 -1% 이하 = 역김프
+
   const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 15_000);
+  const tid = setTimeout(() => ctrl.abort(), 20_000);
   try {
-    const res = await fetch("https://api.nansen.ai/api/v1/prediction-market/market-screener", {
-      method: "POST",
-      headers: { apiKey, "Content-Type": "application/json" },
-      signal: ctrl.signal,
-      body: JSON.stringify({
-        status: "active",
-        pagination: { page: 1, per_page: 30 },
-        order_by: [{ field: "volume", direction: "DESC" }],
-        min_volume_24hr: 1000,
-      }),
-    });
-    clearTimeout(tid);
-    if (!res.ok) return null;
-    const json = await res.json();
-    const rows = json.data ?? [];
-    // 상위 20개 풀에서 매 실행마다 5개 무작위 선택 (Fisher-Yates)
-    const pool = [...rows];
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
+    // 1. USD/KRW 환율
+    const fxRes = await fetch("https://api.exchangerate-api.com/v4/latest/USD", { signal: ctrl.signal });
+    if (!fxRes.ok) throw new Error(`FX ${fxRes.status}`);
+    const fxData = await fxRes.json();
+    const usdKrw = fxData.rates?.KRW;
+    if (!usdKrw) throw new Error("KRW 환율 없음");
+
+    // 2. 업비트 KRW 마켓 목록
+    const marketsRes = await fetch("https://api.upbit.com/v1/market/all", { signal: ctrl.signal });
+    if (!marketsRes.ok) throw new Error(`Upbit market ${marketsRes.status}`);
+    const allMarkets = await marketsRes.json();
+    const krwMarkets = allMarkets
+      .filter((m) => m.market.startsWith("KRW-"))
+      .map((m) => m.market);
+
+    // 3. 업비트 ticker(100배치) + 업비트 market detail + 빗썸 ticker + 빗썸 D/W + 바이낸스 USDT (병렬)
+    const upbitTickerCalls = [];
+    for (let i = 0; i < krwMarkets.length; i += 100) {
+      const batch = krwMarkets.slice(i, i + 100).join(",");
+      upbitTickerCalls.push(
+        fetch(`https://api.upbit.com/v1/ticker?markets=${batch}`, { signal: ctrl.signal })
+          .then((r) => { if (!r.ok) throw new Error(`Upbit ticker ${r.status}`); return r.json(); })
+      );
     }
-    const shuffled = pool.slice(0, 5);
-    return shuffled.map((r) => ({
-      market_id: r.market_id ?? r.id,
-      question: r.question ?? r.title,
-      yes_price: r.yes_price ?? r.last_trade_price ?? r.outcome_prices?.[0] ?? null,
-      volume_24hr: r.volume_24hr,
-      total_volume: r.total_volume ?? r.volume,
-      end_date: r.end_date ?? r.end_date_iso ?? null,
-      platform: r.platform ?? "Polymarket",
-      market_url: r.market_url ?? r.url ?? (r.slug ? `https://polymarket.com/event/${r.slug}` : null),
-    }));
+    const [upbitBatches, upbitDetailsJson, bithumbJson, bithumbDwJson, bnAll] = await Promise.all([
+      Promise.all(upbitTickerCalls),
+      fetch("https://api.upbit.com/v1/market/all?isDetails=true", { signal: ctrl.signal })
+        .then((r) => { if (!r.ok) throw new Error(`Upbit details ${r.status}`); return r.json(); }),
+      fetch("https://api.bithumb.com/public/ticker/ALL_KRW", { signal: ctrl.signal })
+        .then((r) => { if (!r.ok) throw new Error(`Bithumb ${r.status}`); return r.json(); }),
+      fetch("https://api.bithumb.com/public/assetsstatus/multichain/ALL", { signal: ctrl.signal })
+        .then((r) => { if (!r.ok) throw new Error(`Bithumb DW ${r.status}`); return r.json(); }),
+      fetch("https://api.binance.com/api/v3/ticker/price", { signal: ctrl.signal })
+        .then((r) => { if (!r.ok) throw new Error(`Binance ${r.status}`); return r.json(); }),
+    ]);
+    clearTimeout(tid);
+
+    const upbitTickers = upbitBatches.flat();
+    const bithumbData = bithumbJson?.data ?? {};
+
+    // Upbit market warning/caution 맵
+    const upbitWarnMap = new Map();
+    for (const m of upbitDetailsJson) {
+      if (!m.market.startsWith("KRW-")) continue;
+      const sym = m.market.slice(4);
+      upbitWarnMap.set(sym, {
+        warning: !!m.market_event?.warning,
+        kimchi_caution: !!m.market_event?.caution?.GLOBAL_PRICE_DIFFERENCES,
+      });
+    }
+
+    // Bithumb D/W 집계 (네트워크별 OR — 하나라도 가능하면 가능)
+    const bithumbDwMap = new Map();
+    for (const r of (bithumbDwJson?.data ?? [])) {
+      const sym = r.currency;
+      const e = bithumbDwMap.get(sym) ?? { deposit: false, withdraw: false };
+      if (Number(r.deposit_status) === 1) e.deposit = true;
+      if (Number(r.withdrawal_status) === 1) e.withdraw = true;
+      bithumbDwMap.set(sym, e);
+    }
+
+    const bnUsdtPrice = new Map();
+    for (const t of bnAll) {
+      if (t.symbol.endsWith("USDT")) {
+        bnUsdtPrice.set(t.symbol.slice(0, -4), parseFloat(t.price));
+      }
+    }
+
+    // 4. 심볼별 데이터 통합 (업비트 + 빗썸 union)
+    const bySymbol = new Map();
+    for (const t of upbitTickers) {
+      const sym = t.market.slice(4); // KRW-XXX → XXX
+      if (STABLECOINS.has(sym)) continue;
+      const e = bySymbol.get(sym) ?? {};
+      e.upbit_krw = t.trade_price;
+      e.upbit_volume_24h_krw = t.acc_trade_price_24h ?? 0;
+      e.upbit_change_24h_pct = (t.signed_change_rate ?? 0) * 100;
+      bySymbol.set(sym, e);
+    }
+    for (const [sym, raw] of Object.entries(bithumbData)) {
+      if (sym === "date" || STABLECOINS.has(sym)) continue;
+      const close = parseFloat(raw.closing_price);
+      const vol = parseFloat(raw.acc_trade_value_24H);
+      const chg = parseFloat(raw.fluctate_rate_24H);
+      if (!Number.isFinite(close) || close <= 0) continue;
+      const e = bySymbol.get(sym) ?? {};
+      e.bithumb_krw = close;
+      e.bithumb_volume_24h_krw = Number.isFinite(vol) ? vol : 0;
+      e.bithumb_change_24h_pct = Number.isFinite(chg) ? chg : 0;
+      bySymbol.set(sym, e);
+    }
+
+    // 5. 김프 계산 (한국 통합가 = 거래대금 가중평균)
+    const computed = [];
+    for (const [sym, e] of bySymbol) {
+      const usdtPrice = bnUsdtPrice.get(sym);
+      if (!usdtPrice) continue;
+      const upVol = e.upbit_volume_24h_krw ?? 0;
+      const bhVol = e.bithumb_volume_24h_krw ?? 0;
+      const totalVol = upVol + bhVol;
+      if (totalVol <= 0) continue;
+      const upPrice = e.upbit_krw ?? null;
+      const bhPrice = e.bithumb_krw ?? null;
+      let combinedKrw;
+      if (upPrice && bhPrice) {
+        combinedKrw = (upPrice * upVol + bhPrice * bhVol) / totalVol;
+      } else {
+        combinedKrw = upPrice ?? bhPrice;
+      }
+      if (!combinedKrw) continue;
+      const upChg = e.upbit_change_24h_pct ?? 0;
+      const bhChg = e.bithumb_change_24h_pct ?? 0;
+      const change = totalVol > 0 ? (upChg * upVol + bhChg * bhVol) / totalVol : 0;
+      const premium = ((combinedKrw / usdKrw - usdtPrice) / usdtPrice) * 100;
+      const bhDw = bithumbDwMap.get(sym) ?? null;
+      const upWarn = upbitWarnMap.get(sym) ?? null;
+      // 빗썸 D/W 상태값 — bhDw가 null이면 빗썸 미상장이라 'unknown'
+      let bithumb_dw_status = null;
+      if (bhDw) {
+        if (bhDw.deposit && bhDw.withdraw) bithumb_dw_status = "OK";
+        else if (bhDw.deposit && !bhDw.withdraw) bithumb_dw_status = "DEPOSIT_ONLY"; // 출금 정지
+        else if (!bhDw.deposit && bhDw.withdraw) bithumb_dw_status = "WITHDRAW_ONLY"; // 입금 정지
+        else bithumb_dw_status = "SUSPENDED";
+      }
+      computed.push({
+        symbol: sym,
+        upbit_krw: upPrice,
+        upbit_volume_24h_krw: upVol > 0 ? upVol : null,
+        bithumb_krw: bhPrice,
+        bithumb_volume_24h_krw: bhVol > 0 ? bhVol : null,
+        combined_krw: combinedKrw,
+        binance_usdt: usdtPrice,
+        premium_pct: premium,
+        total_volume_24h_krw: totalVol,
+        change_24h_pct: change,
+        bithumb_dw_status,
+        upbit_warning: upWarn?.warning ?? false,
+        upbit_kimchi_caution: upWarn?.kimchi_caution ?? false,
+      });
+    }
+    if (computed.length === 0) return null;
+
+    // 6. 고정 4종 + 평균 김프(거래대금 가중)
+    const fixed = FIXED_SYMBOLS
+      .map((s) => computed.find((c) => c.symbol === s))
+      .filter(Boolean);
+    const sumVol = fixed.reduce((a, c) => a + c.total_volume_24h_krw, 0);
+    const avgPremium = sumVol > 0
+      ? fixed.reduce((a, c) => a + c.premium_pct * c.total_volume_24h_krw, 0) / sumVol
+      : null;
+
+    // 7. 이상치 (5%+) / 역김프 (-1% 이하) — 고정 4 제외, 거래대금 5억+
+    const fixedSet = new Set(FIXED_SYMBOLS);
+    const outliers = computed
+      .filter((c) => !fixedSet.has(c.symbol) && c.total_volume_24h_krw >= MIN_VOLUME_KRW && c.premium_pct >= OUTLIER_PCT)
+      .sort((a, b) => b.premium_pct - a.premium_pct)
+      .slice(0, 8);
+    const reverse = computed
+      .filter((c) => !fixedSet.has(c.symbol) && c.total_volume_24h_krw >= MIN_VOLUME_KRW && c.premium_pct <= REVERSE_PCT)
+      .sort((a, b) => a.premium_pct - b.premium_pct)
+      .slice(0, 5);
+
+    return {
+      usd_krw: usdKrw,
+      avg_premium_pct: avgPremium,
+      fixed,
+      outliers,
+      reverse,
+    };
   } catch (e) {
     clearTimeout(tid);
-    console.warn("  예측 시장 수집 실패:", e.message);
+    console.warn("  김치프리미엄 수집 실패:", e.message);
     return null;
   }
 }
@@ -1043,10 +1184,10 @@ async function fetchAll() {
   const altcoinSeason = calcAltcoinSeason(marketsTop250);
   const gainersLosers = calcGainersLosers(marketsTop250);
 
-  const [longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories] = await Promise.all([
+  const [longShortRatio, netflows, kimchiPremium, hyperliquidPerps, coinCategories] = await Promise.all([
     fetchLongShortRatio(),
     fetchSmartMoneyNetflows(),
-    fetchPredictionMarkets(),
+    fetchKimchiPremium(),
     fetchHyperliquidPerps(),
     fetchCoinCategories(),
   ]);
@@ -1054,14 +1195,7 @@ async function fetchAll() {
   const rsiHeatmap = await fetchRsiHeatmap();
   const futuresScanner = await fetchFuturesScanner(marketsTop250);
 
-  // 예측시장 질문 한국어 번역
-  if (predictionMarkets?.length) {
-    const questions = predictionMarkets.map((p) => p.question);
-    const translated = await translateBatch(questions);
-    predictionMarkets.forEach((p, i) => { p.question = translated[i] ?? p.question; });
-  }
-
-  console.log(`  알트코인 시즌: ${altcoinSeason}, 롱/숏: ${longShortRatio}, 넷플로우: ${netflows?.length ?? 0}개, 예측시장: ${predictionMarkets?.length ?? 0}개, 하이퍼리퀴드: ${hyperliquidPerps?.length ?? 0}개, 섹터: ${coinCategories?.length ?? 0}개, RSI 과매수: ${rsiHeatmap?.overbought?.length ?? 0}개, 과매도: ${rsiHeatmap?.oversold?.length ?? 0}개, 급등: ${gainersLosers?.gainers?.length ?? 0}개, 급락: ${gainersLosers?.losers?.length ?? 0}개`);
+  console.log(`  알트코인 시즌: ${altcoinSeason}, 롱/숏: ${longShortRatio}, 넷플로우: ${netflows?.length ?? 0}개, 김프 평균: ${kimchiPremium?.avg_premium_pct?.toFixed(2) ?? "—"}% (이상치 ${kimchiPremium?.outliers?.length ?? 0}개, 역김프 ${kimchiPremium?.reverse?.length ?? 0}개), 하이퍼리퀴드: ${hyperliquidPerps?.length ?? 0}개, 섹터: ${coinCategories?.length ?? 0}개, RSI 과매수: ${rsiHeatmap?.overbought?.length ?? 0}개, 과매도: ${rsiHeatmap?.oversold?.length ?? 0}개, 급등: ${gainersLosers?.gainers?.length ?? 0}개, 급락: ${gainersLosers?.losers?.length ?? 0}개`);
 
   // 시장 요약
   const gd = global_?.data ?? null;
@@ -1090,12 +1224,12 @@ async function fetchAll() {
     };
   });
 
-  return { market, trending: trendingCoins, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers, marketsTop250, futuresScanner };
+  return { market, trending: trendingCoins, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, kimchiPremium, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers, marketsTop250, futuresScanner };
 }
 
 // ── 편집 코멘트 생성 (룰 기반) ───────────────────────────────────────────────
 
-function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, predictionMarkets, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers, marketsTop250, futuresScanner }) {
+function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeason, longShortRatio, netflows, kimchiPremium, hyperliquidPerps, coinCategories, rsiHeatmap, gainersLosers, marketsTop250, futuresScanner }) {
   const change = market?.market_cap_change_24h;
   const btcDom = market?.btc_dominance;
   const coins = market?.coins ?? [];
@@ -1407,7 +1541,7 @@ function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeas
 
   const summary = `${sentimentDetail}${btcDom != null ? ` BTC 도미넌스는 ${btcDom.toFixed(1)}%를 기록 중입니다.` : ""}`;
 
-  return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, netflow_comment: netflowComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, prediction_markets: predictionMarkets ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null,
+  return { sentiment, summary, highlights, market_comment: marketComment, coin_comment: coinComment, trending_comment: trendingComment, dex_comment: dexComment, fng_comment: fngComment, netflow_comment: netflowComment, altcoin_season: altcoinSeason ?? null, long_short_ratio: longShortRatio ?? null, netflows: netflows ?? null, kimchi_premium: kimchiPremium ?? null, hyperliquid_perps: hyperliquidPerps ?? null, coin_categories: coinCategories ?? null, rsi_heatmap: rsiHeatmap ?? null, gainers_losers: gainersLosers ?? null,
     coins_top250: marketsTop250 ? marketsTop250.map(c => ({
       symbol: (c.symbol ?? "").toUpperCase(),
       name: c.name ?? "",
@@ -1415,6 +1549,7 @@ function generateEditorial({ market, trending, fearGreed, dexChains, altcoinSeas
       price_change_percentage_7d_in_currency: c.price_change_percentage_7d_in_currency ?? 0,
     })) : null,
     futures_scanner: futuresScanner ?? [],
+    futures_scanner_at: futuresScanner?.length ? new Date().toISOString() : null,
   };
 }
 
@@ -1704,17 +1839,61 @@ async function sendTelegramBriefing(date, payload, editorial) {
       `</pre>`;
   }
 
-  // 예측시장 — 질문 + YES🟢/NO🔴 % 한 줄
   const stripDash = (s) => s ? s.replace(/^[^—]*—\s*/, "") : s;
-  const fmtPred = (p) => {
-    const yesPct = p.yes_price != null ? Math.round(p.yes_price * 100) : null;
-    const q = p.question.length > 38 ? p.question.slice(0, 37) + "…" : p.question;
-    if (yesPct == null) return `• ${q}`;
-    const noPct = 100 - yesPct;
-    return `• ${q}\n   🟢 <b>${yesPct}%</b>  🔴 <b>${noPct}%</b>`;
-  };
-  const allPreds = (editorial.prediction_markets ?? []).slice(0, 5);
-  const predLines = allPreds.length ? allPreds.map(fmtPred).join("\n") : null;
+
+  // 김치프리미엄 — 헤더 + 김프 알람·단절·역김프 표
+  const kp = editorial.kimchi_premium;
+  let kimchiBlock = null;
+  if (kp) {
+    const fmtKp = (n) => (n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`);
+    const fmtKp1 = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
+    const avg = kp.avg_premium_pct;
+    const btc = (kp.fixed ?? []).find((c) => c.symbol === "BTC")?.premium_pct;
+    const eth = (kp.fixed ?? []).find((c) => c.symbol === "ETH")?.premium_pct;
+
+    const isBroken = (c) => (c.bithumb_dw_status != null && c.bithumb_dw_status !== "OK") || c.upbit_kimchi_caution;
+    const real     = (kp.outliers ?? []).filter((c) => !isBroken(c)).slice(0, 5);
+    const broken   = (kp.outliers ?? []).filter(isBroken).slice(0, 3);
+    const reverseT = (kp.reverse ?? []).slice(0, 3);
+
+    const statusTag = (c) => {
+      if (c.bithumb_dw_status === "SUSPENDED")      return " 🚫입출";
+      if (c.bithumb_dw_status === "DEPOSIT_ONLY")   return " ⛔출금";
+      if (c.bithumb_dw_status === "WITHDRAW_ONLY")  return " ⛔입금";
+      if (c.upbit_kimchi_caution)                   return " ⚠️주의";
+      if (c.bithumb_dw_status === "OK")             return " 🟢정상";
+      return "";
+    };
+    const fmtRow = (c) => {
+      const sym = padR(c.symbol, 7);
+      const pct = padL(fmtKp1(c.premium_pct), 7);
+      const chg = c.change_24h_pct >= 0
+        ? `▲${Math.abs(c.change_24h_pct).toFixed(1)}%`
+        : `▼${Math.abs(c.change_24h_pct).toFixed(1)}%`;
+      return `${sym}${pct}  ${chg}${statusTag(c)}`;
+    };
+
+    const blocks = [];
+    if (real.length) {
+      blocks.push(`🔥 김프 알람 <i>(정상 차익거래)</i>\n<pre>${real.map(fmtRow).join("\n")}</pre>`);
+    }
+    if (broken.length) {
+      blocks.push(`🚫 차익거래 단절 <i>(입출금 정지·주의)</i>\n<pre>${broken.map(fmtRow).join("\n")}</pre>`);
+    }
+    if (reverseT.length) {
+      blocks.push(`❄️ 역김프 <i>(매도세 시그널)</i>\n<pre>${reverseT.map(fmtRow).join("\n")}</pre>`);
+    }
+
+    const headerParts = [
+      avg != null ? `평균 <b>${fmtKp(avg)}</b>` : null,
+      btc != null ? `BTC ${fmtKp(btc)}` : null,
+      eth != null ? `ETH ${fmtKp(eth)}` : null,
+    ].filter(Boolean);
+    const header = headerParts.join("  ·  ");
+    kimchiBlock = blocks.length
+      ? `${header}\n\n${blocks.join("\n\n")}`
+      : header;
+  }
 
   const sections = [
     `${emoji} <b>${editorial.sentiment}</b>\n${editorial.summary.replace(/\.\s+/g, ".\n")}`,
@@ -1725,7 +1904,7 @@ async function sendTelegramBriefing(date, payload, editorial) {
     rsiBar ? `\n📈 <b>RSI 히트맵</b> <i>(4h)</i>\n${rsiBar}` : null,
     netflowLines ? `\n🧠 <b>스마트머니 넷플로우</b>\n${netflowLines}` : null,
     editorial.dex_comment ? `\n🌐 <b>온체인 자금흐름</b>\n<i>${stripDash(editorial.dex_comment)}</i>` : null,
-    predLines ? `\n🎯 <b>예측시장</b>\n${predLines}` : null,
+    kimchiBlock ? `\n🇰🇷 <b>김치프리미엄</b>  <i>업비트+빗썸 vs Binance</i>\n${kimchiBlock}` : null,
     `\n<a href="https://stragos.xyz/crypto">➡️ 최신 브리핑 전체 보기</a>`,
     `🆕 <a href="https://stragos.xyz/crypto#futures"><b>선물 시그널</b></a> 신규 추가`,
     `📨 <i>6시간마다 발송</i>`,
@@ -1760,7 +1939,7 @@ async function main() {
 
   const payload = await fetchAll();
   const editorial = generateEditorial(payload);
-  const { altcoinSeason: _as, longShortRatio: _ls, netflows: _nf, predictionMarkets: _pm, hyperliquidPerps: _hp, coinCategories: _cc, rsiHeatmap: _rsi, gainersLosers: _gl, marketsTop250: _m250, futuresScanner: _fs, ...dbPayload } = payload;
+  const { altcoinSeason: _as, longShortRatio: _ls, netflows: _nf, kimchiPremium: _kp, hyperliquidPerps: _hp, coinCategories: _cc, rsiHeatmap: _rsi, gainersLosers: _gl, marketsTop250: _m250, futuresScanner: _fs, ...dbPayload } = payload;
 
   if (isDryRun) {
     console.log("[dry-run] DB 저장 및 텔레그램 전송 생략");

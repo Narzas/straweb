@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase";
 import LogoutButton from "./LogoutButton";
 
@@ -76,9 +77,17 @@ export default async function AnalyticsPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Analytics
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Analytics
+          </h1>
+          <Link
+            href="/admin/posts"
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+          >
+            운영 노트 →
+          </Link>
+        </div>
         <LogoutButton />
       </div>
 

@@ -75,6 +75,7 @@ const PATTERN_LABELS: Record<string, string> = {
   DRAGONFLY_DOJI: "잠자리 도지",
   THREE_WHITE_SOLDIERS: "적삼병",
   GAP_UP_SUPPORT: "갭 구간",
+  ELLIOTT_ABC_ENTRY: "ABC 진입",
 };
 
 const CANDLE_LABELS: Record<string, string> = {

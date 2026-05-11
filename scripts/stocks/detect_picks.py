@@ -939,6 +939,62 @@ def detect_gap_up_support(
     return None
 
 
+def detect_abc_entry(daily: pd.DataFrame) -> Optional[PatternMatch]:
+    """ABC 조정 종결 → 5파 진입: 시세 준 종목의 C파 저점 근처에서 반등 시작 시 신호.
+    조건: 일봉 기준 high→low→high→low 4개 스윙, A/C 저점 ±5%, 현재가 C저점 +15% 이내,
+    마지막 봉 음봉 아님 (종가 >= 시가 * 0.995).
+    """
+    if len(daily) < 180:
+        return None
+
+    last_bar = daily.iloc[-1]
+    last_o, last_c = float(last_bar["open"]), float(last_bar["close"])
+    if last_c < last_o * 0.995:
+        return None
+
+    recent = daily.tail(180).reset_index(drop=True)
+    swings = _zigzag_simple(recent, threshold=0.05)
+    if len(swings) < 4:
+        return None
+    last4 = swings[-4:]
+    if [s.kind for s in last4] != ["high", "low", "high", "low"]:
+        return None
+    surge_high = last4[0].price
+    a_low = last4[1].price
+    b_high = last4[2].price
+    c_low = last4[3].price
+    if abs(c_low - a_low) / max(a_low, 1e-9) > 0.05:
+        return None
+
+    current_close = float(daily["close"].iloc[-1])
+    if current_close > c_low * 1.15:
+        return None
+
+    entry = current_close
+    target = round(surge_high)
+    stop = round(c_low * 0.95)
+    if target <= entry or entry <= stop:
+        return None
+    if (target - entry) / max(entry - stop, 0.01) < 1.5:
+        return None
+
+    return PatternMatch(
+        name="ELLIOTT_ABC_ENTRY",
+        entry_price=round(entry),
+        target_price=target,
+        stop_loss=stop,
+        pattern_height=round(surge_high - c_low),
+        base_score=30,
+        note=f"ABC종결 C저={round(c_low)} B고={round(b_high)} 목표={round(surge_high)}",
+        meta={
+            "surge_high": round(surge_high),
+            "a_low": round(a_low),
+            "b_high": round(b_high),
+            "c_low": round(c_low),
+        },
+    )
+
+
 def _try_patterns(
     bars: pd.DataFrame, zz: float, tf: str
 ) -> Optional[PatternMatch]:
@@ -1006,6 +1062,8 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
             continue
 
         match = _try_patterns(bars, zz=cfg["zigzag"], tf=tf_name)
+        if not match and tf_name == "DAILY" and cycle.surged and cycle.abc_complete:
+            match = detect_abc_entry(daily)
         if not match:
             continue
 

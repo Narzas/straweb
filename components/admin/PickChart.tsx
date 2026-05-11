@@ -9,12 +9,24 @@ type SwingPoint = {
   label: string;
 };
 
+type PatternMeta = {
+  gap_bottom?: number;
+  gap_top?: number;
+  surge_high?: number;
+  a_low?: number;
+  b_high?: number;
+  c_low?: number;
+  [key: string]: unknown;
+};
+
 type Props = {
   ticker: string;
   swings: SwingPoint[];
   entry: number;
   target: number | null;
   stop: number | null;
+  pattern?: string;
+  detectionMeta?: PatternMeta | null;
   months?: number;
   timeframe?: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 };
@@ -81,12 +93,21 @@ function resample(
   );
 }
 
+const TF_ZOOM_BARS: Record<string, number> = {
+  DAILY: 60,
+  WEEKLY: 26,
+  MONTHLY: 18,
+  YEARLY: 5,
+};
+
 export default function PickChart({
   ticker,
   swings,
   entry,
   target,
   stop,
+  pattern,
+  detectionMeta,
   months,
   timeframe = "DAILY",
 }: Props) {
@@ -196,16 +217,6 @@ export default function PickChart({
           axisLabelVisible: true,
           title: "Entry",
         });
-        if (target != null) {
-          candleSeries.createPriceLine({
-            price: target,
-            color: "#ef4444",
-            lineWidth: 1,
-            lineStyle: 2,
-            axisLabelVisible: true,
-            title: "Target",
-          });
-        }
         if (stop != null) {
           candleSeries.createPriceLine({
             price: stop,
@@ -215,6 +226,137 @@ export default function PickChart({
             axisLabelVisible: true,
             title: "Stop",
           });
+        }
+
+        // 패턴별 보조선 — swing 레이블 기반 넥라인
+        const swingByLabel = (label: string) =>
+          swings.find((s) => s.label === label);
+        const avgPrice = (...labels: string[]) => {
+          const pts = labels.map(swingByLabel).filter(Boolean);
+          if (pts.length === 0) return null;
+          return pts.reduce((acc, s) => acc + s!.price, 0) / pts.length;
+        };
+
+        if (pattern === "DOUBLE_BOTTOM") {
+          const nl = swingByLabel("Neckline");
+          if (nl) {
+            candleSeries.createPriceLine({
+              price: nl.price,
+              color: "#a78bfa",
+              lineWidth: 1,
+              lineStyle: 2,
+              axisLabelVisible: true,
+              title: "넥라인",
+            });
+          }
+        }
+
+        if (pattern === "TRIPLE_BOTTOM") {
+          const nl = avgPrice("P1", "P2");
+          if (nl) {
+            candleSeries.createPriceLine({
+              price: nl,
+              color: "#a78bfa",
+              lineWidth: 1,
+              lineStyle: 2,
+              axisLabelVisible: true,
+              title: "넥라인",
+            });
+          }
+        }
+
+        if (pattern === "INVERSE_HS") {
+          const nl = avgPrice("P1", "P2");
+          if (nl) {
+            candleSeries.createPriceLine({
+              price: nl,
+              color: "#a78bfa",
+              lineWidth: 1,
+              lineStyle: 2,
+              axisLabelVisible: true,
+              title: "넥라인",
+            });
+          }
+        }
+
+        if (pattern === "CUP_HANDLE") {
+          const rim = avgPrice("좌림", "우림(피벗)");
+          if (rim) {
+            candleSeries.createPriceLine({
+              price: rim,
+              color: "#a78bfa",
+              lineWidth: 1,
+              lineStyle: 2,
+              axisLabelVisible: true,
+              title: "Rim",
+            });
+          }
+        }
+
+        if (pattern === "GAP_UP_SUPPORT" && detectionMeta) {
+          if (detectionMeta.gap_top != null) {
+            candleSeries.createPriceLine({
+              price: detectionMeta.gap_top,
+              color: "#06b6d4",
+              lineWidth: 1,
+              lineStyle: 3,
+              axisLabelVisible: true,
+              title: "갭 상단",
+            });
+          }
+          if (detectionMeta.gap_bottom != null) {
+            candleSeries.createPriceLine({
+              price: detectionMeta.gap_bottom,
+              color: "#06b6d4",
+              lineWidth: 1,
+              lineStyle: 3,
+              axisLabelVisible: true,
+              title: "갭 하단",
+            });
+          }
+        }
+
+        if (pattern === "ELLIOTT_ABC_ENTRY" && detectionMeta) {
+          if (detectionMeta.surge_high != null) {
+            candleSeries.createPriceLine({
+              price: detectionMeta.surge_high,
+              color: "#f43f5e",
+              lineWidth: 1,
+              lineStyle: 1,
+              axisLabelVisible: true,
+              title: "시세고",
+            });
+          }
+          if (detectionMeta.b_high != null) {
+            candleSeries.createPriceLine({
+              price: detectionMeta.b_high,
+              color: "#f97316",
+              lineWidth: 1,
+              lineStyle: 2,
+              axisLabelVisible: true,
+              title: "B고",
+            });
+          }
+          if (detectionMeta.a_low != null) {
+            candleSeries.createPriceLine({
+              price: detectionMeta.a_low,
+              color: "#14b8a6",
+              lineWidth: 1,
+              lineStyle: 2,
+              axisLabelVisible: true,
+              title: "A저",
+            });
+          }
+          if (detectionMeta.c_low != null) {
+            candleSeries.createPriceLine({
+              price: detectionMeta.c_low,
+              color: "#14b8a6",
+              lineWidth: 1,
+              lineStyle: 2,
+              axisLabelVisible: true,
+              title: "C저",
+            });
+          }
         }
 
         // 스윙 마커
@@ -232,7 +374,17 @@ export default function PickChart({
           );
         }
 
-        chart.timeScale().fitContent();
+        // 최근 N봉 기본 확대
+        const zoomBars = TF_ZOOM_BARS[timeframe] ?? 120;
+        const rows = data.rows;
+        if (rows.length > zoomBars) {
+          chart.timeScale().setVisibleRange({
+            from: rows[rows.length - zoomBars].date as import("lightweight-charts").Time,
+            to: rows[rows.length - 1].date as import("lightweight-charts").Time,
+          });
+        } else {
+          chart.timeScale().fitContent();
+        }
         setLoading(false);
 
         // resize
@@ -253,7 +405,7 @@ export default function PickChart({
       resizeObserver?.disconnect();
       chart?.remove();
     };
-  }, [ticker, swings, entry, target, stop, effectiveMonths, timeframe]);
+  }, [ticker, swings, entry, target, stop, pattern, detectionMeta, effectiveMonths, timeframe]);
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden">

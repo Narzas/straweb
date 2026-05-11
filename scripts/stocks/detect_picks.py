@@ -227,8 +227,13 @@ def check_trend(daily: pd.DataFrame, yearly: pd.DataFrame, monthly: pd.DataFrame
     five_yr_ago = float(yearly["close"].iloc[-cmp_n])
     latest_close = float(yearly["close"].iloc[-1])
     yearly_up = bullish_count >= 3 and latest_close >= five_yr_ago
+    recent2_bullish = len(recent_y) >= 2 and bool(
+        (recent_y["close"].iloc[-2:].values > recent_y["open"].iloc[-2:].values).all()
+    )
     if yearly_up:
         tc.yearly = "UP"
+    elif recent2_bullish:
+        tc.yearly = "FLAT"  # 장기 하락 후 최근 2년 연속 양봉 반등 중
     elif latest_close < five_yr_ago * 0.85:
         tc.yearly = "DOWN"
     else:
@@ -255,8 +260,8 @@ def check_trend(daily: pd.DataFrame, yearly: pd.DataFrame, monthly: pd.DataFrame
     last_close_d = float(daily["close"].iloc[-1])
     tc.ma240_position = "ABOVE" if last_close_d >= ma240 else "BELOW"
 
-    # y=UP or FLAT 허용 (y=FLAT+m=UP+240MA ABOVE → 대형주 횡보 후 월봉 상승 케이스 수용)
-    tc.passes = (tc.ma240_position == "ABOVE") and (tc.monthly == "UP") and (tc.yearly in ("UP", "FLAT"))
+    # 240MA는 점수 보너스로만 반영 — Stage 1 하드필터 제외
+    tc.passes = (tc.monthly == "UP") and (tc.yearly in ("UP", "FLAT"))
     if not tc.passes:
         tc.reason = f"trend_fail(y={tc.yearly},m={tc.monthly},ma240={tc.ma240_position})"
     return tc
@@ -584,9 +589,9 @@ def detect_cup_handle(
         ):
             continue
 
-        # 1) LCR/RCR 대칭 ±5%
+        # 1) LCR/RCR 대칭 ±20% (R-Rim > L-Rim도 허용 — 상승형 컵)
         rim_diff = abs(lcr.price - rcr.price) / max(lcr.price, 1e-9)
-        if rim_diff > 0.05:
+        if rim_diff > 0.20:
             continue
 
         # 2) Cup 깊이 12~50%
@@ -604,7 +609,7 @@ def detect_cup_handle(
         handle_depth = (rcr.price - hl.price) / max(rcr.price, 1e-9)
         if not (0.03 <= handle_depth <= 0.15):
             continue
-        if handle_depth > depth * 0.5:
+        if handle_depth > depth * 0.75:
             continue
 
         # 5) Handle 기간 (타임프레임별 handle_min/handle_max)
@@ -644,10 +649,10 @@ def detect_cup_handle(
 
         meta = {
             "swings": [
-                {"date": lcr.date, "price": float(lcr.price), "kind": "high", "label": "L-Rim"},
-                {"date": cb.date, "price": float(cb.price), "kind": "low", "label": "Cup"},
-                {"date": rcr.date, "price": float(rcr.price), "kind": "high", "label": "R-Rim"},
-                {"date": hl.date, "price": float(hl.price), "kind": "low", "label": "Handle"},
+                {"date": lcr.date, "price": float(lcr.price), "kind": "high", "label": "좌림"},
+                {"date": cb.date, "price": float(cb.price), "kind": "low", "label": "컵바닥"},
+                {"date": rcr.date, "price": float(rcr.price), "kind": "high", "label": "우림(피벗)"},
+                {"date": hl.date, "price": float(hl.price), "kind": "low", "label": "핸들"},
             ],
             "checks": {
                 "rim_symmetry_pct": round(rim_diff * 100, 2),
@@ -674,6 +679,84 @@ def detect_cup_handle(
             ),
             meta=meta,
         )
+
+    # ─── 구조적 탐지 fallback ───
+    # 연속 스윙 방식이 실패한 경우, 컵 구간 전체에서 극값(최저·최고) 직접 매핑
+    # 핸들 조건 완화: 깊이 ≤20%, 위치 ≥80%
+    hl_s = rcr_s = None
+    for i in range(len(swings) - 1, max(-1, len(swings) - 6), -1):
+        s = swings[i]
+        if hl_s is None and s.kind == "low":
+            hl_s = s
+        elif hl_s is not None and s.kind == "high":
+            rcr_s = s
+            break
+
+    if hl_s is not None and rcr_s is not None and last_close <= rcr_s.price * 1.05:
+        hdep = (rcr_s.price - hl_s.price) / max(rcr_s.price, 1e-9)
+        hbars = hl_s.idx - rcr_s.idx
+        if (0.03 <= hdep <= 0.20 and
+                hl_s.price >= rcr_s.price * 0.80 and
+                handle_min <= hbars <= handle_max):
+            win_start_idx = rcr_s.idx - cup_max
+            win_lcr_end = rcr_s.idx - cup_min
+            # L-rim 먼저: cup window에서 R-rim과 유사한 최고 고점
+            lcr_cands = [s for s in swings if s.kind == "high"
+                         and win_start_idx <= s.idx <= win_lcr_end
+                         and s.price >= rcr_s.price * 0.75]
+            if lcr_cands:
+                lcr_s = max(lcr_cands, key=lambda s: s.price)
+                # 컵 바닥: L-rim ~ R-rim 사이 최저점
+                cup_lows = [s for s in swings if s.kind == "low"
+                            and lcr_s.idx < s.idx < rcr_s.idx]
+                if cup_lows:
+                    cb_s = min(cup_lows, key=lambda s: s.price)
+                    rdiff = abs(lcr_s.price - rcr_s.price) / max(lcr_s.price, 1e-9)
+                    ravg = (lcr_s.price + rcr_s.price) / 2
+                    dep = (ravg - cb_s.price) / ravg
+                    cbars = rcr_s.idx - lcr_s.idx
+                    lbars = cb_s.idx - lcr_s.idx
+                    if (rdiff <= 0.20 and 0.12 <= dep <= 0.50 and
+                            cup_min <= cbars <= cup_max and
+                            (lbars / max(cbars, 1)) >= 0.25):
+                        try:
+                            vol_r = float(np.mean(volumes[cb_s.idx:rcr_s.idx + 1]))
+                            vol_h = float(np.mean(volumes[rcr_s.idx:hl_s.idx + 1]))
+                            vol_ok = bool(vol_h < vol_r * 0.9)
+                        except Exception:
+                            vol_ok = True
+                        piv = rcr_s.price
+                        ht = ravg - cb_s.price
+                        return PatternMatch(
+                            name="CUP_HANDLE",
+                            entry_price=round(piv * 1.002, 2),
+                            target_price=round(piv + ht, 2),
+                            stop_loss=round(hl_s.price * 0.97, 2),
+                            pattern_height=round(ht, 2),
+                            base_score=50,
+                            note=(
+                                f"Cup 깊이 {dep*100:.0f}%/{cbars}일, "
+                                f"Handle {hdep*100:.0f}%/{hbars}일 [구조적]"
+                            ),
+                            meta={
+                                "swings": [
+                                    {"date": lcr_s.date, "price": float(lcr_s.price), "kind": "high", "label": "좌림"},
+                                    {"date": cb_s.date, "price": float(cb_s.price), "kind": "low", "label": "컵바닥"},
+                                    {"date": rcr_s.date, "price": float(rcr_s.price), "kind": "high", "label": "우림(피벗)"},
+                                    {"date": hl_s.date, "price": float(hl_s.price), "kind": "low", "label": "핸들"},
+                                ],
+                                "checks": {
+                                    "rim_symmetry_pct": round(rdiff * 100, 2),
+                                    "cup_depth_pct": round(dep * 100, 2),
+                                    "cup_duration_bars": cbars,
+                                    "handle_depth_pct": round(hdep * 100, 2),
+                                    "handle_duration_bars": hbars,
+                                    "handle_position_pct": round(hl_s.price / rcr_s.price * 100, 2),
+                                    "volume_decreases_in_handle": vol_ok,
+                                    "structural": True,
+                                },
+                            },
+                        )
     return None
 
 
@@ -1002,15 +1085,14 @@ def _try_patterns(
     # 타임프레임별 Cup 기간 (단위는 해당 timeframe의 봉 개수)
     cup_params = {
         "DAILY":   (35, 325, 5, 25),
-        "WEEKLY":  (10, 65, 1, 5),     # 10주~1.3년, handle 1~5주
-        "MONTHLY": (4, 18, 1, 3),      # 4개월~1.5년
+        "WEEKLY":  (6, 200, 1, 10),     # 6주~4년, handle 1~10주
+        "MONTHLY": (4, 48, 1, 6),      # 4개월~4년
         "YEARLY":  (2, 6, 1, 2),
     }.get(tf, (35, 325, 5, 25))
 
     return (
         detect_cup_handle(bars, zz=zz, cup_min=cup_params[0], cup_max=cup_params[1],
                           handle_min=cup_params[2], handle_max=cup_params[3])
-        or detect_inverse_hs(bars, zz=zz)
         or detect_triple_bottom(bars, zz=zz)
         or detect_double_bottom(bars, zz=zz)
         or detect_three_white_soldiers(bars)

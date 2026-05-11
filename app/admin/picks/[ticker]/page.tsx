@@ -227,6 +227,8 @@ export default async function PickDetailPage({
             entry={pick.entry_price}
             target={pick.target_price}
             stop={pick.stop_loss}
+            pattern={pick.pattern}
+            detectionMeta={meta}
             timeframe={pick.timeframe}
           />
 

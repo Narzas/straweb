@@ -1,0 +1,1065 @@
+"""
+매수타점 탐지 → Supabase buy_picks 테이블 저장
+
+사용법:
+  python detect_picks.py                    # 오늘(가장 최근 영업일) 기준
+  python detect_picks.py --date 2026-05-08  # 특정 날짜
+  python detect_picks.py --ticker 005930    # 단일 종목 디버그
+  python detect_picks.py --limit 50         # 처음 50종목만 (테스트)
+  python detect_picks.py --min-score 60     # 점수 임계값 조정 (기본 70)
+
+파이프라인:
+  Stage 0 (시총·제외리스트) → Stage 1 (年/月/240MA 추세) → Stage 2 (시세 준 종목 + ABC 검증)
+    → 패턴 탐지 (Double Bottom / Inverse H&S) → 캔들 보조 → 점수화 → 저장
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+import time
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from typing import Optional
+
+import numpy as np
+import pandas as pd
+from dotenv import load_dotenv
+from supabase import create_client
+from tqdm import tqdm
+
+ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(ROOT / ".env.local")
+
+sys.path.insert(0, str(Path(__file__).parent))
+from indicators import (  # noqa: E402
+    Swing,
+    _zigzag_simple,
+    atr,
+    classify_candle,
+    rsi,
+    sma,
+)
+
+SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    sys.exit("Missing Supabase env vars")
+sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+MIN_MARKET_CAP = 100_000_000_000  # 1000억
+DEFAULT_MIN_SCORE = 70
+ZIGZAG_THRESHOLD = 0.05  # 일봉 기본값
+
+# 타임프레임별 설정
+TIMEFRAMES: dict[str, dict] = {
+    "DAILY":   {"resample": None,  "zigzag": 0.05, "min_bars": 240, "label": "일봉"},
+    "WEEKLY":  {"resample": "W-FRI", "zigzag": 0.10, "min_bars": 80, "label": "주봉"},  # ~1.5년
+    "MONTHLY": {"resample": "ME",  "zigzag": 0.18, "min_bars": 36, "label": "월봉"},  # ~3년
+    "YEARLY":  {"resample": "YE",  "zigzag": 0.30, "min_bars": 7,  "label": "년봉"},  # ~7년
+}
+
+
+def _to_native(obj):
+    """numpy/pandas → 순수 Python (JSON 직렬화 위해)"""
+    import numpy as _np
+    if obj is None:
+        return None
+    if isinstance(obj, dict):
+        return {k: _to_native(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_native(x) for x in obj]
+    if isinstance(obj, (_np.bool_,)):
+        return bool(obj)
+    if isinstance(obj, (_np.integer,)):
+        return int(obj)
+    if isinstance(obj, (_np.floating,)):
+        return float(obj)
+    return obj
+
+
+def resample_ohlcv(daily: pd.DataFrame, freq: str) -> pd.DataFrame:
+    """일봉 → 지정 frequency로 resample. date 컬럼 유지."""
+    df = daily.copy()
+    df["date_dt"] = pd.to_datetime(df["date"])
+    df = df.set_index("date_dt")
+    out = pd.DataFrame(
+        {
+            "open": df["open"].resample(freq).first(),
+            "high": df["high"].resample(freq).max(),
+            "low": df["low"].resample(freq).min(),
+            "close": df["close"].resample(freq).last(),
+            "volume": df["volume"].resample(freq).sum(),
+        }
+    ).dropna()
+    out = out.reset_index()
+    out["date"] = out["date_dt"].dt.date.astype(str)
+    return out.drop(columns=["date_dt"]).reset_index(drop=True)
+
+
+# ──────────────────────────────────────────────────────────
+# 데이터 로딩
+# ──────────────────────────────────────────────────────────
+def load_ohlcv(ticker: str, end_date: date, days_back: int = 800) -> pd.DataFrame:
+    """ticker의 [end_date - days_back, end_date] OHLCV 로드 (페이지네이션)"""
+    start = end_date - timedelta(days=days_back)
+    rows = []
+    offset = 0
+    page = 1000
+    while True:
+        res = (
+            sb.table("daily_ohlcv")
+            .select("date,open,high,low,close,volume,market_cap")
+            .eq("ticker", ticker)
+            .gte("date", start.isoformat())
+            .lte("date", end_date.isoformat())
+            .order("date", desc=False)
+            .range(offset, offset + page - 1)
+            .execute()
+        )
+        if not res.data:
+            break
+        rows.extend(res.data)
+        if len(res.data) < page:
+            break
+        offset += page
+    if not rows:
+        return pd.DataFrame()
+    df = pd.DataFrame(rows)
+    df["close"] = df["close"].astype(float)
+    df["open"] = df["open"].astype(float)
+    df["high"] = df["high"].astype(float)
+    df["low"] = df["low"].astype(float)
+    df["volume"] = df["volume"].astype(int)
+    return df.reset_index(drop=True)
+
+
+def load_yearly(ticker: str, end_date: date, years_back: int = 10) -> pd.DataFrame:
+    """년봉 (간단히 일봉을 년 단위로 resample)"""
+    df = load_ohlcv(ticker, end_date, days_back=years_back * 365 + 30)
+    if df.empty:
+        return df
+    df["date_dt"] = pd.to_datetime(df["date"])
+    df = df.set_index("date_dt")
+    yearly = pd.DataFrame(
+        {
+            "open": df["open"].resample("YE").first(),
+            "high": df["high"].resample("YE").max(),
+            "low": df["low"].resample("YE").min(),
+            "close": df["close"].resample("YE").last(),
+            "volume": df["volume"].resample("YE").sum(),
+        }
+    ).dropna()
+    return yearly.reset_index(drop=True)
+
+
+def load_monthly(ticker: str, end_date: date, months_back: int = 18) -> pd.DataFrame:
+    df = load_ohlcv(ticker, end_date, days_back=months_back * 31 + 30)
+    if df.empty:
+        return df
+    df["date_dt"] = pd.to_datetime(df["date"])
+    df = df.set_index("date_dt")
+    monthly = pd.DataFrame(
+        {
+            "open": df["open"].resample("ME").first(),
+            "high": df["high"].resample("ME").max(),
+            "low": df["low"].resample("ME").min(),
+            "close": df["close"].resample("ME").last(),
+            "volume": df["volume"].resample("ME").sum(),
+        }
+    ).dropna()
+    return monthly.reset_index(drop=True)
+
+
+# ──────────────────────────────────────────────────────────
+# Stage 0: 시총 + 제외 리스트
+# ──────────────────────────────────────────────────────────
+def load_excluded_tickers() -> set[str]:
+    """excluded_tickers + stocks.is_excluded 통합"""
+    out: set[str] = set()
+    offset = 0
+    page = 1000
+    while True:
+        r = sb.table("excluded_tickers").select("ticker").range(offset, offset + page - 1).execute()
+        if not r.data:
+            break
+        out.update(x["ticker"] for x in r.data)
+        if len(r.data) < page:
+            break
+        offset += page
+    return out
+
+
+def passes_stage0(ticker: str, latest_cap: Optional[float], excluded: set[str]) -> tuple[bool, str]:
+    if ticker in excluded:
+        return False, "EXCLUDED_LIST"
+    if latest_cap is None:
+        return False, "NO_MARKET_CAP"
+    if latest_cap < MIN_MARKET_CAP:
+        return False, "BELOW_1000억"
+    return True, "OK"
+
+
+# ──────────────────────────────────────────────────────────
+# Stage 1: 추세 검증 (년/월/일봉 + 240일선)
+# ──────────────────────────────────────────────────────────
+@dataclass
+class TrendCheck:
+    yearly: str = "UNKNOWN"  # UP / FLAT / DOWN
+    monthly: str = "UNKNOWN"
+    ma240_position: str = "UNKNOWN"  # ABOVE / BELOW
+    passes: bool = False
+    reason: str = ""
+
+
+def check_trend(daily: pd.DataFrame, yearly: pd.DataFrame, monthly: pd.DataFrame) -> TrendCheck:
+    tc = TrendCheck()
+
+    # 년봉: 최근 5개 년봉 중 3개 이상 양봉 + 최근 종가가 5년전 종가 대비 위
+    if len(yearly) < 3:
+        tc.reason = "yearly_data_insufficient"
+        return tc
+    recent_y = yearly.tail(5)
+    bullish_count = (recent_y["close"] > recent_y["open"]).sum()
+    cmp_n = min(5, len(yearly))
+    five_yr_ago = float(yearly["close"].iloc[-cmp_n])
+    latest_close = float(yearly["close"].iloc[-1])
+    yearly_up = bullish_count >= 3 and latest_close >= five_yr_ago
+    if yearly_up:
+        tc.yearly = "UP"
+    elif latest_close < five_yr_ago * 0.85:
+        tc.yearly = "DOWN"
+    else:
+        tc.yearly = "FLAT"
+
+    # 월봉: SMA6 위 7개 이상 + 최근 종가 SMA12 위
+    if len(monthly) < 12:
+        tc.reason = "monthly_data_insufficient"
+        return tc
+    m_sma6 = sma(monthly["close"], 6)
+    m_sma12 = sma(monthly["close"], 12)
+    recent_m = monthly.tail(12)
+    above_sma6 = (recent_m["close"].values > m_sma6.tail(12).values).sum()
+    last_close_m = float(monthly["close"].iloc[-1])
+    last_sma12 = float(m_sma12.iloc[-1])
+    monthly_up = above_sma6 >= 7 and last_close_m >= last_sma12
+    tc.monthly = "UP" if monthly_up else ("FLAT" if last_close_m >= last_sma12 * 0.95 else "DOWN")
+
+    # 240일선
+    if len(daily) < 240:
+        tc.reason = "daily_data_insufficient"
+        return tc
+    ma240 = sma(daily["close"], 240).iloc[-1]
+    last_close_d = float(daily["close"].iloc[-1])
+    tc.ma240_position = "ABOVE" if last_close_d >= ma240 else "BELOW"
+
+    tc.passes = (tc.yearly == "UP") and (tc.monthly == "UP") and (tc.ma240_position == "ABOVE")
+    if not tc.passes:
+        tc.reason = f"trend_fail(y={tc.yearly},m={tc.monthly},ma240={tc.ma240_position})"
+    return tc
+
+
+# ──────────────────────────────────────────────────────────
+# Stage 2: "시세 준 종목" + ABC 조정 검증 (옵션 C)
+# ──────────────────────────────────────────────────────────
+@dataclass
+class CycleCheck:
+    surged: bool = False
+    surge_reason: str = ""
+    abc_complete: bool = True   # 시세 안 줬으면 자동 통과
+    penalty: int = 0            # 점수 페널티
+
+
+def check_cycle(daily: pd.DataFrame) -> CycleCheck:
+    cc = CycleCheck()
+    if len(daily) < 240:
+        return cc
+
+    closes = daily["close"].values
+    last = float(closes[-1])
+
+    # 6M 최저 대비 +80%
+    low_6m = float(daily["low"].tail(120).min())
+    rise_6m = (last / max(low_6m, 1e-9) - 1) * 100
+
+    # 12M 최저 대비 +150%
+    low_12m = float(daily["low"].tail(240).min())
+    rise_12m = (last / max(low_12m, 1e-9) - 1) * 100
+
+    # 240MA 이격도 +60%
+    ma240 = float(sma(daily["close"], 240).iloc[-1])
+    max_6m = float(daily["high"].tail(120).max())
+    deviation = (max_6m / max(ma240, 1e-9) - 1) * 100
+
+    triggers = []
+    if rise_6m >= 80:
+        triggers.append(f"6M+{rise_6m:.0f}%")
+    if rise_12m >= 150:
+        triggers.append(f"12M+{rise_12m:.0f}%")
+    if deviation >= 60:
+        triggers.append(f"240MA이격+{deviation:.0f}%")
+
+    if not triggers:
+        return cc  # 시세 안 줌, 통과
+
+    cc.surged = True
+    cc.surge_reason = "/".join(triggers)
+
+    # ABC 조정 검증: 6M 고점부터 현재까지 ABC가 완성됐는지
+    cc.abc_complete = _check_abc_complete(daily)
+    if not cc.abc_complete:
+        cc.penalty = 30  # 시세 줬는데 ABC 미완 → -30점
+
+    return cc
+
+
+def _check_abc_complete(daily: pd.DataFrame) -> bool:
+    """간단 ABC 검증: 최근 6M 고점 이후 zigzag swing이 high→low→high→low 4개 이상이고,
+    마지막 swing low가 첫 swing low ±5%."""
+    recent = daily.tail(180).reset_index(drop=True)
+    swings = _zigzag_simple(recent, threshold=0.05)
+    # 최근 고점 (recent의 max) 이후 swing만
+    if len(swings) < 4:
+        return False
+    # 마지막 4개: high, low, high, low 패턴 + low들이 비슷
+    last4 = swings[-4:]
+    kinds = [s.kind for s in last4]
+    if kinds != ["high", "low", "high", "low"]:
+        return False
+    a_low, c_low = last4[1].price, last4[3].price
+    return abs(c_low - a_low) / max(a_low, 1e-9) <= 0.05
+
+
+# ──────────────────────────────────────────────────────────
+# 패턴 탐지
+# ──────────────────────────────────────────────────────────
+@dataclass
+class PatternMatch:
+    name: str                       # "DOUBLE_BOTTOM" | "INVERSE_HS" | "CUP_HANDLE"
+    entry_price: float
+    target_price: float
+    stop_loss: float
+    pattern_height: float
+    base_score: int                 # 패턴 자체 점수 (0~40)
+    note: str = ""
+    meta: dict = field(default_factory=dict)  # swing points + 체크리스트 (차트 검증용)
+
+
+def detect_double_bottom(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> Optional[PatternMatch]:
+    """W 패턴: 비슷한 2개 저점 + 중간 봉우리(넥라인)"""
+    if len(daily) < 30:
+        return None
+    swings = _zigzag_simple(daily, threshold=zz)
+    if len(swings) < 3:
+        return None
+
+    # 최근 swing이 low로 끝나거나 high로 끝나도 직전 3개로 검증
+    # 패턴: low(LB) - high(NL) - low(RB)
+    for i in range(len(swings) - 3, max(-1, len(swings) - 8), -1):
+        if i < 0:
+            break
+        if i + 2 >= len(swings):
+            continue
+        lb, nl, rb = swings[i], swings[i + 1], swings[i + 2]
+        if lb.kind != "low" or nl.kind != "high" or rb.kind != "low":
+            continue
+
+        # 1) 가격 대칭 ±3%
+        price_diff = abs(rb.price - lb.price) / max(lb.price, 1e-9)
+        if price_diff > 0.03:
+            continue
+
+        # 2) 시간 간격 10~50 영업일
+        bars_between = rb.idx - lb.idx
+        if not (10 <= bars_between <= 50):
+            continue
+
+        # 3) 중간 봉우리 높이: 저점 대비 10% 이상
+        rise = (nl.price - max(lb.price, rb.price)) / max(lb.price, 1e-9)
+        if rise < 0.10:
+            continue
+
+        # 4) 사전 추세: LB 형성 전 30 봉 동안 하락 추세 (LB 가격 < 30봉 전 종가)
+        if lb.idx >= 30:
+            prev_close = float(daily["close"].iloc[lb.idx - 30])
+            if lb.price >= prev_close * 0.95:
+                continue
+
+        # 5) 현재 종가가 Neckline 아래인지 (돌파 전 진입 후보)
+        current_close = float(daily["close"].iloc[-1])
+        if current_close > nl.price * 1.05:
+            # 이미 한참 돌파 → 매수 늦음
+            continue
+
+        # 매수타점 = Neckline 돌파선 (현재가가 이 위로 가야 진입)
+        # 손절: 넥라인 3% 아래 (false breakout 방어 — breakout 진입은 tight stop)
+        entry = nl.price * 1.002
+        height = nl.price - min(lb.price, rb.price)
+        target = nl.price + height
+        stop = nl.price * 0.97
+
+        meta = {
+            "swings": [
+                {"date": lb.date, "price": float(lb.price), "kind": "low", "label": "LB"},
+                {"date": nl.date, "price": float(nl.price), "kind": "high", "label": "Neckline"},
+                {"date": rb.date, "price": float(rb.price), "kind": "low", "label": "RB"},
+            ],
+            "checks": {
+                "price_symmetry_pct": round(price_diff * 100, 2),
+                "bars_between": bars_between,
+                "neckline_rise_pct": round(rise * 100, 2),
+                "prior_downtrend": True,
+            },
+        }
+
+        return PatternMatch(
+            name="DOUBLE_BOTTOM",
+            entry_price=round(entry, 2),
+            target_price=round(target, 2),
+            stop_loss=round(stop, 2),
+            pattern_height=round(height, 2),
+            base_score=35,
+            note=f"두 저점 ±{price_diff*100:.1f}%, 간격 {bars_between}일",
+            meta=meta,
+        )
+    return None
+
+
+def detect_triple_bottom(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> Optional[PatternMatch]:
+    """삼바닥(Triple Bottom): 비슷한 3개 저점 + 2개 봉우리
+    구조: low(L1) - high(P1) - low(L2) - high(P2) - low(L3) - 넥라인 돌파"""
+    if len(daily) < 40:
+        return None
+    swings = _zigzag_simple(daily, threshold=zz)
+    if len(swings) < 5:
+        return None
+
+    for i in range(len(swings) - 5, max(-1, len(swings) - 10), -1):
+        if i < 0:
+            break
+        if i + 4 >= len(swings):
+            continue
+        l1, p1, l2, p2, l3 = swings[i : i + 5]
+        if not (
+            l1.kind == "low"
+            and p1.kind == "high"
+            and l2.kind == "low"
+            and p2.kind == "high"
+            and l3.kind == "low"
+        ):
+            continue
+
+        # 1) 3개 저점 모두 ±3% 이내
+        prices = [l1.price, l2.price, l3.price]
+        max_p, min_p = max(prices), min(prices)
+        spread = (max_p - min_p) / max(min_p, 1e-9)
+        if spread > 0.03:
+            continue
+
+        # 2) 두 봉우리 비슷 ±3% (넥라인 수평)
+        peak_diff = abs(p1.price - p2.price) / max(p1.price, 1e-9)
+        if peak_diff > 0.05:
+            continue
+
+        # 3) 넥라인이 저점들보다 10% 이상 위
+        avg_low = sum(prices) / 3
+        neckline = (p1.price + p2.price) / 2
+        rise = (neckline - avg_low) / max(avg_low, 1e-9)
+        if rise < 0.10:
+            continue
+
+        # 4) 사전 하락 추세
+        if l1.idx >= 30:
+            prev_close = float(daily["close"].iloc[l1.idx - 30])
+            if l1.price >= prev_close * 0.95:
+                continue
+
+        # 5) 현재 종가가 넥라인 5% 이내
+        current_close = float(daily["close"].iloc[-1])
+        if current_close > neckline * 1.05:
+            continue
+
+        # 6) 패턴 총 기간 합리적 (30~150 영업일)
+        total_bars = l3.idx - l1.idx
+        if not (30 <= total_bars <= 150):
+            continue
+
+        entry = neckline * 1.002
+        height = neckline - min_p
+        target = neckline + height
+        stop = neckline * 0.97
+
+        meta = {
+            "swings": [
+                {"date": l1.date, "price": float(l1.price), "kind": "low", "label": "L1"},
+                {"date": p1.date, "price": float(p1.price), "kind": "high", "label": "P1"},
+                {"date": l2.date, "price": float(l2.price), "kind": "low", "label": "L2"},
+                {"date": p2.date, "price": float(p2.price), "kind": "high", "label": "P2"},
+                {"date": l3.date, "price": float(l3.price), "kind": "low", "label": "L3"},
+            ],
+            "checks": {
+                "bottom_spread_pct": round(spread * 100, 2),
+                "peak_diff_pct": round(peak_diff * 100, 2),
+                "neckline_rise_pct": round(rise * 100, 2),
+                "total_duration_bars": total_bars,
+                "prior_downtrend": True,
+            },
+        }
+
+        return PatternMatch(
+            name="TRIPLE_BOTTOM",
+            entry_price=round(entry, 2),
+            target_price=round(target, 2),
+            stop_loss=round(stop, 2),
+            pattern_height=round(height, 2),
+            base_score=38,  # Double Bottom(35) < Triple Bottom < Inverse H&S(40)
+            note=f"3저점 ±{spread*100:.1f}%, 총 {total_bars}일",
+            meta=meta,
+        )
+    return None
+
+
+def detect_cup_handle(
+    daily: pd.DataFrame,
+    zz: float = ZIGZAG_THRESHOLD,
+    cup_min: int = 35,
+    cup_max: int = 325,
+    handle_min: int = 5,
+    handle_max: int = 25,
+) -> Optional[PatternMatch]:
+    """컵 위드 핸들: high(LCR) - low(CB) - high(RCR) - low(HL) - 현재가
+    매수타점 = Handle 최고가 돌파 (= Pivot Point)"""
+    if len(daily) < 30:
+        return None
+    swings = _zigzag_simple(daily, threshold=zz)
+    if len(swings) < 4:
+        return None
+
+    closes = daily["close"].values
+    highs = daily["high"].values
+    volumes = daily["volume"].values
+    last_close = float(closes[-1])
+
+    # 최근 4개 swing이 high-low-high-low 인지 검사
+    for i in range(len(swings) - 4, max(-1, len(swings) - 8), -1):
+        if i < 0:
+            break
+        if i + 3 >= len(swings):
+            continue
+        lcr, cb, rcr, hl = swings[i : i + 4]
+        if not (
+            lcr.kind == "high"
+            and cb.kind == "low"
+            and rcr.kind == "high"
+            and hl.kind == "low"
+        ):
+            continue
+
+        # 1) LCR/RCR 대칭 ±5%
+        rim_diff = abs(lcr.price - rcr.price) / max(lcr.price, 1e-9)
+        if rim_diff > 0.05:
+            continue
+
+        # 2) Cup 깊이 12~50%
+        rim_avg = (lcr.price + rcr.price) / 2
+        depth = (rim_avg - cb.price) / rim_avg
+        if not (0.12 <= depth <= 0.50):
+            continue
+
+        # 3) Cup 기간 (타임프레임별 cup_min/cup_max)
+        cup_bars = rcr.idx - lcr.idx
+        if not (cup_min <= cup_bars <= cup_max):
+            continue
+
+        # 4) Handle 깊이 (Cup 깊이의 절반 이하 + 5~15%)
+        handle_depth = (rcr.price - hl.price) / max(rcr.price, 1e-9)
+        if not (0.03 <= handle_depth <= 0.15):
+            continue
+        if handle_depth > depth * 0.5:
+            continue
+
+        # 5) Handle 기간 (타임프레임별 handle_min/handle_max)
+        handle_bars = hl.idx - rcr.idx
+        if not (handle_min <= handle_bars <= handle_max):
+            continue
+
+        # 6) Handle 위치: Cup 상단 1/3 (= RCR의 85% 이상)
+        if hl.price < rcr.price * 0.85:
+            continue
+
+        # 7) 현재가가 아직 Pivot 돌파 직전인지 (Pivot 5% 위까지는 허용)
+        pivot = rcr.price
+        if last_close > pivot * 1.05:
+            continue
+
+        # 8) 거래량 패턴: Cup 우측(CB→RCR)에서 증가, Handle 구간에서 감소
+        try:
+            cup_right_vol = float(np.mean(volumes[cb.idx : rcr.idx + 1]))
+            handle_vol = float(np.mean(volumes[rcr.idx : hl.idx + 1]))
+            vol_pattern_ok = bool(handle_vol < cup_right_vol * 0.9)
+        except Exception:
+            vol_pattern_ok = False
+
+        # 9) U자 검증 (V자 컷): Cup 좌측 하락이 점진적이어야 함
+        left_bars = cb.idx - lcr.idx
+        u_shape_ok = bool((left_bars / max(cup_bars, 1)) >= 0.25)
+
+        if not (vol_pattern_ok and u_shape_ok):
+            continue
+
+        # 매수타점 = Pivot 0.2% 위
+        entry = pivot * 1.002
+        height = rim_avg - cb.price  # Cup 깊이 (=measured move)
+        target = pivot + height
+        stop = hl.price * 0.97  # Handle 저점 3% 아래
+
+        meta = {
+            "swings": [
+                {"date": lcr.date, "price": float(lcr.price), "kind": "high", "label": "L-Rim"},
+                {"date": cb.date, "price": float(cb.price), "kind": "low", "label": "Cup"},
+                {"date": rcr.date, "price": float(rcr.price), "kind": "high", "label": "R-Rim"},
+                {"date": hl.date, "price": float(hl.price), "kind": "low", "label": "Handle"},
+            ],
+            "checks": {
+                "rim_symmetry_pct": round(rim_diff * 100, 2),
+                "cup_depth_pct": round(depth * 100, 2),
+                "cup_duration_bars": cup_bars,
+                "handle_depth_pct": round(handle_depth * 100, 2),
+                "handle_duration_bars": handle_bars,
+                "handle_position_pct": round(hl.price / rcr.price * 100, 2),
+                "volume_decreases_in_handle": vol_pattern_ok,
+                "u_shape_ok": u_shape_ok,
+            },
+        }
+
+        return PatternMatch(
+            name="CUP_HANDLE",
+            entry_price=round(entry, 2),
+            target_price=round(target, 2),
+            stop_loss=round(stop, 2),
+            pattern_height=round(height, 2),
+            base_score=40,
+            note=(
+                f"Cup 깊이 {depth*100:.0f}%/{cup_bars}일, "
+                f"Handle {handle_depth*100:.0f}%/{handle_bars}일"
+            ),
+            meta=meta,
+        )
+    return None
+
+
+def detect_inverse_hs(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> Optional[PatternMatch]:
+    """역헤드앤숄더: low(LS) - high(P1) - low(H) - high(P2) - low(RS)"""
+    if len(daily) < 40:
+        return None
+    swings = _zigzag_simple(daily, threshold=zz)
+    if len(swings) < 5:
+        return None
+
+    for i in range(len(swings) - 5, max(-1, len(swings) - 10), -1):
+        if i < 0:
+            break
+        if i + 4 >= len(swings):
+            continue
+        ls, p1, h, p2, rs = swings[i : i + 5]
+        if not (
+            ls.kind == "low"
+            and p1.kind == "high"
+            and h.kind == "low"
+            and p2.kind == "high"
+            and rs.kind == "low"
+        ):
+            continue
+
+        # Head이 LS, RS보다 5% 이상 더 깊음
+        if not (h.price <= ls.price * 0.95 and h.price <= rs.price * 0.95):
+            continue
+        # LS / RS 대칭 ±5%
+        if abs(ls.price - rs.price) / max(ls.price, 1e-9) > 0.05:
+            continue
+        # Neckline 거의 수평 ±3%
+        if abs(p1.price - p2.price) / max(p1.price, 1e-9) > 0.03:
+            continue
+        # 사전 하락 추세 — 완화: LS 형성 전 30봉 종가보다 LS가 아래면 OK (이전: 5% 이상)
+        # Stage 1에서 이미 추세 검증하므로 여기선 단순 체크만
+        prior_downtrend = True
+        if ls.idx >= 20:
+            prev_close = float(daily["close"].iloc[ls.idx - 20])
+            prior_downtrend = bool(ls.price < prev_close)  # native bool
+
+        # 아직 Neckline 돌파 직전인지
+        neckline = (p1.price + p2.price) / 2
+        current_close = float(daily["close"].iloc[-1])
+        if current_close > neckline * 1.05:
+            continue
+
+        entry = neckline * 1.002
+        height = neckline - h.price
+        target = neckline + height
+        stop = neckline * 0.97  # 넥라인 3% 아래 — false breakout 방어
+
+        meta = {
+            "swings": [
+                {"date": ls.date, "price": float(ls.price), "kind": "low", "label": "LS"},
+                {"date": p1.date, "price": float(p1.price), "kind": "high", "label": "P1"},
+                {"date": h.date, "price": float(h.price), "kind": "low", "label": "Head"},
+                {"date": p2.date, "price": float(p2.price), "kind": "high", "label": "P2"},
+                {"date": rs.date, "price": float(rs.price), "kind": "low", "label": "RS"},
+            ],
+            "checks": {
+                "head_depth_pct": round((1 - h.price / min(ls.price, rs.price)) * 100, 2),
+                "shoulder_symmetry_pct": round(abs(ls.price - rs.price) / ls.price * 100, 2),
+                "neckline_flat_pct": round(abs(p1.price - p2.price) / p1.price * 100, 2),
+                "prior_downtrend": prior_downtrend,
+            },
+        }
+
+        return PatternMatch(
+            name="INVERSE_HS",
+            entry_price=round(entry, 2),
+            target_price=round(target, 2),
+            stop_loss=round(stop, 2),
+            pattern_height=round(height, 2),
+            base_score=40,
+            note=f"H {h.price:.0f}, LS/RS ±{abs(ls.price-rs.price)/ls.price*100:.1f}%",
+            meta=meta,
+        )
+    return None
+
+
+# ──────────────────────────────────────────────────────────
+# 점수 계산
+# ──────────────────────────────────────────────────────────
+def calc_score(
+    match: PatternMatch,
+    candle: str,
+    trend: TrendCheck,
+    cycle: CycleCheck,
+    volume_signal: int,
+    rrr_value: float,
+    market_cap: float,
+) -> int:
+    score = match.base_score  # 0~40
+
+    # 캔들 보조 (0~15)
+    candle_pts = {
+        "DRAGONFLY_DOJI": 15,
+        "HIGH_WAVE": 12,
+        "LONG_LEGGED_DOJI": 10,
+        "STANDARD_DOJI": 5,
+    }.get(candle, 0)
+    score += candle_pts
+
+    # 거래량 (0~15) — 이미 호출자가 계산해서 전달
+    score += min(volume_signal, 15)
+
+    # 추세 강도 보너스 (0~15)
+    trend_pts = 0
+    if trend.yearly == "UP":
+        trend_pts += 7
+    if trend.monthly == "UP":
+        trend_pts += 5
+    if trend.ma240_position == "ABOVE":
+        trend_pts += 3
+    score += trend_pts
+
+    # RRR (0~10)
+    if rrr_value >= 3:
+        score += 10
+    elif rrr_value >= 2:
+        score += 7
+    elif rrr_value >= 1.5:
+        score += 4
+
+    # 시총 보너스 (0~5)
+    if market_cap >= 10_000_000_000_000:  # 10조
+        score += 5
+    elif market_cap >= 1_000_000_000_000:  # 1조
+        score += 3
+    elif market_cap >= 300_000_000_000:    # 3000억
+        score += 1
+
+    # 페널티
+    score -= cycle.penalty
+
+    return max(0, min(100, score))
+
+
+def volume_check(daily: pd.DataFrame) -> int:
+    """거래량 신호 점수 (0~15).
+    최근 5봉 평균이 20봉 평균보다 크면 +10, 50봉 평균 1.5배 이상이면 +15"""
+    if len(daily) < 50:
+        return 0
+    vol = daily["volume"].astype(float)
+    v5 = vol.tail(5).mean()
+    v20 = vol.tail(20).mean()
+    v50 = vol.tail(50).mean()
+    pts = 0
+    if v5 > v20:
+        pts += 5
+    if v5 > v50 * 1.2:
+        pts += 5
+    if v5 > v50 * 1.5:
+        pts += 5
+    return min(pts, 15)
+
+
+# ──────────────────────────────────────────────────────────
+# 메인 파이프라인
+# ──────────────────────────────────────────────────────────
+def get_active_stocks() -> list[tuple[str, str, str]]:
+    """stocks 테이블에서 (ticker, name, market) 페이지네이션"""
+    out = []
+    offset, page = 0, 1000
+    while True:
+        r = (
+            sb.table("stocks")
+            .select("ticker,name,market")
+            .eq("is_excluded", False)
+            .range(offset, offset + page - 1)
+            .execute()
+        )
+        if not r.data:
+            break
+        out.extend((x["ticker"], x["name"], x["market"]) for x in r.data)
+        if len(r.data) < page:
+            break
+        offset += page
+    return out
+
+
+def get_latest_market_cap(ticker: str, target_date: date) -> Optional[float]:
+    r = (
+        sb.table("daily_ohlcv")
+        .select("market_cap")
+        .eq("ticker", ticker)
+        .lte("date", target_date.isoformat())
+        .order("date", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if not r.data or r.data[0]["market_cap"] is None:
+        return None
+    return float(r.data[0]["market_cap"])
+
+
+def _try_patterns(
+    bars: pd.DataFrame, zz: float, tf: str
+) -> Optional[PatternMatch]:
+    """타임프레임별 패턴 탐지 우선순위: Cup&Handle → Inverse H&S → Triple Bottom → Double Bottom"""
+    # 타임프레임별 Cup 기간 (단위는 해당 timeframe의 봉 개수)
+    cup_params = {
+        "DAILY":   (35, 325, 5, 25),
+        "WEEKLY":  (10, 65, 1, 5),     # 10주~1.3년, handle 1~5주
+        "MONTHLY": (4, 18, 1, 3),      # 4개월~1.5년
+        "YEARLY":  (2, 6, 1, 2),
+    }.get(tf, (35, 325, 5, 25))
+
+    return (
+        detect_cup_handle(bars, zz=zz, cup_min=cup_params[0], cup_max=cup_params[1],
+                          handle_min=cup_params[2], handle_max=cup_params[3])
+        or detect_inverse_hs(bars, zz=zz)
+        or detect_triple_bottom(bars, zz=zz)
+        or detect_double_bottom(bars, zz=zz)
+    )
+
+
+def process_one(ticker: str, name: str, market: str, target_date: date, excluded: set[str]):
+    """한 종목 처리 → 매칭 list 반환 (각 timeframe별 독립적인 매칭)"""
+    cap = get_latest_market_cap(ticker, target_date)
+    ok0, reason0 = passes_stage0(ticker, cap, excluded)
+    if not ok0:
+        return [], reason0
+
+    daily = load_ohlcv(ticker, target_date, days_back=4000)  # ~16년치 (yearly resample용)
+    if len(daily) < 240:
+        return [], "DAILY_INSUFFICIENT"
+
+    yearly_df = load_yearly(ticker, target_date, years_back=10)
+    monthly_df = load_monthly(ticker, target_date, months_back=18)
+
+    trend = check_trend(daily, yearly_df, monthly_df)
+    if not trend.passes:
+        return [], trend.reason
+
+    cycle = check_cycle(daily)
+
+    # 캔들 보조 (일봉 기준 — 모든 타임프레임에서 공통 사용)
+    atr14 = float(atr(daily, 14).iloc[-1] or 0)
+    last_sig = classify_candle(daily.iloc[-1], atr14).kind
+    if last_sig == "NONE":
+        last_sig_2 = classify_candle(daily.iloc[-2], atr14).kind if len(daily) >= 2 else "NONE"
+        candle = last_sig_2 if last_sig_2 != "NONE" else "NONE"
+    else:
+        candle = last_sig
+
+    vol_pts = volume_check(daily)
+    current_close = float(daily["close"].iloc[-1])
+
+    # 타임프레임별 매칭 누적
+    results = []
+    for tf_name, cfg in TIMEFRAMES.items():
+        if cfg["resample"] is None:
+            bars = daily
+        else:
+            bars = resample_ohlcv(daily, cfg["resample"])
+
+        if len(bars) < cfg["min_bars"]:
+            continue
+
+        match = _try_patterns(bars, zz=cfg["zigzag"], tf=tf_name)
+        if not match:
+            continue
+
+        rrr = (match.target_price - match.entry_price) / max(
+            match.entry_price - match.stop_loss, 0.01
+        )
+        if rrr < 1.5:
+            continue
+
+        score = calc_score(match, candle, trend, cycle, vol_pts, rrr, cap)
+
+        note = f"{match.note}"
+        if cycle.surged:
+            note += f" | 시세{cycle.surge_reason}"
+            if not cycle.abc_complete:
+                note += " ABC미완"
+
+        detection_meta = {
+            **match.meta,
+            "timeframe": tf_name,
+            "score_breakdown": {
+                "pattern": match.base_score,
+                "candle": candle if candle != "NONE" else None,
+                "volume": vol_pts,
+                "trend": {
+                    "yearly": trend.yearly,
+                    "monthly": trend.monthly,
+                    "ma240": trend.ma240_position,
+                },
+                "rrr": round(rrr, 2),
+                "cycle_surged": cycle.surged,
+                "cycle_abc_complete": cycle.abc_complete,
+                "cycle_penalty": cycle.penalty,
+            },
+            "context": {
+                "candle_confirm": candle if candle != "NONE" else None,
+                "current_close": round(current_close, 2),
+                "market_cap": cap,
+            },
+        }
+
+        results.append({
+            "ticker": ticker,
+            "name": name,
+            "market": market,
+            "pattern": match.name,
+            "timeframe": tf_name,
+            "score": score,
+            "entry_price": match.entry_price,
+            "current_price": round(current_close, 2),
+            "target_price": match.target_price,
+            "stop_loss": match.stop_loss,
+            "candle_confirm": candle if candle != "NONE" else None,
+            "note": note,
+            "trend_yearly": trend.yearly,
+            "trend_monthly": trend.monthly,
+            "ma240_position": trend.ma240_position,
+            "rrr": round(rrr, 2),
+            "pattern_height": match.pattern_height,
+            "detection_meta": detection_meta,
+        })
+
+    if not results:
+        return [], "NO_PATTERN"
+    return results, "MATCH"
+
+
+def run(target_date: date, ticker_filter: Optional[list[str]], min_score: int, limit: Optional[int]):
+    started = time.time()
+    excluded = load_excluded_tickers()
+    print(f"[detect] excluded list: {len(excluded)}")
+
+    if ticker_filter:
+        stocks = [(t, "?", "?") for t in ticker_filter]
+    else:
+        stocks = get_active_stocks()
+    if limit:
+        stocks = stocks[:limit]
+
+    print(f"[detect] processing {len(stocks)} stocks for {target_date}, min_score={min_score}")
+
+    matches = []
+    reasons: dict[str, int] = {}
+    for ticker, name, market in tqdm(stocks, desc="scan"):
+        try:
+            results, reason = process_one(ticker, name, market, target_date, excluded)
+            reasons[reason] = reasons.get(reason, 0) + 1
+            for result in results:
+                if result["score"] >= min_score:
+                    result["date"] = target_date.isoformat()
+                    matches.append(result)
+        except Exception as e:
+            reasons[f"ERROR:{type(e).__name__}"] = reasons.get(f"ERROR:{type(e).__name__}", 0) + 1
+            if ticker_filter:
+                print(f"  ! {ticker}: {e}", file=sys.stderr)
+
+    print(f"\n[detect] reasons:")
+    for r, c in sorted(reasons.items(), key=lambda x: -x[1]):
+        print(f"  {r:>40s}: {c}")
+
+    print(f"\n[detect] matches: {len(matches)}")
+    for m in sorted(matches, key=lambda x: -x["score"])[:30]:
+        print(
+            f"  [{m['timeframe']:<7s}] {m['ticker']} {m['name'][:10]:<10s} "
+            f"{m['pattern']:<15s} score={m['score']} entry={m['entry_price']:.0f} "
+            f"R/R={m['rrr']:.1f} {m['candle_confirm'] or '-'}"
+        )
+
+    # 저장
+    if matches and not ticker_filter:
+        save_rows = []
+        for m in matches:
+            row = {k: v for k, v in m.items() if k not in ("name", "market")}
+            save_rows.append(_to_native(row))
+        for i in range(0, len(save_rows), 500):
+            sb.table("buy_picks").upsert(
+                save_rows[i : i + 500], on_conflict="date,ticker,pattern,timeframe"
+            ).execute()
+        print(f"[detect] saved {len(save_rows)} picks")
+
+    dur = int(time.time() - started)
+    try:
+        sb.table("buy_picks_runs").insert(
+            {
+                "run_date": target_date.isoformat(),
+                "stage": "DETECT",
+                "status": "OK",
+                "duration_sec": dur,
+                "picks_count": len(matches),
+                "filtered_count": len(stocks),
+            }
+        ).execute()
+    except Exception as e:
+        print(f"  ! log_run failed: {e}", file=sys.stderr)
+
+    print(f"[OK] done in {dur}s")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--date", help="YYYY-MM-DD")
+    ap.add_argument("--ticker", help="단일 종목 디버그")
+    ap.add_argument("--limit", type=int, help="처음 N종목")
+    ap.add_argument("--min-score", type=int, default=DEFAULT_MIN_SCORE)
+    args = ap.parse_args()
+
+    target = date.fromisoformat(args.date) if args.date else date.today()
+    tf = [args.ticker] if args.ticker else None
+    run(target, tf, args.min_score, args.limit)
+
+
+if __name__ == "__main__":
+    main()

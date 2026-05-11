@@ -31,7 +31,7 @@ from supabase import create_client
 from tqdm import tqdm
 
 ROOT = Path(__file__).resolve().parents[2]
-load_dotenv(ROOT / ".env.local")
+load_dotenv(ROOT / ".env.local", encoding="utf-8-sig")
 
 sys.path.insert(0, str(Path(__file__).parent))
 from indicators import (  # noqa: E402
@@ -255,7 +255,8 @@ def check_trend(daily: pd.DataFrame, yearly: pd.DataFrame, monthly: pd.DataFrame
     last_close_d = float(daily["close"].iloc[-1])
     tc.ma240_position = "ABOVE" if last_close_d >= ma240 else "BELOW"
 
-    tc.passes = (tc.yearly == "UP") and (tc.monthly == "UP") and (tc.ma240_position == "ABOVE")
+    # y=UP or FLAT 허용 (y=FLAT+m=UP+240MA ABOVE → 대형주 횡보 후 월봉 상승 케이스 수용)
+    tc.passes = (tc.ma240_position == "ABOVE") and (tc.monthly == "UP") and (tc.yearly in ("UP", "FLAT"))
     if not tc.passes:
         tc.reason = f"trend_fail(y={tc.yearly},m={tc.monthly},ma240={tc.ma240_position})"
     return tc
@@ -280,12 +281,14 @@ def check_cycle(daily: pd.DataFrame) -> CycleCheck:
     closes = daily["close"].values
     last = float(closes[-1])
 
-    # 6M 최저 대비 +80%
-    low_6m = float(daily["low"].tail(120).min())
+    # 6M 최저 대비 +80% (100원 미만 틱 제외 — 신규상장 오류 방지)
+    low_6m_series = daily["low"].tail(120)
+    low_6m = float(low_6m_series[low_6m_series >= 100].min() if (low_6m_series >= 100).any() else low_6m_series.min())
     rise_6m = (last / max(low_6m, 1e-9) - 1) * 100
 
-    # 12M 최저 대비 +150%
-    low_12m = float(daily["low"].tail(240).min())
+    # 12M 최저 대비 +150% (100원 미만 틱 제외)
+    low_12m_series = daily["low"].tail(240)
+    low_12m = float(low_12m_series[low_12m_series >= 100].min() if (low_12m_series >= 100).any() else low_12m_series.min())
     rise_12m = (last / max(low_12m, 1e-9) - 1) * 100
 
     # 240MA 이격도 +60%
@@ -310,7 +313,7 @@ def check_cycle(daily: pd.DataFrame) -> CycleCheck:
     # ABC 조정 검증: 6M 고점부터 현재까지 ABC가 완성됐는지
     cc.abc_complete = _check_abc_complete(daily)
     if not cc.abc_complete:
-        cc.penalty = 30  # 시세 줬는데 ABC 미완 → -30점
+        cc.penalty = 10  # 시세 줬는데 ABC 미완 → -10점
 
     return cc
 
@@ -330,6 +333,30 @@ def _check_abc_complete(daily: pd.DataFrame) -> bool:
         return False
     a_low, c_low = last4[1].price, last4[3].price
     return abs(c_low - a_low) / max(a_low, 1e-9) <= 0.05
+
+
+def check_lid_warning(bars: pd.DataFrame, tf_name: str) -> bool:
+    """뚜껑 감지 (주/월/년봉만): 직전 양봉 위로 음봉이 덮어씌운 강력 매도 시그널"""
+    if tf_name == "DAILY" or len(bars) < 2:
+        return False
+    prev, curr = bars.iloc[-2], bars.iloc[-1]
+    p_o, p_c = float(prev["open"]), float(prev["close"])
+    c_o, c_c, c_h = float(curr["open"]), float(curr["close"]), float(curr["high"])
+    if not (p_c > p_o):  # 직전봉 양봉 아님
+        return False
+    if not (c_c < c_o):  # 현재봉 음봉 아님
+        return False
+    high_breaks = c_h > float(prev["high"])          # 음봉 고가가 직전 양봉 고가 돌파
+    body_overlap = c_o > p_o and c_c < p_c           # 음봉 몸통이 직전 양봉 몸통과 겹침
+    return high_breaks and body_overlap
+
+
+def compute_hill_price(bars: pd.DataFrame, n: int = 30) -> Optional[float]:
+    """언덕: 최근 n봉 내 최고가 (현재봉 제외)"""
+    if len(bars) < 2:
+        return None
+    look = bars["high"].iloc[-(n + 1):-1]
+    return float(look.max()) if not look.empty else None
 
 
 # ──────────────────────────────────────────────────────────
@@ -845,6 +872,73 @@ def get_latest_market_cap(ticker: str, target_date: date) -> Optional[float]:
     return float(r.data[0]["market_cap"])
 
 
+def detect_three_white_soldiers(bars: pd.DataFrame) -> Optional[PatternMatch]:
+    """적삼병 (빵빵빵): 최근 3개 연속 양봉, 각 종가 상승, 각 시가 이전 시가 이상"""
+    if len(bars) < 5:
+        return None
+    b0, b1, b2 = bars.iloc[-3], bars.iloc[-2], bars.iloc[-1]
+    o0, c0 = float(b0["open"]), float(b0["close"])
+    o1, c1 = float(b1["open"]), float(b1["close"])
+    o2, c2 = float(b2["open"]), float(b2["close"])
+    if not (c0 > o0 and c1 > o1 and c2 > o2):  # 3봉 모두 양봉
+        return None
+    if not (c2 > c1 > c0):  # 종가 연속 상승
+        return None
+    # 시가 조건: 각 봉의 시가가 직전 봉 몸통 내에 있어야 함 (갭 없는 계단식)
+    if not (o0 <= o1 <= c0 and o1 <= o2 <= c1):
+        return None
+    entry = c2
+    height = c2 - o0
+    target = entry + height
+    stop = float(b0["low"])
+    if target <= entry or entry <= stop:
+        return None
+    return PatternMatch(
+        name="THREE_WHITE_SOLDIERS",
+        entry_price=round(entry),
+        target_price=round(target),
+        stop_loss=round(stop),
+        pattern_height=round(height),
+        base_score=25,
+        note=f"적삼병 {round(c0)}→{round(c1)}→{round(c2)}",
+        meta={"b0_close": round(c0), "b1_close": round(c1), "b2_close": round(c2)},
+    )
+
+
+def detect_gap_up_support(
+    bars: pd.DataFrame, gap_min: float = 0.02, n: int = 60
+) -> Optional[PatternMatch]:
+    """갭 구간: 최근 n봉 내 갭 상승 발생 후 현재가가 갭 하단 ±5%에서 지지"""
+    if len(bars) < 10:
+        return None
+    recent = bars.tail(n).reset_index(drop=True)
+    current_close = float(recent["close"].iloc[-1])
+    for i in range(len(recent) - 2, 0, -1):  # 최근 갭 우선
+        p_c = float(recent["close"].iloc[i - 1])
+        c_o = float(recent["open"].iloc[i])
+        if c_o <= p_c * (1 + gap_min):
+            continue
+        gap_bottom, gap_top = p_c, c_o
+        if not (gap_bottom * 0.95 <= current_close <= gap_bottom * 1.05):
+            continue
+        gap_h = gap_top - gap_bottom
+        target = gap_top + gap_h * 0.5
+        stop = gap_bottom * 0.95
+        if target <= current_close or current_close <= stop:
+            continue
+        return PatternMatch(
+            name="GAP_UP_SUPPORT",
+            entry_price=round(current_close),
+            target_price=round(target),
+            stop_loss=round(stop),
+            pattern_height=round(gap_h),
+            base_score=20,
+            note=f"갭구간 지지 {round(gap_bottom)}~{round(gap_top)}",
+            meta={"gap_bottom": round(gap_bottom), "gap_top": round(gap_top)},
+        )
+    return None
+
+
 def _try_patterns(
     bars: pd.DataFrame, zz: float, tf: str
 ) -> Optional[PatternMatch]:
@@ -863,6 +957,8 @@ def _try_patterns(
         or detect_inverse_hs(bars, zz=zz)
         or detect_triple_bottom(bars, zz=zz)
         or detect_double_bottom(bars, zz=zz)
+        or detect_three_white_soldiers(bars)
+        or detect_gap_up_support(bars)
     )
 
 
@@ -921,6 +1017,11 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
 
         score = calc_score(match, candle, trend, cycle, vol_pts, rrr, cap)
 
+        lid_warn = check_lid_warning(bars, tf_name)
+        hill = compute_hill_price(bars)
+        if lid_warn:
+            score -= 30  # 뚜껑 감점 — 강력 매도 시그널
+
         note = f"{match.note}"
         if cycle.surged:
             note += f" | 시세{cycle.surge_reason}"
@@ -929,6 +1030,8 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
 
         detection_meta = {
             **match.meta,
+            **({"lid_warning": True} if lid_warn else {}),
+            **({"hill_price": round(hill)} if hill is not None else {}),
             "timeframe": tf_name,
             "score_breakdown": {
                 "pattern": match.base_score,

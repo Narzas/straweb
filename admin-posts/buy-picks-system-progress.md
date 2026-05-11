@@ -49,39 +49,46 @@ tags: [매수타점, 주식, 패턴, 차트, supabase, python, fdr]
 |---|---|
 | 시총 하한 | 1,000억 |
 | 엔터 / 게임 / 정치테마 / 세력주 / 바이오 | 제외 |
-| 추세 (Stage 1) | 년·월봉 UP + 240MA 위 모두 충족 |
+| 추세 (Stage 1) | y=UP 또는 FLAT + m=UP + 240MA 위 (2026-05-11 완화) |
 | "시세 준 종목" 정의 | 6개월 +80% / 12개월 +150% / 240MA 이격 +60% 중 하나 |
-| ABC 미완 페널티 | -30점 |
+| ABC 미완 페널티 | -10점 (2026-05-11 완화, 기존 -30) |
+| 저가주 필터 | 100원 미만 틱 제외 (신규상장 오류 방지, 2026-05-11) |
+| 뚜껑 감점 | -30점 (주/월/년봉 한정) |
 | R/R 하한 | 1.5 |
 | 점수 하한 | 70 |
 
+## 완료 작업 (2026-05-11)
+
+### B안 — 필터 완화 ✅
+- `tc.passes`: y=FLAT+m=UP+240MA ABOVE 허용 → 결과는 동일 12건 (FLAT종목 패턴 미매칭)
+- ABC 페널티: -30 → -10
+- 저가주 버그픽스: low_6m/low_12m 계산 시 100원 미만 틱 제외
+- `.env.local` BOM 버그 수정 (`load_dotenv encoding='utf-8-sig'`)
+
+### A안 — 패턴 확장 ✅ (코드 완료, 스캔 결과 대기 중)
+1. **적삼병 (THREE_WHITE_SOLDIERS)** — `detect_three_white_soldiers()` 추가. base_score=25.
+2. **갭 구간 (GAP_UP_SUPPORT)** — `detect_gap_up_support()` 추가. base_score=20.
+3. **뚜껑 감지 (lid_warning)** — `check_lid_warning()` 추가. 주/월/년봉 한정, 감점 -30, detection_meta에 `lid_warning: True` 저장.
+4. **언덕 (hill_price)** — `compute_hill_price()` 추가. 최근 30봉 최고가, detection_meta에 `hill_price` 저장.
+5. UI 뱃지: 뚜껑(빨강 ⚠), 언덕(주황) → 이전 세션에서 완료
+6. `lib/buy-picks.ts` 라벨: THREE_WHITE_SOLDIERS→"적삼병", GAP_UP_SUPPORT→"갭 구간" 추가
+
 ## 미해결 / 다음 작업
 
-오늘(2026-05-11) 전체 detect 결과 12건. 사용자가 발견한 28종목 중 매칭은 1건뿐.
-
-### B안 — 필터 완화 (약 40분 작업, 최우선)
-- Stage 1에서 `y=FLAT + m=UP + 240MA above` 통과 허용 (대한항공·LG에너지솔루션·롯데에너지머티리얼즈·SNT모티브·한화비전 9건이 막힘)
-- 시세 준 종목 페널티 -30 → -10 또는 ABC 미완이어도 패턴 매칭은 통과시키고 점수만 약간 감점 (SKC/HL만도/기아/현대위아/LG전자/에코프로비엠/후성/한전기술/헥토 등 13건 영향)
-- 사이클 % 계산 버그 픽스: 신규상장 종목 초기 1원 가격 추적으로 `6M+3759999999999900%` 같은 비정상값 발생 (현대무벡스/뉴로메카/휴림로봇). 가격 100원 미만은 무시 처리 필요.
-
-### A안 — 패턴 확장 (약 2시간 20분)
-사용자가 보는 setup 중 우리에게 없는 것:
-
-1. **적삼병 (Three White Soldiers, "빵빵빵")** — 3개 연속 양봉, 각 종가가 이전 양봉 위. 일/주/월 어디서나. 사용자 표현: "빵빵빵 / 월봉 빵빵빵".
-2. **Gap Up Support ("갭 구간")** — 갭 상승 후 갭 하단 지지 받으면 매수. 사용자 표현: "갭 구간".
-3. **ABC 종결 → 5파 진입** — 이미 `_check_abc_complete` 측정 중. "ABC 완성 + 마지막 봉 양봉/도지"를 매수 신호로 활용. 사용자 표현: "abc 언덕".
+### C안 (선택사항)
+- **ABC 종결 → 5파 진입** — `_check_abc_complete` + 마지막 봉 양봉/도지 조건으로 별도 패턴 신호화. 사용자 표현: "abc 언덕".
 
 ### 안 할 것
 - LG전자 "삼봉 모양" — 삼봉 = H&S top = 매도 신호. 매수타점 시스템에 불필요.
-- "가운데 자리", "뚜껑/언덕" — 너무 모호한 형태 묘사라 시스템화 어려움.
+- "가운데 자리" — 너무 모호한 형태 묘사라 시스템화 어려움.
 
 ## 다른 PC에서 이어 작업하기
 
 1. `git pull` (master 브랜치)
-2. Python deps: `pip install -r scripts/stocks/requirements.txt` (`PUPPETEER_SKIP_DOWNLOAD=true npm install` 도 필요할 수 있음)
+2. Python deps: `pip install -r scripts/stocks/requirements.txt`
 3. `.env.local`은 다른 PC에 있어야 함 (Supabase URL + service role key)
+   - `.env.local`이 UTF-8 BOM 형식이면 load_dotenv가 못 읽음 → `encoding='utf-8-sig'` 이미 적용됨
 4. 검증: `python scripts/stocks/detect_picks.py --ticker 005930 --min-score 0` — 정상 동작 확인
-5. 작업 시작 순서: **B안 → 결과 확인 → A안 (적삼병 → 갭 → ABC)**
 
 ## 주요 매칭 결과 (2026-05-11 기준 12건)
 

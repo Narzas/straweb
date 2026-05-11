@@ -2,6 +2,12 @@ import { createServiceClient } from "@/lib/supabase";
 
 export type Timeframe = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
+export type DetectionMeta = {
+  lid_warning?: boolean;   // 뚜껑 (강력 매도시그널)
+  hill_price?: number;     // 언덕 (최근 로컬 고점 가격)
+  [key: string]: unknown;
+};
+
 export type BuyPick = {
   code: string;
   name: string;
@@ -16,6 +22,7 @@ export type BuyPick = {
   score?: number;
   candle_confirm?: string | null;
   rrr?: number | null;
+  detection_meta?: DetectionMeta | null;
 };
 
 export const TIMEFRAME_LABELS: Record<Timeframe, string> = {
@@ -66,6 +73,8 @@ const PATTERN_LABELS: Record<string, string> = {
   ELLIOTT_W4: "엘리엇 4파 종결",
   HIGH_WAVE: "하이웨이브",
   DRAGONFLY_DOJI: "잠자리 도지",
+  THREE_WHITE_SOLDIERS: "적삼병",
+  GAP_UP_SUPPORT: "갭 구간",
 };
 
 const CANDLE_LABELS: Record<string, string> = {
@@ -99,6 +108,7 @@ type PickRow = {
   note: string | null;
   rrr: number | null;
   generated_at: string;
+  detection_meta: DetectionMeta | null;
 };
 
 type StockMeta = { ticker: string; name: string; market: string };
@@ -112,7 +122,7 @@ export async function getBuyPickDays(daysBack = 14): Promise<BuyPickDay[]> {
   const { data: picks, error } = await sb
     .from("buy_picks")
     .select(
-      "date,ticker,pattern,timeframe,score,entry_price,current_price,target_price,stop_loss,candle_confirm,note,rrr,generated_at"
+      "date,ticker,pattern,timeframe,score,entry_price,current_price,target_price,stop_loss,candle_confirm,note,rrr,generated_at,detection_meta"
     )
     .gte("date", sinceIso)
     .order("date", { ascending: false })
@@ -153,6 +163,7 @@ export async function getBuyPickDays(daysBack = 14): Promise<BuyPickDay[]> {
       score: row.score,
       candle_confirm: row.candle_confirm,
       rrr: row.rrr != null ? Number(row.rrr) : null,
+      detection_meta: row.detection_meta ?? null,
     };
     const entry = byDate.get(row.date);
     if (entry) {

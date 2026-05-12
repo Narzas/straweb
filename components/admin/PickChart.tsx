@@ -571,9 +571,9 @@ export default function PickChart({
         const { createSeriesMarkers } = await import("lightweight-charts");
         const swingMarkers = swings.map((s) => ({
           time: tfKey(s.date),
-          position: s.kind === "low" ? "belowBar" : "aboveBar",
+          position: (s.kind === "low" ? "belowBar" : "aboveBar") as "belowBar" | "aboveBar",
           color: s.kind === "low" ? "#10b981" : "#ef4444",
-          shape: s.kind === "low" ? "arrowUp" : "arrowDown",
+          shape: (s.kind === "low" ? "arrowUp" : "arrowDown") as "arrowUp" | "arrowDown",
           text: s.label,
           price: s.price,
         }));

@@ -171,6 +171,13 @@ export default function PickChart({
         chart = createChart(ref.current, {
           width: ref.current.clientWidth,
           height: 540,
+          localization: {
+            // 주가는 정수(원) 단위 — RSI(0~100)는 소수점 1자리 유지
+            priceFormatter: (price: number) =>
+              price < 200
+                ? price.toFixed(1)
+                : Math.round(price).toLocaleString("ko-KR"),
+          },
           layout: {
             background: { color: "transparent" },
             textColor: "#94a3b8",
@@ -398,11 +405,11 @@ export default function PickChart({
           };
           const idxL = findIdx("좌림");
           const idxC = findIdx("컵바닥");
-          const idxR = findIdx("우림(피벗)");
+          const idxR = findIdx("우림");
           const idxH = findIdx("핸들");
           const pL = swingByLabel("좌림")?.price;
           const pC = swingByLabel("컵바닥")?.price;
-          const pR = swingByLabel("우림(피벗)")?.price;
+          const pR = swingByLabel("우림")?.price;
           const pH = swingByLabel("핸들")?.price;
 
           // Lagrange 2차 보간: 3점 (x1,y1)(x2,y2)(x3,y3) 통과하는 포물선
@@ -549,7 +556,18 @@ export default function PickChart({
           }
         }
 
-        // 스윙 마커 + 역대 최고가 top 2 마커 (한 번에 set 해야 lightweight-charts 가 덮어쓰기 안 함)
+        // 역대 저점 가로선
+        const allTimeLow = Math.min(...data.rows.map((r) => r.low));
+        candleSeries.createPriceLine({
+          price: allTimeLow,
+          color: "#6366f1",
+          lineWidth: 2,
+          lineStyle: 0,
+          axisLabelVisible: true,
+          title: `역대저점 ₩${allTimeLow.toLocaleString("ko-KR")}`,
+        });
+
+        // 스윙 마커 (한 번에 set 해야 lightweight-charts 가 덮어쓰기 안 함)
         const { createSeriesMarkers } = await import("lightweight-charts");
         const swingMarkers = swings.map((s) => ({
           time: tfKey(s.date),
@@ -559,29 +577,8 @@ export default function PickChart({
           text: s.label,
         }));
 
-        // 차트 데이터 내 high 기준 top 2 (단, 우림 마커와 같은 봉은 중복 제거)
-        const swingDates = new Set(swingMarkers.map((m) => m.time));
-        const sortedByHigh = [...data.rows]
-          .map((r, i) => ({ row: r, idx: i }))
-          .sort((a, b) => b.row.high - a.row.high);
-        const highMarkers: typeof swingMarkers = [];
-        for (const { row } of sortedByHigh) {
-          if (highMarkers.length >= 2) break;
-          if (swingDates.has(row.date)) continue;  // 우림 등과 중복 회피
-          highMarkers.push({
-            time: row.date,
-            position: "aboveBar" as const,
-            color: "#eab308",  // 금색
-            shape: "circle" as const,
-            text: `역대${highMarkers.length + 1} ₩${row.high.toLocaleString("ko-KR")}`,
-          });
-        }
-
-        const allMarkers = [...swingMarkers, ...highMarkers].sort((a, b) =>
-          (a.time as string) < (b.time as string) ? -1 : 1
-        );
-        if (allMarkers.length > 0) {
-          createSeriesMarkers(candleSeries, allMarkers);
+        if (swingMarkers.length > 0) {
+          createSeriesMarkers(candleSeries, swingMarkers);
         }
 
         // 기본 줌: 데이터 길이에 따라 3년 → 1년 → 3개월 → 전체 순으로 선택

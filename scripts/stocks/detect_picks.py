@@ -429,9 +429,8 @@ def detect_double_bottom(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> O
             # 이미 한참 돌파 → 매수 늦음
             continue
 
-        # 매수타점 = Neckline 돌파선 (현재가가 이 위로 가야 진입)
-        # 손절: 넥라인 3% 아래 (false breakout 방어 — breakout 진입은 tight stop)
-        entry = nl.price * 1.002
+        # 매수타점 = Neckline (돌파 기준선)
+        entry = nl.price
         height = nl.price - min(lb.price, rb.price)
         target = nl.price + height
         stop = nl.price * 0.97
@@ -452,7 +451,7 @@ def detect_double_bottom(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> O
 
         return PatternMatch(
             name="DOUBLE_BOTTOM",
-            entry_price=round(entry, 2),
+            entry_price=round(entry),
             target_price=round(target, 2),
             stop_loss=round(stop, 2),
             pattern_height=round(height, 2),
@@ -522,7 +521,7 @@ def detect_triple_bottom(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> O
         if not (30 <= total_bars <= 150):
             continue
 
-        entry = neckline * 1.002
+        entry = neckline
         height = neckline - min_p
         target = neckline + height
         stop = neckline * 0.97
@@ -546,7 +545,7 @@ def detect_triple_bottom(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> O
 
         return PatternMatch(
             name="TRIPLE_BOTTOM",
-            entry_price=round(entry, 2),
+            entry_price=round(entry),
             target_price=round(target, 2),
             stop_loss=round(stop, 2),
             pattern_height=round(height, 2),
@@ -561,9 +560,10 @@ def detect_cup_handle(
     daily: pd.DataFrame,
     zz: float = ZIGZAG_THRESHOLD,
     cup_min: int = 35,
-    cup_max: int = 325,
-    handle_min: int = 5,
-    handle_max: int = 25,
+    cup_max: int = 60,
+    handle_min: int = 3,
+    handle_max: int = 15,
+    depth_max: float = 0.35,
 ) -> Optional[PatternMatch]:
     """컵 위드 핸들: high(LCR) - low(CB) - high(RCR) - low(HL) - 현재가
     매수타점 = Handle 최고가 돌파 (= Pivot Point)"""
@@ -603,10 +603,10 @@ def detect_cup_handle(
         if rcr.price < lcr.price * 0.95:
             continue
 
-        # 2) Cup 깊이 12~50%
+        # 2) Cup 깊이 12~depth_max (O'Neil 정석: ~35%)
         rim_avg = (lcr.price + rcr.price) / 2
         depth = (rim_avg - cb.price) / rim_avg
-        if not (0.12 <= depth <= 0.50):
+        if not (0.12 <= depth <= depth_max):
             continue
 
         # 3) Cup 기간 (타임프레임별 cup_min/cup_max)
@@ -631,7 +631,8 @@ def detect_cup_handle(
             continue
 
         # 7) 현재가가 아직 Pivot 돌파 직전인지 (Pivot 5% 위까지는 허용)
-        pivot = rcr.price
+        # O'Neil: 매수타점 = max(좌림, 우림) 0.2% 위 — 진짜 저항선(더 높은 쪽) 돌파 기준
+        pivot = max(lcr.price, rcr.price)
         if last_close > pivot * 1.05:
             continue
 
@@ -657,8 +658,8 @@ def detect_cup_handle(
         if not (vol_pattern_ok and u_shape_ok and lrim_gradual_ok):
             continue
 
-        # 매수타점 = Pivot 0.2% 위
-        entry = pivot * 1.002
+        # 매수타점 = Pivot (좌림·우림 중 더 높은 쪽)
+        entry = pivot
         height = rim_avg - cb.price  # Cup 깊이 (=measured move)
         target = pivot + height
         stop = hl.price * 0.97  # Handle 저점 3% 아래
@@ -667,7 +668,7 @@ def detect_cup_handle(
             "swings": [
                 {"date": lcr.date, "price": float(lcr.price), "kind": "high", "label": "좌림"},
                 {"date": cb.date, "price": float(cb.price), "kind": "low", "label": "컵바닥"},
-                {"date": rcr.date, "price": float(rcr.price), "kind": "high", "label": "우림(피벗)"},
+                {"date": rcr.date, "price": float(rcr.price), "kind": "high", "label": "우림"},
                 {"date": hl.date, "price": float(hl.price), "kind": "low", "label": "핸들"},
             ],
             "checks": {
@@ -686,7 +687,7 @@ def detect_cup_handle(
 
         return PatternMatch(
             name="CUP_HANDLE",
-            entry_price=round(entry, 2),
+            entry_price=round(entry),
             target_price=round(target, 2),
             stop_loss=round(stop, 2),
             pattern_height=round(height, 2),
@@ -754,7 +755,7 @@ def detect_cup_handle(
                     if (rdiff <= 0.05 and
                             lcr_s.price >= rcr_s.price and
                             rcr_s.price >= lcr_s.price * 0.95 and
-                            0.12 <= dep <= 0.50 and
+                            0.12 <= dep <= depth_max and
                             cup_min <= cbars <= cup_max and
                             (lbars / max(cbars, 1)) >= 0.30 and  # U자
                             hdep <= dep * 0.40 and
@@ -765,11 +766,11 @@ def detect_cup_handle(
                             vol_ok = bool(vol_h < vol_r * 0.9)
                         except Exception:
                             vol_ok = True
-                        piv = rcr_s.price
+                        piv = max(lcr_s.price, rcr_s.price)
                         ht = ravg - cb_s.price
                         return PatternMatch(
                             name="CUP_HANDLE",
-                            entry_price=round(piv * 1.002, 2),
+                            entry_price=round(piv, 2),
                             target_price=round(piv + ht, 2),
                             stop_loss=round(hl_s.price * 0.97, 2),
                             pattern_height=round(ht, 2),
@@ -782,7 +783,7 @@ def detect_cup_handle(
                                 "swings": [
                                     {"date": lcr_s.date, "price": float(lcr_s.price), "kind": "high", "label": "좌림"},
                                     {"date": cb_s.date, "price": float(cb_s.price), "kind": "low", "label": "컵바닥"},
-                                    {"date": rcr_s.date, "price": float(rcr_s.price), "kind": "high", "label": "우림(피벗)"},
+                                    {"date": rcr_s.date, "price": float(rcr_s.price), "kind": "high", "label": "우림"},
                                     {"date": hl_s.date, "price": float(hl_s.price), "kind": "low", "label": "핸들"},
                                 ],
                                 "checks": {
@@ -868,7 +869,7 @@ def detect_inverse_hs(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> Opti
 
         return PatternMatch(
             name="INVERSE_HS",
-            entry_price=round(entry, 2),
+            entry_price=round(entry),
             target_price=round(target, 2),
             stop_loss=round(stop, 2),
             pattern_height=round(height, 2),
@@ -1113,16 +1114,19 @@ def _try_patterns(
 ) -> Optional[PatternMatch]:
     """타임프레임별 패턴 탐지 우선순위: Cup&Handle → Inverse H&S → Triple Bottom → Double Bottom"""
     # 타임프레임별 Cup 기간 (단위는 해당 timeframe의 봉 개수)
+    # O'Neil 정석 기준
+    # (cup_min, cup_max, handle_min, handle_max, depth_max)
     cup_params = {
-        "DAILY":   (35, 325, 5, 25),
-        "WEEKLY":  (6, 200, 1, 10),     # 6주~4년, handle 1~10주
-        "MONTHLY": (4, 48, 1, 6),      # 4개월~4년
-        "YEARLY":  (2, 6, 1, 2),
-    }.get(tf, (35, 325, 5, 25))
+        "DAILY":   (35, 200,  3, 15, 0.40),  # 7~40주 (~10개월), handle 3~15일
+        "WEEKLY":  (7,  65,   1,  5, 0.35),  # 7주~65주 (O'Neil 원전), handle 1~5주
+        "MONTHLY": (6,  18,   1,  4, 0.40),  # 6~18개월 장기 베이스
+        "YEARLY":  (2,   6,   1,  2, 0.35),
+    }.get(tf, (35, 200, 3, 15, 0.40))
 
     return (
         detect_cup_handle(bars, zz=zz, cup_min=cup_params[0], cup_max=cup_params[1],
-                          handle_min=cup_params[2], handle_max=cup_params[3])
+                          handle_min=cup_params[2], handle_max=cup_params[3],
+                          depth_max=cup_params[4])
         or detect_triple_bottom(bars, zz=zz)
         or detect_double_bottom(bars, zz=zz)
         or detect_three_white_soldiers(bars)

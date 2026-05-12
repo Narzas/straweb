@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase";
 import {
-  labelCandle,
   labelPattern,
   TIMEFRAME_COLORS,
   TIMEFRAME_LABELS,
@@ -27,7 +26,6 @@ type DetectionMeta = {
   checks?: Record<string, unknown>;
   score_breakdown?: {
     pattern?: number;
-    candle?: string | null;
     volume?: number;
     trend?: { yearly?: string; monthly?: string; ma240?: string };
     rrr?: number;
@@ -36,7 +34,6 @@ type DetectionMeta = {
     cycle_penalty?: number;
   };
   context?: {
-    candle_confirm?: string | null;
     current_close?: number;
     market_cap?: number;
   };
@@ -53,7 +50,6 @@ type PickRow = {
   current_price: number | null;
   target_price: number | null;
   stop_loss: number | null;
-  candle_confirm: string | null;
   note: string | null;
   trend_yearly: string | null;
   trend_monthly: string | null;
@@ -118,19 +114,67 @@ export default async function PickDetailPage({
 
   if (!stockRow) notFound();
 
+  // 같은 market 내 시가총액 순위 + 본인 시총 (가장 최근 daily_ohlcv 기준)
+  let marketRank: { rank: number; total: number; market_cap: number } | null = null;
+  const { data: latestDateRow } = await sb
+    .from("daily_ohlcv")
+    .select("date")
+    .order("date", { ascending: false })
+    .limit(1);
+  const latestDate = latestDateRow?.[0]?.date as string | undefined;
+  if (latestDate) {
+    // 시장 전체 기준 — 제외 종목도 시총 순위 계산에는 포함 (실제 KOSPI/KOSDAQ 순위와 일치)
+    const { data: peers } = await sb
+      .from("stocks")
+      .select("ticker")
+      .eq("market", stockRow.market);
+    const peerTickers = new Set((peers ?? []).map((p) => p.ticker));
+    const { data: caps } = await sb
+      .from("daily_ohlcv")
+      .select("ticker,market_cap")
+      .eq("date", latestDate)
+      .not("market_cap", "is", null)
+      .order("market_cap", { ascending: false })
+      .limit(5000);
+    const peerCaps = (caps ?? []).filter((c) => peerTickers.has(c.ticker));
+    const idx = peerCaps.findIndex((c) => c.ticker === ticker);
+    if (idx >= 0) {
+      marketRank = {
+        rank: idx + 1,
+        total: peerCaps.length,
+        market_cap: Number(peerCaps[idx].market_cap),
+      };
+    }
+  }
+
   const meta = (pick?.detection_meta as DetectionMeta | null) ?? null;
   const swings = meta?.swings ?? [];
 
   return (
     <div className="space-y-6 p-6 max-w-6xl mx-auto">
+      <nav className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+        <Link
+          href="/admin/picks"
+          className="hover:text-gray-900 dark:hover:text-gray-100"
+        >
+          매수타점
+        </Link>
+        {pick?.date && (
+          <>
+            <span className="text-gray-300 dark:text-gray-600">/</span>
+            <Link
+              href={`/admin/picks/d/${pick.date}`}
+              className="hover:text-gray-900 dark:hover:text-gray-100"
+            >
+              {pick.date}
+            </Link>
+          </>
+        )}
+        <span className="text-gray-300 dark:text-gray-600">/</span>
+        <span className="text-gray-900 dark:text-gray-200">{stockRow.name}</span>
+      </nav>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">
-          <Link
-            href="/admin/picks"
-            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-          >
-            ← 매수타점
-          </Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {stockRow.name}{" "}
             <span className="text-gray-400 font-mono text-base">{ticker}</span>
@@ -138,6 +182,18 @@ export default async function PickDetailPage({
           <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded">
             {stockRow.market}
           </span>
+          {marketRank && (
+            <span
+              className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 ring-1 ring-inset ring-amber-200 dark:ring-amber-800/60 px-2 py-0.5 rounded"
+              title={`${stockRow.market} 시가총액 기준 순위`}
+            >
+              시총 #{marketRank.rank.toLocaleString()}/
+              {marketRank.total.toLocaleString()}
+              <span className="ml-1.5 text-amber-600/80 dark:text-amber-400/80">
+                · {fmtCap(marketRank.market_cap)}
+              </span>
+            </span>
+          )}
           {pick && (
             <span
               className={`text-xs font-bold px-2.5 py-1 rounded-full ring-1 ring-inset ${
@@ -281,11 +337,6 @@ export default async function PickDetailPage({
                     ok={!!meta.score_breakdown.cycle_abc_complete}
                   />
                 )}
-                <Row
-                  label="캔들 보조"
-                  value={labelCandle(pick.candle_confirm) ?? "없음"}
-                  ok={!!pick.candle_confirm}
-                />
                 <Row
                   label="거래량 점수"
                   value={`${meta?.score_breakdown?.volume ?? 0}/15`}

@@ -3,10 +3,15 @@
 
 사용법:
   python detect_picks.py                    # 오늘(가장 최근 영업일) 기준
-  python detect_picks.py --date 2026-05-08  # 특정 날짜
+  python detect_picks.py --date 2026-05-08  # 특정 날짜 (이 날짜의 picks 생성)
   python detect_picks.py --ticker 005930    # 단일 종목 디버그
   python detect_picks.py --limit 50         # 처음 50종목만 (테스트)
   python detect_picks.py --min-score 60     # 점수 임계값 조정 (기본 70)
+
+데이터 기준 (전일 강제):
+  --date YYYY-MM-DD 는 "탐지 기준일" = picks가 저장될 날짜.
+  실제 패턴 탐지에 사용되는 OHLCV/시총 데이터는 (target_date - 1) 까지로 cutoff.
+  즉 매수타점은 항상 전일 종가까지의 정보로 산출되어 오늘 시초가부터 유효.
 
 파이프라인:
   Stage 0 (시총·제외리스트) → Stage 1 (年/月/240MA 추세) → Stage 2 (시세 준 종목 + ABC 검증)
@@ -38,7 +43,6 @@ from indicators import (  # noqa: E402
     Swing,
     _zigzag_simple,
     atr,
-    classify_candle,
     rsi,
     sma,
 )
@@ -589,9 +593,14 @@ def detect_cup_handle(
         ):
             continue
 
-        # 1) LCR/RCR 대칭 ±20% (R-Rim > L-Rim도 허용 — 상승형 컵)
+        # 1) LCR/RCR 대칭 — 좌림 ≥ 우림 (좌림이 무조건 같거나 더 높아야) + ±5% 안
+        #    우림이 좌림보다 높은 케이스는 컵위드핸들 아닌 다른 형태로 처리
         rim_diff = abs(lcr.price - rcr.price) / max(lcr.price, 1e-9)
-        if rim_diff > 0.20:
+        if rim_diff > 0.05:
+            continue
+        if rcr.price > lcr.price:
+            continue
+        if rcr.price < lcr.price * 0.95:
             continue
 
         # 2) Cup 깊이 12~50%
@@ -605,11 +614,11 @@ def detect_cup_handle(
         if not (cup_min <= cup_bars <= cup_max):
             continue
 
-        # 4) Handle 깊이 (Cup 깊이의 절반 이하 + 5~15%)
+        # 4) Handle 깊이 — 교과서적: Cup 깊이의 0.40 이하 + 3~15%
         handle_depth = (rcr.price - hl.price) / max(rcr.price, 1e-9)
         if not (0.03 <= handle_depth <= 0.15):
             continue
-        if handle_depth > depth * 0.75:
+        if handle_depth > depth * 0.40:
             continue
 
         # 5) Handle 기간 (타임프레임별 handle_min/handle_max)
@@ -634,11 +643,18 @@ def detect_cup_handle(
         except Exception:
             vol_pattern_ok = False
 
-        # 9) U자 검증 (V자 컷): Cup 좌측 하락이 점진적이어야 함
+        # 9) U자 검증 (V자 컷): Cup 좌측 하락이 점진적이어야 함 (강화: 0.25→0.30)
         left_bars = cb.idx - lcr.idx
-        u_shape_ok = bool((left_bars / max(cup_bars, 1)) >= 0.25)
+        u_shape_ok = bool((left_bars / max(cup_bars, 1)) >= 0.30)
 
-        if not (vol_pattern_ok and u_shape_ok):
+        # 10) 좌림 단봉 거부: 좌림 직전 5봉 평균이 좌림의 75% 이상이어야 점진적 형성
+        #     (극단적 외바늘만 컷, 어느 정도의 급등은 허용)
+        if lcr.idx < 5:
+            continue
+        prev5_avg = float(np.mean(closes[lcr.idx - 5 : lcr.idx]))
+        lrim_gradual_ok = bool(prev5_avg >= lcr.price * 0.75)
+
+        if not (vol_pattern_ok and u_shape_ok and lrim_gradual_ok):
             continue
 
         # 매수타점 = Pivot 0.2% 위
@@ -663,6 +679,8 @@ def detect_cup_handle(
                 "handle_position_pct": round(hl.price / rcr.price * 100, 2),
                 "volume_decreases_in_handle": vol_pattern_ok,
                 "u_shape_ok": u_shape_ok,
+                "left_bars_ratio": round(left_bars / max(cup_bars, 1), 2),
+                "lrim_prev5_ratio": round(prev5_avg / max(lcr.price, 1), 3),
             },
         }
 
@@ -700,25 +718,47 @@ def detect_cup_handle(
                 handle_min <= hbars <= handle_max):
             win_start_idx = rcr_s.idx - cup_max
             win_lcr_end = rcr_s.idx - cup_min
-            # L-rim 먼저: cup window에서 R-rim과 유사한 최고 고점
+            # L-rim: cup window 내, 우림보다 같거나 높은 (≤ +5%) high 중
+            # 시간상 R-rim 에 가장 가까운 (최근) high = "직전 고점"
+            # (좌림 ≥ 우림 정석: 좌림이 무조건 같거나 더 높아야)
             lcr_cands = [s for s in swings if s.kind == "high"
                          and win_start_idx <= s.idx <= win_lcr_end
-                         and s.price >= rcr_s.price * 0.75]
+                         and rcr_s.price <= s.price <= rcr_s.price * 1.05]
             if lcr_cands:
-                lcr_s = max(lcr_cands, key=lambda s: s.price)
+                lcr_s = max(lcr_cands, key=lambda s: s.idx)
+                # 좌림~우림 사이에 좌·우림보다 명확히 높은 봉이 있으면 컵 모양 부적합
+                # (그 더 높은 봉이 진짜 컵 시작이거나 W자 등 다른 형태)
+                between_highs = [s.price for s in swings if s.kind == "high"
+                                 and lcr_s.idx < s.idx < rcr_s.idx]
+                rim_max = max(lcr_s.price, rcr_s.price)
+                between_ok = (
+                    not between_highs or max(between_highs) <= rim_max * 1.03
+                )
                 # 컵 바닥: L-rim ~ R-rim 사이 최저점
                 cup_lows = [s for s in swings if s.kind == "low"
                             and lcr_s.idx < s.idx < rcr_s.idx]
-                if cup_lows:
+                if between_ok and cup_lows:
                     cb_s = min(cup_lows, key=lambda s: s.price)
                     rdiff = abs(lcr_s.price - rcr_s.price) / max(lcr_s.price, 1e-9)
                     ravg = (lcr_s.price + rcr_s.price) / 2
                     dep = (ravg - cb_s.price) / ravg
                     cbars = rcr_s.idx - lcr_s.idx
                     lbars = cb_s.idx - lcr_s.idx
-                    if (rdiff <= 0.20 and 0.12 <= dep <= 0.50 and
+                    # 좌림 단봉 거부 (Path 1과 동일 가드)
+                    lrim_gradual_ok2 = (
+                        lcr_s.idx >= 5 and
+                        float(np.mean(closes[lcr_s.idx - 5 : lcr_s.idx])) >= lcr_s.price * 0.75
+                    )
+                    # 교과서적 가드: 림 대칭 ±5% + 좌림 ≥ 우림 (좌림이 더 높거나 같음)
+                    #              + Handle 깊이 ≤ Cup 깊이 × 0.40
+                    if (rdiff <= 0.05 and
+                            lcr_s.price >= rcr_s.price and
+                            rcr_s.price >= lcr_s.price * 0.95 and
+                            0.12 <= dep <= 0.50 and
                             cup_min <= cbars <= cup_max and
-                            (lbars / max(cbars, 1)) >= 0.25):
+                            (lbars / max(cbars, 1)) >= 0.30 and  # U자
+                            hdep <= dep * 0.40 and
+                            lrim_gradual_ok2):
                         try:
                             vol_r = float(np.mean(volumes[cb_s.idx:rcr_s.idx + 1]))
                             vol_h = float(np.mean(volumes[rcr_s.idx:hl_s.idx + 1]))
@@ -844,23 +884,13 @@ def detect_inverse_hs(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> Opti
 # ──────────────────────────────────────────────────────────
 def calc_score(
     match: PatternMatch,
-    candle: str,
     trend: TrendCheck,
     cycle: CycleCheck,
     volume_signal: int,
     rrr_value: float,
     market_cap: float,
 ) -> int:
-    score = match.base_score  # 0~40
-
-    # 캔들 보조 (0~15)
-    candle_pts = {
-        "DRAGONFLY_DOJI": 15,
-        "HIGH_WAVE": 12,
-        "LONG_LEGGED_DOJI": 10,
-        "STANDARD_DOJI": 5,
-    }.get(candle, 0)
-    score += candle_pts
+    score = match.base_score  # 0~50
 
     # 거래량 (0~15) — 이미 호출자가 계산해서 전달
     score += min(volume_signal, 15)
@@ -1101,33 +1131,28 @@ def _try_patterns(
 
 
 def process_one(ticker: str, name: str, market: str, target_date: date, excluded: set[str]):
-    """한 종목 처리 → 매칭 list 반환 (각 timeframe별 독립적인 매칭)"""
-    cap = get_latest_market_cap(ticker, target_date)
+    """한 종목 처리 → 매칭 list 반환 (각 timeframe별 독립적인 매칭)
+
+    매수타점은 항상 전일 종가까지의 정보로 산출 (target_date 의 데이터는 절대 사용 금지).
+    """
+    data_cutoff = target_date - timedelta(days=1)
+    cap = get_latest_market_cap(ticker, data_cutoff)
     ok0, reason0 = passes_stage0(ticker, cap, excluded)
     if not ok0:
         return [], reason0
 
-    daily = load_ohlcv(ticker, target_date, days_back=4000)  # ~16년치 (yearly resample용)
+    daily = load_ohlcv(ticker, data_cutoff, days_back=4000)  # ~16년치 (yearly resample용)
     if len(daily) < 240:
         return [], "DAILY_INSUFFICIENT"
 
-    yearly_df = load_yearly(ticker, target_date, years_back=10)
-    monthly_df = load_monthly(ticker, target_date, months_back=18)
+    yearly_df = load_yearly(ticker, data_cutoff, years_back=10)
+    monthly_df = load_monthly(ticker, data_cutoff, months_back=18)
 
     trend = check_trend(daily, yearly_df, monthly_df)
     if not trend.passes:
         return [], trend.reason
 
     cycle = check_cycle(daily)
-
-    # 캔들 보조 (일봉 기준 — 모든 타임프레임에서 공통 사용)
-    atr14 = float(atr(daily, 14).iloc[-1] or 0)
-    last_sig = classify_candle(daily.iloc[-1], atr14).kind
-    if last_sig == "NONE":
-        last_sig_2 = classify_candle(daily.iloc[-2], atr14).kind if len(daily) >= 2 else "NONE"
-        candle = last_sig_2 if last_sig_2 != "NONE" else "NONE"
-    else:
-        candle = last_sig
 
     vol_pts = volume_check(daily)
     current_close = float(daily["close"].iloc[-1])
@@ -1155,7 +1180,7 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
         if rrr < 1.5:
             continue
 
-        score = calc_score(match, candle, trend, cycle, vol_pts, rrr, cap)
+        score = calc_score(match, trend, cycle, vol_pts, rrr, cap)
 
         lid_warn = check_lid_warning(bars, tf_name)
         hill = compute_hill_price(bars)
@@ -1175,7 +1200,6 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
             "timeframe": tf_name,
             "score_breakdown": {
                 "pattern": match.base_score,
-                "candle": candle if candle != "NONE" else None,
                 "volume": vol_pts,
                 "trend": {
                     "yearly": trend.yearly,
@@ -1188,7 +1212,6 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
                 "cycle_penalty": cycle.penalty,
             },
             "context": {
-                "candle_confirm": candle if candle != "NONE" else None,
                 "current_close": round(current_close, 2),
                 "market_cap": cap,
             },
@@ -1205,7 +1228,7 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
             "current_price": round(current_close, 2),
             "target_price": match.target_price,
             "stop_loss": match.stop_loss,
-            "candle_confirm": candle if candle != "NONE" else None,
+            "candle_confirm": None,
             "note": note,
             "trend_yearly": trend.yearly,
             "trend_monthly": trend.monthly,
@@ -1231,6 +1254,13 @@ def run(target_date: date, ticker_filter: Optional[list[str]], min_score: int, l
         stocks = get_active_stocks()
     if limit:
         stocks = stocks[:limit]
+
+    # idempotent: 재실행 시 stale picks 가 남지 않도록 동일 date 의 기존 picks 모두 삭제
+    # (단일 종목 디버그 실행 시에는 건너뜀)
+    if not ticker_filter and not limit:
+        deleted = sb.table("buy_picks").delete().eq("date", target_date.isoformat()).execute()
+        if deleted.data:
+            print(f"[detect] cleared {len(deleted.data)} stale picks for {target_date}")
 
     print(f"[detect] processing {len(stocks)} stocks for {target_date}, min_score={min_score}")
 
@@ -1258,7 +1288,7 @@ def run(target_date: date, ticker_filter: Optional[list[str]], min_score: int, l
         print(
             f"  [{m['timeframe']:<7s}] {m['ticker']} {m['name'][:10]:<10s} "
             f"{m['pattern']:<15s} score={m['score']} entry={m['entry_price']:.0f} "
-            f"R/R={m['rrr']:.1f} {m['candle_confirm'] or '-'}"
+            f"R/R={m['rrr']:.1f}"
         )
 
     # 저장

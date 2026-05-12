@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { rateLimit, getIp } from "@/lib/rate-limit";
-import { logVisitor, getCountry } from "@/lib/visitor-tracking";
+import { logVisitor, getCountry, isExcludedIp } from "@/lib/visitor-tracking";
 
 export async function GET(
   _req: Request,
@@ -32,6 +32,16 @@ export async function POST(
   }
 
   const supabase = createServiceClient();
+
+  // 제외 IP: 카운트·로그 없이 현재 값만 반환
+  if (isExcludedIp(ip)) {
+    const { data } = await supabase
+      .from("post_views")
+      .select("view_count")
+      .eq("slug", slug)
+      .single();
+    return NextResponse.json({ count: data?.view_count ?? 0 });
+  }
 
   const { data, error } = await supabase.rpc("increment_post_views", {
     post_slug: slug,

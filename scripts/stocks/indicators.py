@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -171,55 +170,3 @@ def _zigzag_simple(df: pd.DataFrame, threshold: float) -> list[Swing]:
     return swings
 
 
-# ──────────────────────────────────────────────────────────
-# 캔들 패턴 (단일봉)
-# ──────────────────────────────────────────────────────────
-@dataclass
-class CandleSignal:
-    kind: Literal[
-        "DRAGONFLY_DOJI",
-        "GRAVESTONE_DOJI",
-        "LONG_LEGGED_DOJI",
-        "STANDARD_DOJI",
-        "HIGH_WAVE",
-        "NONE",
-    ]
-
-
-def classify_candle(row: pd.Series, atr_val: float) -> CandleSignal:
-    """단일 봉 분류. row: open/high/low/close, atr_val: 비교용 ATR"""
-    o, h, l, c = float(row["open"]), float(row["high"]), float(row["low"]), float(row["close"])
-    rng = h - l
-    if rng <= 0 or atr_val <= 0:
-        return CandleSignal(kind="NONE")
-
-    body = abs(c - o)
-    upper = h - max(o, c)
-    lower = min(o, c) - l
-
-    body_pct = body / rng
-    upper_pct = upper / rng
-    lower_pct = lower / rng
-
-    big_enough = rng >= atr_val * 0.5
-
-    # Doji: body 거의 없음
-    if body_pct <= 0.05 and big_enough:
-        if upper_pct <= 0.05 and lower_pct >= 0.70:
-            return CandleSignal(kind="DRAGONFLY_DOJI")
-        if lower_pct <= 0.05 and upper_pct >= 0.70:
-            return CandleSignal(kind="GRAVESTONE_DOJI")
-        if upper_pct >= 0.40 and lower_pct >= 0.40:
-            return CandleSignal(kind="LONG_LEGGED_DOJI")
-        return CandleSignal(kind="STANDARD_DOJI")
-
-    # High Wave: body 작음 (10~30%), 양쪽 꼬리 큼, ATR 1.5배 이상
-    if (
-        0.10 <= body_pct <= 0.30
-        and upper >= body * 3
-        and lower >= body * 3
-        and rng >= atr_val * 1.5
-    ):
-        return CandleSignal(kind="HIGH_WAVE")
-
-    return CandleSignal(kind="NONE")

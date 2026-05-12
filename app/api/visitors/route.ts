@@ -1,7 +1,7 @@
 import { createServiceClient } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 import { rateLimit, getIp } from "@/lib/rate-limit";
-import { logVisitor, getCountry } from "@/lib/visitor-tracking";
+import { logVisitor, getCountry, isExcludedIp } from "@/lib/visitor-tracking";
 
 export async function GET() {
   const supabase = createServiceClient();
@@ -31,6 +31,19 @@ export async function POST(req: Request) {
 
   const supabase = createServiceClient();
   const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+  // 제외 IP: 카운트·로그 없이 현재 값만 반환
+  if (isExcludedIp(ip)) {
+    const [statsRes, dailyRes] = await Promise.all([
+      supabase.from("site_stats").select("visitor_count").eq("id", 1).single(),
+      supabase.from("daily_visitors").select("count").eq("date", today).single(),
+    ]);
+    return NextResponse.json({
+      count: statsRes.data?.visitor_count ?? 0,
+      total: statsRes.data?.visitor_count ?? 0,
+      today: dailyRes.data?.count ?? 0,
+    });
+  }
 
   const { data, error } = await supabase.rpc("increment_visitors");
 

@@ -124,10 +124,11 @@ def sync_stocks_list() -> int:
 # ──────────────────────────────────────────────────────────
 def fetch_one_day(target_date: date) -> int:
     """KRX StockListing은 호출 시점의 최신 데이터만 줌.
-    target_date가 오늘이 아니면 per-ticker 백필로 빠진다."""
+    target_date가 오늘이 아니면 per-ticker 백필로 빠진다 (resume=False → 강제 덮어쓰기)."""
     today = date.today()
     if target_date != today:
-        return fetch_backfill(target_date, target_date)
+        # 과거 날짜 재수집: 이미 존재하는 종목도 강제로 다시 가져와 덮어쓰기
+        return fetch_backfill(target_date, target_date, resume=False)
 
     print(f"[fetch_one_day] {target_date} (latest snapshot)")
     listing = fdr.StockListing("KRX")

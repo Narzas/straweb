@@ -8,6 +8,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const HASH_SALT = process.env.IP_HASH_SALT ?? "stragos-fallback-salt-2026";
 
+// 방문자 카운트·로그에서 제외할 IP (주인장 본인 IP 등)
+const EXCLUDED_IPS = new Set<string>(["125.128.63.86"]);
+
+export function isExcludedIp(ip: string): boolean {
+  return EXCLUDED_IPS.has(ip);
+}
+
 export function hashIp(ip: string): string {
   return createHash("sha256")
     .update(HASH_SALT + ip)

@@ -20,8 +20,8 @@ export type BuyPick = {
   stop_loss?: number | null;
   note?: string | null;
   score?: number;
-  candle_confirm?: string | null;
   rrr?: number | null;
+  market_cap?: number | null;
   detection_meta?: DetectionMeta | null;
 };
 
@@ -71,28 +71,13 @@ const PATTERN_LABELS: Record<string, string> = {
   CUP_HANDLE: "컵 위드 핸들",
   ELLIOTT_W2: "엘리엇 2파 종결",
   ELLIOTT_W4: "엘리엇 4파 종결",
-  HIGH_WAVE: "하이웨이브",
-  DRAGONFLY_DOJI: "잠자리 도지",
   THREE_WHITE_SOLDIERS: "적삼병",
   GAP_UP_SUPPORT: "갭 구간",
   ELLIOTT_ABC_ENTRY: "ABC 진입",
 };
 
-const CANDLE_LABELS: Record<string, string> = {
-  DRAGONFLY_DOJI: "잠자리 도지",
-  GRAVESTONE_DOJI: "비석 도지",
-  LONG_LEGGED_DOJI: "장대 도지",
-  STANDARD_DOJI: "도지",
-  HIGH_WAVE: "하이웨이브",
-};
-
 export function labelPattern(raw: string): string {
   return PATTERN_LABELS[raw] ?? raw;
-}
-
-export function labelCandle(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  return CANDLE_LABELS[raw] ?? raw;
 }
 
 type PickRow = {
@@ -105,7 +90,6 @@ type PickRow = {
   current_price: number | null;
   target_price: number | null;
   stop_loss: number | null;
-  candle_confirm: string | null;
   note: string | null;
   rrr: number | null;
   generated_at: string;
@@ -123,7 +107,7 @@ export async function getBuyPickDays(daysBack = 14): Promise<BuyPickDay[]> {
   const { data: picks, error } = await sb
     .from("buy_picks")
     .select(
-      "date,ticker,pattern,timeframe,score,entry_price,current_price,target_price,stop_loss,candle_confirm,note,rrr,generated_at,detection_meta"
+      "date,ticker,pattern,timeframe,score,entry_price,current_price,target_price,stop_loss,note,rrr,generated_at,detection_meta"
     )
     .gte("date", sinceIso)
     .order("date", { ascending: false })
@@ -162,7 +146,6 @@ export async function getBuyPickDays(daysBack = 14): Promise<BuyPickDay[]> {
       stop_loss: row.stop_loss != null ? Number(row.stop_loss) : null,
       note: row.note,
       score: row.score,
-      candle_confirm: row.candle_confirm,
       rrr: row.rrr != null ? Number(row.rrr) : null,
       detection_meta: row.detection_meta ?? null,
     };

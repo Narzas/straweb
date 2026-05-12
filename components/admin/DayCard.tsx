@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
-  labelCandle,
   labelPattern,
   TIMEFRAME_COLORS,
   TIMEFRAME_LABELS,
@@ -118,11 +117,6 @@ function PickItem({ pick }: { pick: BuyPick }) {
             <span className="inline-block bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5">
               {labelPattern(pick.pattern)}
             </span>
-            {pick.candle_confirm && (
-              <span className="inline-block bg-purple-50 dark:bg-purple-950/30 text-purple-800 dark:text-purple-300 px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5">
-                {labelCandle(pick.candle_confirm)}
-              </span>
-            )}
             {pick.detection_meta?.lid_warning && (
               <span className="inline-block bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded text-[10px] font-bold mr-1.5 ring-1 ring-inset ring-red-300 dark:ring-red-800">
                 ⚠ 뚜껑

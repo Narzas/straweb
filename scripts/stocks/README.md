@@ -13,13 +13,24 @@ requirements.txt   — Python deps
 
 ## 일일 운영 cron (Oracle Cloud Ubuntu)
 
-```cron
-# 평일 KST 16:00 — 일봉 + 시총 수집 (장마감 직후)
-0 16 * * 1-5  cd /home/ubuntu/straweb/scripts/stocks && python3 fetch_daily.py >> fetch.log 2>&1
+매수타점이 **전일 종가 기준**이라 새벽 시간대에 돌려도 충분 — 오히려 장 시작(09:00) 전에 picks 가 준비되어 있어야 운용 가능.
 
-# 평일 KST 16:30 — 패턴 탐지 + 매수타점 저장
-30 16 * * 1-5 cd /home/ubuntu/straweb/scripts/stocks && python3 detect_picks.py >> detect.log 2>&1
+```cron
+# 평일 KST 05:00 — 전일 일봉 + 시총 수집 (전일 데이터는 익일 오전엔 확정됨)
+0 5 * * 1-5  cd /home/ubuntu/straweb/scripts/stocks && python3 fetch_daily.py --date $(date -d 'yesterday' +\%Y-\%m-\%d) >> fetch.log 2>&1
+
+# 평일 KST 05:30 — 패턴 탐지 + 매수타점 저장 (오늘 자 picks 생성, 데이터는 전일까지)
+30 5 * * 1-5 cd /home/ubuntu/straweb/scripts/stocks && python3 detect_picks.py >> detect.log 2>&1
 ```
+
+> ⚠️ **매수타점 = 전일 종가 기준 강제**
+> `detect_picks.py` 는 `--date YYYY-MM-DD` 인자를 "**picks 가 저장될 날짜**"로 해석한다.
+> 실제 OHLCV/시총 데이터 cutoff 는 코드에서 자동으로 `target_date - 1` 로 강제됨 (`process_one` 참조).
+> 즉 인자 없이 호출하면 `target_date = date.today()` → 데이터는 **전일까지만** 사용 → 오늘 시초가부터 유효한 picks 가 산출됨.
+
+> 💡 **왜 16:00 cron 이 아니라 새벽 05:00 cron 인가?**
+> 같은 날 장 마감 직후(16:00) 에 fetch + detect 를 돌리면 picks 는 다음 영업일에 노출될 때 이미 신선도가 떨어짐.
+> 또 fetch 가 장중에 실수로 돌면 잘못된 가격이 박힐 위험이 있는데, 새벽 시간대엔 KRX 데이터가 완전히 확정된 상태라 그럴 일이 없음.
 
 `.env.local`을 같은 위치에 두거나, 환경 변수로 다음을 노출:
 - `NEXT_PUBLIC_SUPABASE_URL`

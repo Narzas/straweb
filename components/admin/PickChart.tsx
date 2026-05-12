@@ -575,6 +575,7 @@ export default function PickChart({
           color: s.kind === "low" ? "#10b981" : "#ef4444",
           shape: s.kind === "low" ? "arrowUp" : "arrowDown",
           text: s.label,
+          price: s.price,
         }));
 
         if (swingMarkers.length > 0) {

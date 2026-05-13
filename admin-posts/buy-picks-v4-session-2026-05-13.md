@@ -248,3 +248,63 @@ git pull
 ```powershell
 C:\Users\strag\AppData\Local\Programs\Python\Python313\python.exe scripts/stocks/analyze_user_picks_batch.py
 ```
+
+---
+
+## 13. 차트 패턴 시각화 추가 (5/13 오후)
+
+### DOUBLE_BOTTOM — W자 연결선
+
+| 항목 | 내용 |
+|---|---|
+| 추가 | 보라색 LineSeries: 1차 바닥 → 저항선 → 2차 바닥 |
+| 저항선 | 기존 수평 점선(createPriceLine) 유지 |
+| 데이터 소스 | DB swings 컬럼 (날짜+가격 이미 저장됨) — 재스캔 불필요 |
+
+### ELLIOTT_ABC_ENTRY — 지그재그 연결선 + 꼭지점 마커
+
+**1단계: detect_picks.py 날짜 필드 추가**
+
+detect_abc_entry() meta에 4개 날짜 필드 추가:
+surge_high_date, a_low_date, b_high_date, c_low_date
+
+**2단계: 차트 렌더링 (PickChart.tsx)**
+
+| 변경 전 | 변경 후 |
+|---|---|
+| 수평 점선 4개 (시세고/B고/A저/C저) | 제거 |
+| — | 오렌지색 LineSeries: 시세고→A→B→C 지그재그 |
+| — | 꼭지점 마커: 시세고▼(빨강) A▲(청록) B▼(주황) C▲(청록) |
+
+마커는 기존 swingMarkers와 시간순 병합 후 createSeriesMarkers 단일 호출.
+구버전 DB(날짜 필드 없는 row)는 선/마커 없이 조용히 스킵.
+
+### TREND_EXTENDED — 52주 신고가 종목 자동 제외
+
+최근 20거래일 내 52주 신고가 경신 종목을 TREND_EXTENDED 분류에서 제외.
+이미 고점을 찍은 종목이 워치리스트에 섞이는 노이즈 제거.
+
+### 2026-05-14 전체 재스캔
+
+위 변경사항 반영 + DB 기존 5/14 데이터 갱신:
+- 2,550개 종목 / ~15분 소요
+- 결과: 26개 신호 (match 16 + trend 10)
+- ELLIOTT_ABC_ENTRY 날짜 필드 DB 반영 확인 ✓
+
+### 커밋
+
+e19d9e4  feat: ABC 패턴 꼭지점 마커 표시 + 가로선 제거
+a49b8f5  feat: 쌍바닥 W선 + ABC 지그재그선 차트 추가 + ABC 날짜 메타 추가
+
+---
+
+## 내일 확인 사항 (5/14 출근 후)
+
+1. **git push** → Vercel 자동 배포 대기 (~2분) 후 stragos.xyz/admin/picks 접속
+2. **브라우저 검증** — ABC 패턴 종목 차트 열어서 꼭지점 마커(시세고▼ / A▲ / B▼ / C▲) 제대로 표시되는지 확인
+3. **Oracle Cloud 셋업** (아직 미완료 — 섹션 12 명령어 참고)
+   - git pull
+   - venv 패키지 설치
+   - crontab 등록 (fetch_daily + detect_picks)
+4. **5/15 detect** — Oracle 가동됐으면 자동, 아니면 로컬에서 수동 실행
+

@@ -437,9 +437,9 @@ def detect_double_bottom(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> O
 
         meta = {
             "swings": [
-                {"date": lb.date, "price": float(lb.price), "kind": "low", "label": "LB"},
-                {"date": nl.date, "price": float(nl.price), "kind": "high", "label": "Neckline"},
-                {"date": rb.date, "price": float(rb.price), "kind": "low", "label": "RB"},
+                {"date": lb.date, "price": float(lb.price), "kind": "low", "label": "1차 바닥"},
+                {"date": nl.date, "price": float(nl.price), "kind": "high", "label": "저항선"},
+                {"date": rb.date, "price": float(rb.price), "kind": "low", "label": "2차 바닥"},
             ],
             "checks": {
                 "price_symmetry_pct": round(price_diff * 100, 2),
@@ -528,11 +528,11 @@ def detect_triple_bottom(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> O
 
         meta = {
             "swings": [
-                {"date": l1.date, "price": float(l1.price), "kind": "low", "label": "L1"},
-                {"date": p1.date, "price": float(p1.price), "kind": "high", "label": "P1"},
-                {"date": l2.date, "price": float(l2.price), "kind": "low", "label": "L2"},
-                {"date": p2.date, "price": float(p2.price), "kind": "high", "label": "P2"},
-                {"date": l3.date, "price": float(l3.price), "kind": "low", "label": "L3"},
+                {"date": l1.date, "price": float(l1.price), "kind": "low", "label": "1차 바닥"},
+                {"date": p1.date, "price": float(p1.price), "kind": "high", "label": "1차 피크"},
+                {"date": l2.date, "price": float(l2.price), "kind": "low", "label": "2차 바닥"},
+                {"date": p2.date, "price": float(p2.price), "kind": "high", "label": "2차 피크"},
+                {"date": l3.date, "price": float(l3.price), "kind": "low", "label": "3차 바닥"},
             ],
             "checks": {
                 "bottom_spread_pct": round(spread * 100, 2),
@@ -853,11 +853,11 @@ def detect_inverse_hs(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> Opti
 
         meta = {
             "swings": [
-                {"date": ls.date, "price": float(ls.price), "kind": "low", "label": "LS"},
-                {"date": p1.date, "price": float(p1.price), "kind": "high", "label": "P1"},
-                {"date": h.date, "price": float(h.price), "kind": "low", "label": "Head"},
-                {"date": p2.date, "price": float(p2.price), "kind": "high", "label": "P2"},
-                {"date": rs.date, "price": float(rs.price), "kind": "low", "label": "RS"},
+                {"date": ls.date, "price": float(ls.price), "kind": "low", "label": "왼쪽 어깨"},
+                {"date": p1.date, "price": float(p1.price), "kind": "high", "label": "1차 피크"},
+                {"date": h.date, "price": float(h.price), "kind": "low", "label": "머리"},
+                {"date": p2.date, "price": float(p2.price), "kind": "high", "label": "2차 피크"},
+                {"date": rs.date, "price": float(rs.price), "kind": "low", "label": "오른쪽 어깨"},
             ],
             "checks": {
                 "head_depth_pct": round((1 - h.price / min(ls.price, rs.price)) * 100, 2),
@@ -922,8 +922,9 @@ def calc_score(
     elif market_cap >= 300_000_000_000:    # 3000억
         score += 1
 
-    # 페널티
-    score -= cycle.penalty
+    # 페널티 — HILL_BREAKOUT은 surge 진행 중 매수가 전제이므로 ABC 미완 페널티 제외
+    if match.name != "HILL_BREAKOUT":
+        score -= cycle.penalty
 
     return max(0, min(100, score))
 
@@ -1109,6 +1110,46 @@ def detect_abc_entry(daily: pd.DataFrame) -> Optional[PatternMatch]:
     )
 
 
+def detect_hill_breakout(
+    bars: pd.DataFrame, threshold: float = 0.03
+) -> Optional[PatternMatch]:
+    """언덕(직전 로컬 고점) pivot 돌파 매수 (O'Neil pivot point breakout).
+
+    조건: hill_price 존재 + 직전 종가가 hill ±threshold(default 3%) 이내.
+    호출자 측에서 cycle.surged 게이팅 필수 (시세 진행 중인 종목만).
+
+    Entry: hill_price (정확히 pivot)
+    Stop:  hill × 0.93 (O'Neil 7% rule)
+    Target: hill × 1.20 (O'Neil 첫 매도 +20%)
+    R/R 고정 ≈ 2.86
+    """
+    hill = compute_hill_price(bars)
+    if hill is None or hill <= 0:
+        return None
+    prev_close = float(bars["close"].iloc[-1])
+    deviation = abs(prev_close / hill - 1)
+    if deviation > threshold:
+        return None
+
+    entry = round(hill)
+    stop = round(hill * 0.93)
+    target = round(hill * 1.20)
+    return PatternMatch(
+        name="HILL_BREAKOUT",
+        entry_price=entry,
+        target_price=target,
+        stop_loss=stop,
+        pattern_height=entry - stop,
+        base_score=30,
+        note=f"언덕돌파 pivot={entry:,} (직전종가 {round(prev_close):,})",
+        meta={
+            "hill_price": entry,
+            "prev_close": round(prev_close),
+            "deviation_pct": round(deviation * 100, 2),
+        },
+    )
+
+
 def _try_patterns(
     bars: pd.DataFrame, zz: float, tf: str
 ) -> Optional[PatternMatch]:
@@ -1161,8 +1202,13 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
     vol_pts = volume_check(daily)
     current_close = float(daily["close"].iloc[-1])
 
-    # 타임프레임별 매칭 누적
+    # 240일선 이격률 — gap_extended 필터에서 사용
+    ma240 = float(daily["close"].iloc[-240:].mean())
+    ma240_dev_pct = (current_close / ma240 - 1) * 100 if ma240 > 0 else 0
+
+    # 타임프레임별 매칭 누적 (R/R / score 컷오프 무관 — 분류는 run()에서)
     results = []
+    daily_has_pattern = False
     for tf_name, cfg in TIMEFRAMES.items():
         if cfg["resample"] is None:
             bars = daily
@@ -1173,16 +1219,35 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
             continue
 
         match = _try_patterns(bars, zz=cfg["zigzag"], tf=tf_name)
+
+        # GAP_UP_SUPPORT는 user style과 미스매치 — DAILY 한정 HILL/ABC로 업그레이드 시도
+        if match and match.name == "GAP_UP_SUPPORT" and tf_name == "DAILY":
+            if cycle.surged and cycle.abc_complete:
+                abc = detect_abc_entry(daily)
+                if abc:
+                    match = abc
+            if match.name == "GAP_UP_SUPPORT" and cycle.surged:
+                hill = detect_hill_breakout(daily)
+                if hill:
+                    match = hill
+            if match.name == "GAP_UP_SUPPORT":
+                match = None  # 업그레이드 실패 → 폐기 (trend_extended 자격 유지)
+
         if not match and tf_name == "DAILY" and cycle.surged and cycle.abc_complete:
             match = detect_abc_entry(daily)
+        if not match and tf_name == "DAILY" and cycle.surged:
+            match = detect_hill_breakout(daily)
         if not match:
             continue
+
+        # WEEKLY 등 비-DAILY GAP_UP_SUPPORT도 컷 미달이면 의미 X — 일단 결과로는 남기고 run()에서 처리
+        if tf_name == "DAILY":
+            daily_has_pattern = True
 
         rrr = (match.target_price - match.entry_price) / max(
             match.entry_price - match.stop_loss, 0.01
         )
-        if rrr < 1.5:
-            continue
+        rrr = max(-99.99, min(999.99, rrr))  # numeric(5,2) 컬럼 한계
 
         score = calc_score(match, trend, cycle, vol_pts, rrr, cap)
 
@@ -1218,6 +1283,7 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
             "context": {
                 "current_close": round(current_close, 2),
                 "market_cap": cap,
+                "ma240_dev_pct": round(ma240_dev_pct, 1),
             },
         }
 
@@ -1240,6 +1306,50 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
             "rrr": round(rrr, 2),
             "pattern_height": match.pattern_height,
             "detection_meta": detection_meta,
+        })
+
+    # 추세 진행 워치 후보 — DAILY 패턴 없음 + 시세줌 + ABC 미완
+    # + 추가 필터: 240MA 이격 ≥ 40% + hill_price 근접 ±10% (user style 매칭)
+    daily_hill = compute_hill_price(daily)
+    if (
+        not daily_has_pattern
+        and cycle.surged
+        and not cycle.abc_complete
+        and ma240_dev_pct >= 40
+        and daily_hill is not None
+        and daily_hill > 0
+        and abs(current_close / daily_hill - 1) <= 0.10
+    ):
+        results.append({
+            "ticker": ticker,
+            "name": name,
+            "market": market,
+            "pattern": "TREND_EXTENDED",
+            "timeframe": "DAILY",
+            "score": 0,
+            "entry_price": round(daily_hill),  # 매수타점 = hill_price (pivot 돌파)
+            "current_price": round(current_close, 2),
+            "target_price": None,
+            "stop_loss": None,
+            "candle_confirm": None,
+            "note": f"시세{cycle.surge_reason} ABC미완 hill={round(daily_hill):,}",
+            "trend_yearly": trend.yearly,
+            "trend_monthly": trend.monthly,
+            "ma240_position": trend.ma240_position,
+            "rrr": None,
+            "pattern_height": None,
+            "detection_meta": {
+                "kind_hint": "trend_extended",
+                "timeframe": "DAILY",
+                "cycle_surge_reason": cycle.surge_reason,
+                "hill_price": round(daily_hill),
+                "context": {
+                    "current_close": round(current_close, 2),
+                    "market_cap": cap,
+                    "ma240_dev_pct": round(ma240_dev_pct, 1),
+                    "hill_dev_pct": round((current_close / daily_hill - 1) * 100, 1),
+                },
+            },
         })
 
     if not results:
@@ -1268,16 +1378,22 @@ def run(target_date: date, ticker_filter: Optional[list[str]], min_score: int, l
 
     print(f"[detect] processing {len(stocks)} stocks for {target_date}, min_score={min_score}")
 
-    matches = []
+    matches = []        # kind='match'
+    trend_extended = [] # kind='trend_extended'
     reasons: dict[str, int] = {}
     for ticker, name, market in tqdm(stocks, desc="scan"):
         try:
             results, reason = process_one(ticker, name, market, target_date, excluded)
             reasons[reason] = reasons.get(reason, 0) + 1
             for result in results:
-                if result["score"] >= min_score:
-                    result["date"] = target_date.isoformat()
+                result["date"] = target_date.isoformat()
+                if result["pattern"] == "TREND_EXTENDED":
+                    result["kind"] = "trend_extended"
+                    trend_extended.append(result)
+                elif (result["rrr"] or 0) >= 1.5 and result["score"] >= min_score:
+                    result["kind"] = "match"
                     matches.append(result)
+                # else: 컷오프 미달 GAP/패턴은 폐기 (gap_extended 카테고리 제거)
         except Exception as e:
             reasons[f"ERROR:{type(e).__name__}"] = reasons.get(f"ERROR:{type(e).__name__}", 0) + 1
             if ticker_filter:
@@ -1287,7 +1403,7 @@ def run(target_date: date, ticker_filter: Optional[list[str]], min_score: int, l
     for r, c in sorted(reasons.items(), key=lambda x: -x[1]):
         print(f"  {r:>40s}: {c}")
 
-    print(f"\n[detect] matches: {len(matches)}")
+    print(f"\n[detect] matches: {len(matches)} | trend_extended: {len(trend_extended)}")
     for m in sorted(matches, key=lambda x: -x["score"])[:30]:
         print(
             f"  [{m['timeframe']:<7s}] {m['ticker']} {m['name'][:10]:<10s} "
@@ -1295,17 +1411,18 @@ def run(target_date: date, ticker_filter: Optional[list[str]], min_score: int, l
             f"R/R={m['rrr']:.1f}"
         )
 
-    # 저장
-    if matches and not ticker_filter:
+    # 저장 (matches + trend_extended)
+    all_save = matches + trend_extended
+    if all_save and not ticker_filter:
         save_rows = []
-        for m in matches:
+        for m in all_save:
             row = {k: v for k, v in m.items() if k not in ("name", "market")}
             save_rows.append(_to_native(row))
         for i in range(0, len(save_rows), 500):
             sb.table("buy_picks").upsert(
                 save_rows[i : i + 500], on_conflict="date,ticker,pattern,timeframe"
             ).execute()
-        print(f"[detect] saved {len(save_rows)} picks")
+        print(f"[detect] saved {len(save_rows)} rows ({len(matches)} match + {len(trend_extended)} trend)")
 
     dur = int(time.time() - started)
     try:

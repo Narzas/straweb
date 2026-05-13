@@ -8,12 +8,15 @@ export type DetectionMeta = {
   [key: string]: unknown;
 };
 
+export type PickKind = "match" | "gap_extended" | "trend_extended";
+
 export type BuyPick = {
   code: string;
   name: string;
   market: "KOSPI" | "KOSDAQ";
   pattern: string;
   timeframe: Timeframe;
+  kind: PickKind;
   entry_price: number;
   current_price?: number | null;
   target_price?: number | null;
@@ -74,6 +77,14 @@ const PATTERN_LABELS: Record<string, string> = {
   THREE_WHITE_SOLDIERS: "적삼병",
   GAP_UP_SUPPORT: "갭 구간",
   ELLIOTT_ABC_ENTRY: "ABC 진입",
+  HILL_BREAKOUT: "언덕 돌파",
+  TREND_EXTENDED: "추세 진행",
+};
+
+export const KIND_META: Record<PickKind, { label: string; emoji: string; description: string }> = {
+  match: { label: "매수타점", emoji: "✅", description: "점수 ≥ 70 + R/R ≥ 1.5" },
+  gap_extended: { label: "갭자리 후보", emoji: "🟡", description: "GAP_UP_SUPPORT 패턴 (R/R/점수 컷 미달)" },
+  trend_extended: { label: "추세 진행 워치", emoji: "👀", description: "시세 진행 + ABC 미완 (패턴 없음)" },
 };
 
 export function labelPattern(raw: string): string {
@@ -85,6 +96,7 @@ type PickRow = {
   ticker: string;
   pattern: string;
   timeframe: string;
+  kind: string | null;
   score: number;
   entry_price: number;
   current_price: number | null;
@@ -107,7 +119,7 @@ export async function getBuyPickDays(daysBack = 14): Promise<BuyPickDay[]> {
   const { data: picks, error } = await sb
     .from("buy_picks")
     .select(
-      "date,ticker,pattern,timeframe,score,entry_price,current_price,target_price,stop_loss,note,rrr,generated_at,detection_meta"
+      "date,ticker,pattern,timeframe,kind,score,entry_price,current_price,target_price,stop_loss,note,rrr,generated_at,detection_meta"
     )
     .gte("date", sinceIso)
     .order("date", { ascending: false })
@@ -140,6 +152,7 @@ export async function getBuyPickDays(daysBack = 14): Promise<BuyPickDay[]> {
       market,
       pattern: row.pattern,
       timeframe: (row.timeframe ?? "DAILY") as Timeframe,
+      kind: ((row.kind as PickKind | null) ?? "match") as PickKind,
       entry_price: Number(row.entry_price),
       current_price: row.current_price != null ? Number(row.current_price) : null,
       target_price: row.target_price != null ? Number(row.target_price) : null,

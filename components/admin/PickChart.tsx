@@ -190,7 +190,8 @@ export default function PickChart({
           timeScale: {
             borderColor: "rgba(148, 163, 184, 0.2)",
             timeVisible: false,
-            rightOffset: 30,
+            // rightOffset 0 — visible range는 setVisibleLogicalRange로만 결정 (이중 padding 방지)
+            rightOffset: 0,
             lockVisibleTimeRangeOnResize: true,  // 페이지 이동 후 ResizeObserver 발화 시 줌 reset 방지
           },
           crosshair: { mode: 1 },
@@ -354,7 +355,7 @@ export default function PickChart({
         };
 
         if (pattern === "DOUBLE_BOTTOM") {
-          const nl = swingByLabel("Neckline");
+          const nl = swingByLabel("저항선");
           if (nl) {
             candleSeries.createPriceLine({
               price: nl.price,
@@ -362,13 +363,13 @@ export default function PickChart({
               lineWidth: 1,
               lineStyle: 2,
               axisLabelVisible: true,
-              title: "넥라인",
+              title: "저항선",
             });
           }
         }
 
         if (pattern === "TRIPLE_BOTTOM") {
-          const nl = avgPrice("P1", "P2");
+          const nl = avgPrice("1차 피크", "2차 피크");
           if (nl) {
             candleSeries.createPriceLine({
               price: nl,
@@ -376,13 +377,13 @@ export default function PickChart({
               lineWidth: 1,
               lineStyle: 2,
               axisLabelVisible: true,
-              title: "넥라인",
+              title: "저항선",
             });
           }
         }
 
         if (pattern === "INVERSE_HS") {
-          const nl = avgPrice("P1", "P2");
+          const nl = avgPrice("1차 피크", "2차 피크");
           if (nl) {
             candleSeries.createPriceLine({
               price: nl,
@@ -390,7 +391,7 @@ export default function PickChart({
               lineWidth: 1,
               lineStyle: 2,
               axisLabelVisible: true,
-              title: "넥라인",
+              title: "저항선",
             });
           }
         }
@@ -592,17 +593,14 @@ export default function PickChart({
         else if (len >= bars1y) zoomBars = bars1y;
         else if (len >= bars3m) zoomBars = bars3m;
         else zoomBars = len;
+        // 우측 여백: timeframe 무관 동일 비율 (zoomBars의 15%) — DAILY/WEEKLY 모두 ~13% 여백
+        const padBars = Math.max(10, Math.round(zoomBars * 0.15));
         const applyZoom = () => {
           if (aborted || !chart) return;
-          if (len > zoomBars) {
-            chart.timeScale().setVisibleLogicalRange({
-              from: len - zoomBars,
-              to: len - 1 + 30,
-            });
-          } else {
-            chart.timeScale().fitContent();
-            chart.timeScale().scrollToPosition(-30, false);
-          }
+          chart.timeScale().setVisibleLogicalRange({
+            from: Math.max(0, len - zoomBars),
+            to: len - 1 + padBars,
+          });
         };
         // 1차: 동기 호출
         applyZoom();
@@ -611,6 +609,8 @@ export default function PickChart({
         requestAnimationFrame(applyZoom);
         // 3차: ResizeObserver 첫 발화 race 회피
         setTimeout(applyZoom, 100);
+        // 4차: 추가 안전망 (느린 디바이스 / 늦은 layout shift 대비)
+        setTimeout(applyZoom, 500);
 
         // OHLC 툴팁 (crosshair hover)
         const rowByTime = new Map(data.rows.map((r) => [r.date, r]));
@@ -655,10 +655,11 @@ export default function PickChart({
           tip.style.top = `${Math.max(0, top)}px`;
         });
 
-        // resize
+        // resize — width 동기화 + zoom 재적용 (lockVisibleTimeRangeOnResize 보조)
         resizeObserver = new ResizeObserver(() => {
           if (ref.current && chart) {
             chart.applyOptions({ width: ref.current.clientWidth });
+            applyZoom();
           }
         });
         resizeObserver.observe(ref.current);

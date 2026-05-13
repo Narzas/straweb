@@ -10,42 +10,51 @@ function priceFmt(n: number): string {
   return n.toLocaleString("ko-KR");
 }
 
-// 점수 구간별 카드 강조 — 90+ 금색 / 85+ 초록 / 80+ 청록 / 그 외 기본
-function scoreAccent(score: number | undefined) {
-  const s = score ?? 0;
+// 카드 강조 — kind별 1차 분기, match면 점수 구간으로 세부 강조
+function cardAccent(pick: BuyPick) {
+  if (pick.kind === "gap_extended") {
+    return {
+      ring: "",
+      border: "border-yellow-300 dark:border-yellow-700",
+      header: "bg-yellow-50/70 dark:bg-yellow-950/30",
+      scoreBg: "text-yellow-800 dark:text-yellow-200 bg-yellow-100 dark:bg-yellow-900/40",
+    };
+  }
+  if (pick.kind === "trend_extended") {
+    return {
+      ring: "",
+      border: "border-gray-300 dark:border-slate-600",
+      header: "bg-gray-50 dark:bg-slate-800/60",
+      scoreBg: "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-slate-700",
+    };
+  }
+  const s = pick.score ?? 0;
   if (s >= 90)
     return {
       ring: "ring-2 ring-amber-300/70 dark:ring-amber-600/60",
       border: "border-amber-300 dark:border-amber-700",
-      header:
-        "bg-gradient-to-br from-amber-100 to-yellow-50 dark:from-amber-950/50 dark:to-yellow-950/30",
-      scoreBg:
-        "text-amber-800 dark:text-amber-200 bg-amber-200/70 dark:bg-amber-900/60",
+      header: "bg-gradient-to-br from-amber-100 to-yellow-50 dark:from-amber-950/50 dark:to-yellow-950/30",
+      scoreBg: "text-amber-800 dark:text-amber-200 bg-amber-200/70 dark:bg-amber-900/60",
     };
   if (s >= 85)
     return {
       ring: "",
       border: "border-emerald-300 dark:border-emerald-700",
-      header:
-        "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30",
-      scoreBg:
-        "text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-900/50",
+      header: "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30",
+      scoreBg: "text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-900/50",
     };
   if (s >= 80)
     return {
       ring: "",
       border: "border-teal-200 dark:border-teal-800",
-      header:
-        "bg-teal-50/60 dark:bg-teal-950/20",
-      scoreBg:
-        "text-teal-800 dark:text-teal-200 bg-teal-100 dark:bg-teal-900/40",
+      header: "bg-teal-50/60 dark:bg-teal-950/20",
+      scoreBg: "text-teal-800 dark:text-teal-200 bg-teal-100 dark:bg-teal-900/40",
     };
   return {
     ring: "",
     border: "border-gray-200 dark:border-slate-700",
     header: "bg-gray-50/50 dark:bg-slate-900/40",
-    scoreBg:
-      "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40",
+    scoreBg: "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40",
   };
 }
 
@@ -63,8 +72,9 @@ export function PickCard({ pick }: { pick: BuyPick }) {
       : diff >= 0
       ? "text-rose-600 dark:text-rose-400"
       : "text-blue-600 dark:text-blue-400";
-  const accent = scoreAccent(pick.score);
+  const accent = cardAccent(pick);
   const isLargeCap = (pick.market_cap ?? 0) >= LARGE_CAP_THRESHOLD;
+  const isWatch = pick.kind !== "match";
 
   return (
     <Link
@@ -86,9 +96,19 @@ export function PickCard({ pick }: { pick: BuyPick }) {
           <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">
             {pick.market}
           </span>
-          {pick.score != null && (
+          {pick.score != null && pick.kind === "match" && (
             <span className={`ml-auto text-[11px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded ${accent.scoreBg}`}>
               {pick.score}점
+            </span>
+          )}
+          {pick.kind === "gap_extended" && (
+            <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded ${accent.scoreBg}`}>
+              🟡 갭자리
+            </span>
+          )}
+          {pick.kind === "trend_extended" && (
+            <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded ${accent.scoreBg}`}>
+              👀 워치
             </span>
           )}
         </div>
@@ -130,8 +150,14 @@ export function PickCard({ pick }: { pick: BuyPick }) {
 
         <dl className="space-y-1 text-xs">
           <div className="flex items-center justify-between">
-            <dt className="text-gray-500 dark:text-gray-400">매수타점</dt>
-            <dd className="font-mono tabular-nums font-semibold text-emerald-700 dark:text-emerald-300">
+            <dt className="text-gray-500 dark:text-gray-400">
+              {pick.kind === "trend_extended" ? "매수타점 (hill)" : "매수타점"}
+            </dt>
+            <dd className={`font-mono tabular-nums font-semibold ${
+              pick.kind === "trend_extended"
+                ? "text-blue-700 dark:text-blue-300"
+                : "text-emerald-700 dark:text-emerald-300"
+            }`}>
               {priceFmt(pick.entry_price)}
             </dd>
           </div>

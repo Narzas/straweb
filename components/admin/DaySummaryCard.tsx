@@ -8,15 +8,15 @@ function formatDateLabel(date: string): string {
 }
 
 export function DaySummaryCard({ day }: { day: BuyPickDay }) {
-  const topScore = day.picks.reduce(
-    (m, p) => Math.max(m, p.score ?? 0),
-    0
-  );
-  const tfCounts = day.picks.reduce<Record<string, number>>((acc, p) => {
+  const matches = day.picks.filter((p) => p.kind === "match");
+  const gapExt = day.picks.filter((p) => p.kind === "gap_extended");
+  const trendExt = day.picks.filter((p) => p.kind === "trend_extended");
+  const topScore = matches.reduce((m, p) => Math.max(m, p.score ?? 0), 0);
+  const tfCounts = matches.reduce<Record<string, number>>((acc, p) => {
     acc[p.timeframe] = (acc[p.timeframe] ?? 0) + 1;
     return acc;
   }, {});
-  const topPick = [...day.picks].sort(
+  const topPick = [...matches].sort(
     (a, b) => (b.score ?? 0) - (a.score ?? 0)
   )[0];
 
@@ -31,7 +31,7 @@ export function DaySummaryCard({ day }: { day: BuyPickDay }) {
             {formatDateLabel(day.date)}
           </h2>
           <span className="text-[11px] font-bold tabular-nums text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full">
-            {day.picks.length}종목
+            매수 {matches.length}
           </span>
         </div>
       </header>
@@ -39,30 +39,30 @@ export function DaySummaryCard({ day }: { day: BuyPickDay }) {
       <div className="flex-1 px-5 py-4 space-y-3">
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
-            <div className="text-[10px] text-gray-500 dark:text-gray-400">최고점</div>
-            <div className="text-lg font-bold font-mono tabular-nums text-amber-700 dark:text-amber-300">
-              {topScore}
+            <div className="text-[10px] text-gray-500 dark:text-gray-400">✅ 매수</div>
+            <div className="text-lg font-bold font-mono tabular-nums text-emerald-700 dark:text-emerald-300">
+              {matches.length}
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-gray-500 dark:text-gray-400">종목수</div>
-            <div className="text-lg font-bold font-mono tabular-nums text-gray-900 dark:text-gray-100">
-              {day.picks.length}
+            <div className="text-[10px] text-gray-500 dark:text-gray-400">🟡 갭자리</div>
+            <div className="text-lg font-bold font-mono tabular-nums text-yellow-700 dark:text-yellow-300">
+              {gapExt.length}
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-gray-500 dark:text-gray-400">평균 R/R</div>
-            <div className="text-lg font-bold font-mono tabular-nums text-violet-700 dark:text-violet-300">
-              {(() => {
-                const valid = day.picks.filter((p) => p.rrr != null);
-                if (valid.length === 0) return "—";
-                const avg =
-                  valid.reduce((s, p) => s + (p.rrr ?? 0), 0) / valid.length;
-                return avg.toFixed(1);
-              })()}
+            <div className="text-[10px] text-gray-500 dark:text-gray-400">👀 워치</div>
+            <div className="text-lg font-bold font-mono tabular-nums text-gray-600 dark:text-gray-300">
+              {trendExt.length}
             </div>
           </div>
         </div>
+        {matches.length > 0 && (
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-gray-500 dark:text-gray-400">매수 최고점</span>
+            <span className="font-mono font-bold tabular-nums text-amber-700 dark:text-amber-300">{topScore}점</span>
+          </div>
+        )}
 
         {/* 타임프레임별 분포 */}
         <div className="flex flex-wrap gap-1.5">
@@ -78,11 +78,11 @@ export function DaySummaryCard({ day }: { day: BuyPickDay }) {
           )}
         </div>
 
-        {/* 최고 점수 종목 미리보기 */}
+        {/* 최고 점수 종목 미리보기 (매수타점만) */}
         {topPick && (
           <div className="border-t border-gray-100 dark:border-slate-700 pt-3">
             <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">
-              최고점 종목
+              매수 최고점 종목
             </div>
             <div className="flex items-baseline justify-between gap-2">
               <div className="flex items-baseline gap-2 min-w-0">

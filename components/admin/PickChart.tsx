@@ -539,6 +539,8 @@ export default function PickChart({
           }
         }
 
+        let abcMarkers: { time: string; position: "aboveBar" | "belowBar"; color: string; shape: "arrowUp" | "arrowDown"; text: string }[] = [];
+
         if (pattern === "ELLIOTT_ABC_ENTRY" && detectionMeta) {
           // ABC 지그재그 연결선 (날짜 필드 있는 새 데이터에서만)
           const { surge_high_date: shD, a_low_date: alD, b_high_date: bhD, c_low_date: clD } = detectionMeta;
@@ -561,45 +563,15 @@ export default function PickChart({
             abcSeries.setData(abcPts);
           }
 
-          if (detectionMeta.surge_high != null) {
-            candleSeries.createPriceLine({
-              price: detectionMeta.surge_high,
-              color: "#f43f5e",
-              lineWidth: 1,
-              lineStyle: 1,
-              axisLabelVisible: true,
-              title: "시세고",
-            });
-          }
-          if (detectionMeta.b_high != null) {
-            candleSeries.createPriceLine({
-              price: detectionMeta.b_high,
-              color: "#f97316",
-              lineWidth: 1,
-              lineStyle: 2,
-              axisLabelVisible: true,
-              title: "B고",
-            });
-          }
-          if (detectionMeta.a_low != null) {
-            candleSeries.createPriceLine({
-              price: detectionMeta.a_low,
-              color: "#14b8a6",
-              lineWidth: 1,
-              lineStyle: 2,
-              axisLabelVisible: true,
-              title: "A저",
-            });
-          }
-          if (detectionMeta.c_low != null) {
-            candleSeries.createPriceLine({
-              price: detectionMeta.c_low,
-              color: "#14b8a6",
-              lineWidth: 1,
-              lineStyle: 2,
-              axisLabelVisible: true,
-              title: "C저",
-            });
+          if (shD && alD && bhD && clD &&
+              detectionMeta.surge_high != null && detectionMeta.a_low != null &&
+              detectionMeta.b_high != null && detectionMeta.c_low != null) {
+            abcMarkers.push(
+              { time: tfKey(shD), position: "aboveBar" as const, color: "#f43f5e", shape: "arrowDown" as const, text: `시세고 ${detectionMeta.surge_high}` },
+              { time: tfKey(alD), position: "belowBar" as const, color: "#14b8a6", shape: "arrowUp" as const, text: `A ${detectionMeta.a_low}` },
+              { time: tfKey(bhD), position: "aboveBar" as const, color: "#f97316", shape: "arrowDown" as const, text: `B ${detectionMeta.b_high}` },
+              { time: tfKey(clD), position: "belowBar" as const, color: "#14b8a6", shape: "arrowUp" as const, text: `C ${detectionMeta.c_low}` },
+            );
           }
         }
 
@@ -625,8 +597,11 @@ export default function PickChart({
           price: s.price,
         }));
 
-        if (swingMarkers.length > 0) {
-          createSeriesMarkers(candleSeries, swingMarkers);
+        const allMarkers = [...swingMarkers, ...abcMarkers].sort((a, b) =>
+          a.time < b.time ? -1 : a.time > b.time ? 1 : 0
+        );
+        if (allMarkers.length > 0) {
+          createSeriesMarkers(candleSeries, allMarkers);
         }
 
         // 기본 줌: 데이터 길이에 따라 3년 → 1년 → 3개월 → 전체 순으로 선택

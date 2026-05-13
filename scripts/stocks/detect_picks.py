@@ -1103,9 +1103,13 @@ def detect_abc_entry(daily: pd.DataFrame) -> Optional[PatternMatch]:
         note=f"ABC종결 C저={round(c_low)} B고={round(b_high)} 목표={round(surge_high)}",
         meta={
             "surge_high": round(surge_high),
+            "surge_high_date": last4[0].date,
             "a_low": round(a_low),
+            "a_low_date": last4[1].date,
             "b_high": round(b_high),
+            "b_high_date": last4[2].date,
             "c_low": round(c_low),
+            "c_low_date": last4[3].date,
         },
     )
 
@@ -1319,6 +1323,7 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
         and daily_hill is not None
         and daily_hill > 0
         and abs(current_close / daily_hill - 1) <= 0.10
+        and float(daily["high"].iloc[-20:].max()) < float(daily["high"].iloc[-min(252, len(daily)):].max()) * 0.99  # 최근 20일 내 52주 신고가 종목 제외
     ):
         results.append({
             "ticker": ticker,

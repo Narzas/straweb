@@ -13,9 +13,13 @@ type PatternMeta = {
   gap_bottom?: number;
   gap_top?: number;
   surge_high?: number;
+  surge_high_date?: string;
   a_low?: number;
+  a_low_date?: string;
   b_high?: number;
+  b_high_date?: string;
   c_low?: number;
+  c_low_date?: string;
   [key: string]: unknown;
 };
 
@@ -355,7 +359,28 @@ export default function PickChart({
         };
 
         if (pattern === "DOUBLE_BOTTOM") {
+          const lb = swingByLabel("1차 바닥");
           const nl = swingByLabel("저항선");
+          const rb = swingByLabel("2차 바닥");
+
+          // W자형 연결선
+          if (lb && nl && rb) {
+            const wPts = [
+              { time: tfKey(lb.date), value: lb.price },
+              { time: tfKey(nl.date), value: nl.price },
+              { time: tfKey(rb.date), value: rb.price },
+            ];
+            const wSeries = chart.addSeries(LineSeries, {
+              color: "#a78bfa",
+              lineWidth: 2,
+              priceLineVisible: false,
+              lastValueVisible: false,
+              crosshairMarkerVisible: false,
+            });
+            wSeries.setData(wPts);
+          }
+
+          // 수평 저항선
           if (nl) {
             candleSeries.createPriceLine({
               price: nl.price,
@@ -515,6 +540,27 @@ export default function PickChart({
         }
 
         if (pattern === "ELLIOTT_ABC_ENTRY" && detectionMeta) {
+          // ABC 지그재그 연결선 (날짜 필드 있는 새 데이터에서만)
+          const { surge_high_date: shD, a_low_date: alD, b_high_date: bhD, c_low_date: clD } = detectionMeta;
+          if (shD && alD && bhD && clD &&
+              detectionMeta.surge_high != null && detectionMeta.a_low != null &&
+              detectionMeta.b_high != null && detectionMeta.c_low != null) {
+            const abcPts = [
+              { time: tfKey(shD), value: detectionMeta.surge_high as number },
+              { time: tfKey(alD), value: detectionMeta.a_low as number },
+              { time: tfKey(bhD), value: detectionMeta.b_high as number },
+              { time: tfKey(clD), value: detectionMeta.c_low as number },
+            ];
+            const abcSeries = chart.addSeries(LineSeries, {
+              color: "#f97316",
+              lineWidth: 2,
+              priceLineVisible: false,
+              lastValueVisible: false,
+              crosshairMarkerVisible: false,
+            });
+            abcSeries.setData(abcPts);
+          }
+
           if (detectionMeta.surge_high != null) {
             candleSeries.createPriceLine({
               price: detectionMeta.surge_high,

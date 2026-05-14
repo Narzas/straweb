@@ -75,11 +75,18 @@ export function PickCard({ pick }: { pick: BuyPick }) {
   const accent = cardAccent(pick);
   const isLargeCap = (pick.market_cap ?? 0) >= LARGE_CAP_THRESHOLD;
   const isWatch = pick.kind !== "match";
+  // 전일종가 vs 매수타점 — 카드 전체 보더 강조 (한국식: 양수=빨강, 음수=파랑)
+  const diffBorder =
+    diff == null
+      ? `border ${accent.border}`
+      : diff >= 0
+      ? "border-2 border-rose-500 dark:border-rose-400"
+      : "border-2 border-blue-500 dark:border-blue-400";
 
   return (
     <Link
       href={`/admin/picks/${pick.code}?tf=${pick.timeframe}`}
-      className={`group relative flex flex-col rounded-xl border ${accent.border} ${accent.ring} bg-white dark:bg-slate-800 hover:shadow-md transition-all overflow-hidden`}
+      className={`group relative flex flex-col rounded-xl ${diffBorder} ${accent.ring} bg-white dark:bg-slate-800 hover:shadow-md transition-all overflow-hidden`}
     >
       {/* 헤더 */}
       <div className={`px-4 py-3 border-b border-gray-100 dark:border-slate-700 ${accent.header}`}>
@@ -163,7 +170,7 @@ export function PickCard({ pick }: { pick: BuyPick }) {
           </div>
           {pick.current_price != null && (
             <div className="flex items-center justify-between">
-              <dt className="text-gray-500 dark:text-gray-400">현재가</dt>
+              <dt className="text-gray-500 dark:text-gray-400">전일종가</dt>
               <dd className="flex items-center gap-1.5">
                 <span className="font-mono tabular-nums text-gray-900 dark:text-gray-100">
                   {priceFmt(pick.current_price)}

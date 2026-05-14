@@ -361,10 +361,15 @@ def check_lid_warning(bars: pd.DataFrame, tf_name: str) -> bool:
 
 
 def compute_hill_price(bars: pd.DataFrame, n: int = 30) -> Optional[float]:
-    """언덕: 최근 n봉 내 최고가 (현재봉 제외)"""
-    if len(bars) < 2:
+    """언덕: 최근 n봉 내 최고가.
+
+    bars 는 data_cutoff(target_date - 1) 까지만 로드되므로 마지막 봉은
+    이미 완료된 어제 봉이다. 어제 고점이 pivot 후보가 되어야 하므로
+    마지막 봉을 포함해서 max high 계산.
+    """
+    if len(bars) < 1:
         return None
-    look = bars["high"].iloc[-(n + 1):-1]
+    look = bars["high"].iloc[-n:]
     return float(look.max()) if not look.empty else None
 
 

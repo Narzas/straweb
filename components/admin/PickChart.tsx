@@ -371,8 +371,8 @@ export default function PickChart({
               { time: tfKey(rb.date), value: rb.price },
             ];
             const wSeries = chart.addSeries(LineSeries, {
-              color: "#a78bfa",
-              lineWidth: 2,
+              color: "#6d28d9",
+              lineWidth: 3,
               priceLineVisible: false,
               lastValueVisible: false,
               crosshairMarkerVisible: false,
@@ -554,8 +554,8 @@ export default function PickChart({
               { time: tfKey(clD), value: detectionMeta.c_low as number },
             ];
             const abcSeries = chart.addSeries(LineSeries, {
-              color: "#f97316",
-              lineWidth: 2,
+              color: "#c2410c",
+              lineWidth: 3,
               priceLineVisible: false,
               lastValueVisible: false,
               crosshairMarkerVisible: false,
@@ -610,7 +610,10 @@ export default function PickChart({
         const bars1y = TF_BARS_1Y[timeframe] ?? 252;
         const bars3m = TF_BARS_3M[timeframe] ?? 63;
         let zoomBars: number;
-        if (len >= bars3y) zoomBars = bars3y;
+        // 쌍바닥·ABC는 패턴 형성 구간이 수개월~1년 — 1년 줌이 최적 (3년이면 디테일 보기 어려움)
+        const forceOneYear = pattern === "DOUBLE_BOTTOM" || pattern === "ELLIOTT_ABC_ENTRY";
+        if (forceOneYear && len >= bars1y) zoomBars = bars1y;
+        else if (len >= bars3y) zoomBars = bars3y;
         else if (len >= bars1y) zoomBars = bars1y;
         else if (len >= bars3m) zoomBars = bars3m;
         else zoomBars = len;

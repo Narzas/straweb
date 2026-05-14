@@ -8,6 +8,7 @@ import {
   type Timeframe,
 } from "@/lib/buy-picks";
 import PickChart from "@/components/admin/PickChart";
+import ScrollResetOnMount from "@/components/admin/ScrollResetOnMount";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +153,7 @@ export default async function PickDetailPage({
 
   return (
     <div className="space-y-6 p-6 max-w-6xl mx-auto">
+      <ScrollResetOnMount />
       <nav className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
         <Link
           href="/admin/picks"

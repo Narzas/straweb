@@ -885,6 +885,86 @@ def detect_inverse_hs(daily: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> Opti
     return None
 
 
+def detect_head_breakout(bars: pd.DataFrame, zz: float = ZIGZAG_THRESHOLD) -> Optional[PatternMatch]:
+    """삼봉(H&S Top) 머리 돌파 매수 — 실패한 토핑 패턴 → 강세 반전.
+
+    구조: high(LS) - low(V1) - high(Head) - low(V2) - high(RS)
+    Head 가 LS·RS 보다 ≥5% 높고, LS/RS 대칭 ±5%, 넥라인 ±5%.
+    prev_close ∈ Head ±3% (돌파 임박).
+
+    Entry: head_price (pivot)
+    Stop:  head × 0.93 (O'Neil 7%)
+    Target: head × 1.20 (O'Neil +20%)
+    """
+    if len(bars) < 20:
+        return None
+    swings = _zigzag_simple(bars, threshold=zz)
+    if len(swings) < 5:
+        return None
+
+    for i in range(len(swings) - 5, max(-1, len(swings) - 10), -1):
+        if i < 0:
+            break
+        if i + 4 >= len(swings):
+            continue
+        ls, v1, head, v2, rs = swings[i : i + 5]
+        if not (
+            ls.kind == "high"
+            and v1.kind == "low"
+            and head.kind == "high"
+            and v2.kind == "low"
+            and rs.kind == "high"
+        ):
+            continue
+
+        # Head 가 LS, RS 보다 ≥5% 높음
+        if not (head.price >= ls.price * 1.05 and head.price >= rs.price * 1.05):
+            continue
+        # LS / RS 대칭 ±5%
+        if abs(ls.price - rs.price) / max(ls.price, 1e-9) > 0.05:
+            continue
+        # 넥라인 (V1, V2) 거의 수평 ±5%
+        if abs(v1.price - v2.price) / max(v1.price, 1e-9) > 0.05:
+            continue
+        # 현재 prev_close가 Head ±3% 이내 (돌파 임박)
+        prev_close = float(bars["close"].iloc[-1])
+        deviation = abs(prev_close / head.price - 1)
+        if deviation > 0.03:
+            continue
+        # 패턴 총 폭 최소 10봉
+        if rs.idx - ls.idx < 10:
+            continue
+
+        entry = round(head.price)
+        stop = round(head.price * 0.93)
+        target = round(head.price * 1.20)
+        height = entry - stop
+
+        return PatternMatch(
+            name="HEAD_BREAKOUT",
+            entry_price=entry,
+            target_price=target,
+            stop_loss=stop,
+            pattern_height=height,
+            base_score=35,
+            note=f"삼봉 머리 돌파 pivot={entry:,} (H={round(head.price):,}, LS={round(ls.price):,}, RS={round(rs.price):,})",
+            meta={
+                "swings": [
+                    {"date": ls.date, "price": float(ls.price), "kind": "high", "label": "왼쪽 어깨"},
+                    {"date": v1.date, "price": float(v1.price), "kind": "low", "label": "1차 골"},
+                    {"date": head.date, "price": float(head.price), "kind": "high", "label": "머리"},
+                    {"date": v2.date, "price": float(v2.price), "kind": "low", "label": "2차 골"},
+                    {"date": rs.date, "price": float(rs.price), "kind": "high", "label": "오른쪽 어깨"},
+                ],
+                "head_price": entry,
+                "neckline": round((v1.price + v2.price) / 2),
+                "prev_close": round(prev_close),
+                "deviation_pct": round(deviation * 100, 2),
+            },
+        )
+    return None
+
+
 # ──────────────────────────────────────────────────────────
 # 점수 계산
 # ──────────────────────────────────────────────────────────
@@ -1173,10 +1253,14 @@ def _try_patterns(
         "YEARLY":  (2,   6,   1,  2, 0.35),
     }.get(tf, (35, 200, 3, 15, 0.40))
 
+    # HEAD_BREAKOUT (삼봉 머리 돌파) — 일/주/월봉만, 년봉 swing 부족으로 제외
+    head_match = detect_head_breakout(bars, zz=zz) if tf in ("DAILY", "WEEKLY", "MONTHLY") else None
+
     return (
         detect_cup_handle(bars, zz=zz, cup_min=cup_params[0], cup_max=cup_params[1],
                           handle_min=cup_params[2], handle_max=cup_params[3],
                           depth_max=cup_params[4])
+        or head_match
         or detect_triple_bottom(bars, zz=zz)
         or detect_double_bottom(bars, zz=zz)
         or detect_three_white_soldiers(bars)

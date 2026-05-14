@@ -78,6 +78,7 @@ const PATTERN_LABELS: Record<string, string> = {
   GAP_UP_SUPPORT: "갭 구간",
   ELLIOTT_ABC_ENTRY: "ABC 진입",
   HILL_BREAKOUT: "언덕 돌파",
+  HEAD_BREAKOUT: "삼봉 머리 돌파",
   TREND_EXTENDED: "추세 진행",
 };
 

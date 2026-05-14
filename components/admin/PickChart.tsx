@@ -393,6 +393,46 @@ export default function PickChart({
           }
         }
 
+        if (pattern === "HEAD_BREAKOUT") {
+          const ls = swingByLabel("왼쪽 어깨");
+          const v1 = swingByLabel("1차 골");
+          const head = swingByLabel("머리");
+          const v2 = swingByLabel("2차 골");
+          const rs = swingByLabel("오른쪽 어깨");
+
+          // M자형 지그재그선: LS → V1 → Head → V2 → RS
+          if (ls && v1 && head && v2 && rs) {
+            const mPts = [
+              { time: tfKey(ls.date), value: ls.price },
+              { time: tfKey(v1.date), value: v1.price },
+              { time: tfKey(head.date), value: head.price },
+              { time: tfKey(v2.date), value: v2.price },
+              { time: tfKey(rs.date), value: rs.price },
+            ];
+            const mSeries = chart.addSeries(LineSeries, {
+              color: "#be123c",
+              lineWidth: 3,
+              priceLineVisible: false,
+              lastValueVisible: false,
+              crosshairMarkerVisible: false,
+            });
+            mSeries.setData(mPts);
+          }
+
+          // 수평 넥라인 (V1·V2 평균)
+          const neckline = avgPrice("1차 골", "2차 골");
+          if (neckline) {
+            candleSeries.createPriceLine({
+              price: neckline,
+              color: "#be123c",
+              lineWidth: 1,
+              lineStyle: 2,
+              axisLabelVisible: true,
+              title: "넥라인",
+            });
+          }
+        }
+
         if (pattern === "TRIPLE_BOTTOM") {
           const nl = avgPrice("1차 피크", "2차 피크");
           if (nl) {
@@ -610,8 +650,11 @@ export default function PickChart({
         const bars1y = TF_BARS_1Y[timeframe] ?? 252;
         const bars3m = TF_BARS_3M[timeframe] ?? 63;
         let zoomBars: number;
-        // 쌍바닥·ABC는 패턴 형성 구간이 수개월~1년 — 1년 줌이 최적 (3년이면 디테일 보기 어려움)
-        const forceOneYear = pattern === "DOUBLE_BOTTOM" || pattern === "ELLIOTT_ABC_ENTRY";
+        // 쌍바닥·삼봉·ABC는 패턴 형성 구간이 수개월~1년 — 1년 줌이 최적 (3년이면 디테일 보기 어려움)
+        const forceOneYear =
+          pattern === "DOUBLE_BOTTOM" ||
+          pattern === "HEAD_BREAKOUT" ||
+          pattern === "ELLIOTT_ABC_ENTRY";
         if (forceOneYear && len >= bars1y) zoomBars = bars1y;
         else if (len >= bars3y) zoomBars = bars3y;
         else if (len >= bars1y) zoomBars = bars1y;

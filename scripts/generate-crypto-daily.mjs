@@ -449,6 +449,8 @@ async function fetchKimchiPremium() {
   const STABLECOINS = new Set(["USDT", "USDC", "DAI", "BUSD", "TUSD", "FDUSD", "USD1", "PYUSD", "USDD"]);
   const MIN_VOLUME_KRW = 5e8;     // 5억원 이상 거래대금(업비트+빗썸 합산)만 outlier 후보
   const OUTLIER_PCT = 5;          // 김프 5% 이상 = 펌핑
+  const MAX_PREMIUM_PCT = 50;     // 50% 초과는 티커 충돌(같은 심볼 다른 토큰)로 간주
+  const MAX_REVERSE_PCT = -30;    // -30% 미만도 동일하게 충돌로 간주
   const REVERSE_PCT = -1;         // 김프 -1% 이하 = 역김프
 
   const ctrl = new AbortController();
@@ -606,13 +608,31 @@ async function fetchKimchiPremium() {
       : null;
 
     // 7. 이상치 (5%+) / 역김프 (-1% 이하) — 고정 4 제외, 거래대금 5억+
+    //    50% 초과·-30% 미만은 티커 충돌(같은 심볼 다른 토큰)로 간주하고 제외
     const fixedSet = new Set(FIXED_SYMBOLS);
+    const collisions = computed.filter(
+      (c) => !fixedSet.has(c.symbol)
+        && c.total_volume_24h_krw >= MIN_VOLUME_KRW
+        && (c.premium_pct > MAX_PREMIUM_PCT || c.premium_pct < MAX_REVERSE_PCT),
+    );
+    if (collisions.length) {
+      console.warn(
+        "  김프 티커 충돌 의심 제외:",
+        collisions.map((c) => `${c.symbol}(${c.premium_pct.toFixed(0)}%)`).join(", "),
+      );
+    }
     const outliers = computed
-      .filter((c) => !fixedSet.has(c.symbol) && c.total_volume_24h_krw >= MIN_VOLUME_KRW && c.premium_pct >= OUTLIER_PCT)
+      .filter((c) => !fixedSet.has(c.symbol)
+        && c.total_volume_24h_krw >= MIN_VOLUME_KRW
+        && c.premium_pct >= OUTLIER_PCT
+        && c.premium_pct <= MAX_PREMIUM_PCT)
       .sort((a, b) => b.premium_pct - a.premium_pct)
       .slice(0, 8);
     const reverse = computed
-      .filter((c) => !fixedSet.has(c.symbol) && c.total_volume_24h_krw >= MIN_VOLUME_KRW && c.premium_pct <= REVERSE_PCT)
+      .filter((c) => !fixedSet.has(c.symbol)
+        && c.total_volume_24h_krw >= MIN_VOLUME_KRW
+        && c.premium_pct <= REVERSE_PCT
+        && c.premium_pct >= MAX_REVERSE_PCT)
       .sort((a, b) => a.premium_pct - b.premium_pct)
       .slice(0, 5);
 

@@ -1412,7 +1412,6 @@ def process_one(ticker: str, name: str, market: str, target_date: date, excluded
         and daily_hill is not None
         and daily_hill > 0
         and abs(current_close / daily_hill - 1) <= 0.10
-        and float(daily["high"].iloc[-20:].max()) < float(daily["high"].iloc[-min(252, len(daily)):].max()) * 0.99  # 최근 20일 내 52주 신고가 종목 제외
     ):
         results.append({
             "ticker": ticker,

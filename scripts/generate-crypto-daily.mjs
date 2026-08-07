@@ -109,22 +109,62 @@ async function translateBatch(texts) {
   }
 }
 
-async function safeFetch(url, headers = {}, timeoutMs = 10_000) {
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "CryptoBriefBot/1.0", ...headers },
-      signal: ctrl.signal,
-    });
-    clearTimeout(tid);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res;
-  } catch (e) {
-    clearTimeout(tid);
-    console.warn(`  [skip] ${url} — ${e.message}`);
-    return null;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// retries 기본 0 — 심볼 루프에서 도는 호출들(선물 스캐너·RSI 등)의 기존 동작 유지.
+// 재시도가 필요한 곳만 명시적으로 넘긴다.
+async function safeFetch(url, headers = {}, timeoutMs = 10_000, retries = 0) {
+  let lastErr = "unknown";
+
+  for (let attempt = 0; ; attempt++) {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+    let waitMs = null;
+
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "CryptoBriefBot/1.0", ...headers },
+        signal: ctrl.signal,
+      });
+      clearTimeout(tid);
+      if (res.ok) return res;
+
+      lastErr = `HTTP ${res.status}`;
+      // 429·5xx만 재시도 대상. 그 외 4xx는 재시도해도 의미 없으니 즉시 포기
+      if (res.status === 429 || res.status >= 500) {
+        const ra = Number(res.headers.get("retry-after"));
+        if (Number.isFinite(ra) && ra > 0) waitMs = ra * 1000;
+      } else {
+        break;
+      }
+    } catch (e) {
+      clearTimeout(tid);
+      lastErr = e.message;
+    }
+
+    if (attempt >= retries) break;
+    waitMs ??= 2_000 * 2 ** attempt + Math.floor(Math.random() * 500);
+    console.warn(`  [retry ${attempt + 1}/${retries}] ${url} — ${lastErr}, ${(waitMs / 1000).toFixed(1)}s 대기`);
+    await sleep(waitMs);
   }
+
+  console.warn(`  [skip] ${url} — ${lastErr}`);
+  return null;
+}
+
+// CoinGecko 전용 래퍼 — Demo API 키 주입 + 429 백오프 재시도.
+// 키 없으면 공용(키리스) 한도가 ~4회/윈도우라 실행당 6회 호출에서 반드시 429가 난다.
+const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY ?? "";
+
+if (!COINGECKO_API_KEY) {
+  console.warn(
+    "  [경고] COINGECKO_API_KEY 없음 — 키리스 공용 한도(~4회/윈도우)로 동작. 실행당 6회 호출이라 429 발생 가능"
+  );
+}
+
+function cgFetch(url, timeoutMs = 10_000) {
+  const headers = COINGECKO_API_KEY ? { "x-cg-demo-api-key": COINGECKO_API_KEY } : {};
+  return safeFetch(url, headers, timeoutMs, 3);
 }
 
 function parseRssItems(xml) {
@@ -154,7 +194,7 @@ function parseRssItems(xml) {
 
 async function fetchMarketsTop250() {
   // top 250 by market cap, 24h + 7d — used for altcoin season + gainers/losers (1 CoinGecko call)
-  const res = await safeFetch(
+  const res = await cgFetch(
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h,7d"
   );
   if (!res) return null;
@@ -424,7 +464,7 @@ async function fetchRsiHeatmap() {
 }
 
 async function fetchCoinCategories() {
-  const res = await safeFetch(
+  const res = await cgFetch(
     "https://api.coingecko.com/api/v3/coins/categories?order=market_cap_change_24h_desc"
   );
   if (!res) return null;
@@ -1128,9 +1168,9 @@ async function fetchAll() {
   console.log("데이터 수집 중...");
 
   const [globalRes, trendingRes, marketsRes, fngRes, dexRes] = await Promise.all([
-    safeFetch("https://api.coingecko.com/api/v3/global"),
-    safeFetch("https://api.coingecko.com/api/v3/search/trending"),
-    safeFetch(
+    cgFetch("https://api.coingecko.com/api/v3/global"),
+    cgFetch("https://api.coingecko.com/api/v3/search/trending"),
+    cgFetch(
       "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana,bnb,xrp,hyperliquid&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d"
     ),
     safeFetch("https://api.alternative.me/fng/?limit=1"),
@@ -1144,7 +1184,7 @@ async function fetchAll() {
   // 트렌딩 코인 가격/변동률 보강
   const trendingIds = (trending?.coins ?? []).slice(0, 6).map((e) => e.item.id).join(",");
   const trendingMktRes = trendingIds
-    ? await safeFetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${trendingIds}&price_change_percentage=24h,7d&sparkline=false`)
+    ? await cgFetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${trendingIds}&price_change_percentage=24h,7d&sparkline=false`)
     : null;
   const trendingMkt = trendingMktRes ? await trendingMktRes.json() : [];
   const fngRaw = fngRes ? await fngRes.json() : null;
@@ -1963,6 +2003,16 @@ async function main() {
 
   if (isDryRun) {
     console.log("[dry-run] DB 저장 및 텔레그램 전송 생략");
+    process.exit(0);
+  }
+
+  // 시장 데이터 수집 실패 시 저장/발송 중단.
+  // upsert는 date 기준이라 그냥 진행하면 같은 날 앞선 성공 실행의 데이터를
+  // null로 덮어써서 하루치가 통째로 "데이터 없음"이 된다.
+  if (!payload.market) {
+    console.error(
+      `✗ 시장 데이터 수집 실패 (CoinGecko /global) — ${date} 저장·발송 건너뜀. 기존 데이터 유지.`
+    );
     process.exit(0);
   }
 

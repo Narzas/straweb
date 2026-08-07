@@ -84,12 +84,16 @@
 - 한국어 포함 파일: Read + Edit 도구 사용
 
 ### CoinGecko 주의사항
-- 무료 티어: 분당 30회 rate limit
-- 스크립트 1회 실행당 CoinGecko 5회 호출
-- 매시간 실행 = 120회/일 — 여유 있음
-- 테스트 반복 실행 시 분당 rate limit 주의
+- **키리스(공용) 한도는 ~4회/윈도우** — 분당 30회는 Demo **API 키 발급 시** 한도임
+- 스크립트 1회 실행당 CoinGecko **6회** 호출 (`/global`, `/search/trending`, `/coins/markets` ×3, `/coins/categories`) — 이 중 3개는 `Promise.all` 동시 발사
+- 따라서 `COINGECKO_API_KEY` 필수. 없으면 429 → `market: null` → "오늘 시장 데이터를 불러오지 못했습니다."
+- CoinGecko 호출은 반드시 `cgFetch()` 사용 (키 주입 + 429 지수 백오프 재시도 3회)
+- `safeFetch(url, headers, timeoutMs, retries)` — `retries` 기본 0. 심볼 루프에서 도는 호출(선물 스캐너·RSI)에 재시도를 넣으면 실행 시간이 폭증하므로 기본값 유지할 것
+- `market`이 null이면 DB 저장·텔레그램 발송을 건너뜀 — upsert가 `date` 기준이라 같은 날 앞선 성공분을 덮어쓰기 때문
+- 테스트 반복 실행 시 rate limit 주의
 
 ### 환경변수 (`.env.local` + Vercel)
 - `DEEPL_API_KEY` — 소진됨, 충전 필요 (현재 Google Translate로 대체)
 - `NEXT_PUBLIC_SITE_URL=https://www.stragos.xyz`
+- `COINGECKO_API_KEY` — CoinGecko Demo 키(무료). 로컬 `.env.local` + Oracle Cloud 서버 양쪽에 필요
 - Supabase, Telegram Bot Token 등 기타
